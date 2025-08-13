@@ -2067,58 +2067,42 @@ def hook():
 
             send_message(chat, "\n".join(lines))
             return "OK", 200
-
-    if low.startswith("/selfie"):
+            
+                if low.startswith("/selfie"):
         vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "teasing, SFW"
-    if (str(uid) != OWNER_ID) and not allowed(uid):
+        if (str(uid) != OWNER_ID) and not allowed(uid):
             send_message(chat, "Free image limit hit.")
             return "OK", 200
         _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=False), nsfw=False)
 
     if low.startswith("/old18"):
         vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "nostalgic"
-    if (str(uid) != OWNER_ID) and not allowed(uid):
+        if (str(uid) != OWNER_ID) and not allowed(uid):
             send_message(chat, "Free image limit hit.")
             return "OK", 200
         _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=True), nsfw=True)
 
     if low.startswith("/poster"):
         desc = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "movie poster, epic lighting"
-    if (str(uid) != OWNER_ID) and not allowed(uid):
+        if (str(uid) != OWNER_ID) and not allowed(uid):
             send_message(chat, "Free image limit hit.")
             return "OK", 200
         _spawn_image_job(chat, poster_prompt(p, desc), nsfw=False)
 
     if low.startswith("/draw"):
         prompt_txt = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "cartoon doodle of us together"
-    if (str(uid) != OWNER_ID) and not allowed(uid):
+        if (str(uid) != OWNER_ID) and not allowed(uid):
             send_message(chat, "Free image limit hit.")
             return "OK", 200
         _spawn_image_job(chat, draw_prompt(p, prompt_txt), nsfw=False)
 
     if low.startswith("/gen"):
         prompt_txt = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "any cool scene"
-    if (str(uid) != OWNER_ID) and not allowed(uid):
+        if (str(uid) != OWNER_ID) and not allowed(uid):
             send_message(chat, "Free image limit hit.")
             return "OK", 200
         _spawn_image_job(chat, prompt_txt, nsfw=False)
 
-            hint = (f"{p.get('name', 'Girl')} consistent look: {p.get('img_tags', '')}, "
-                    f"{p.get('hair', '')} hair, {p.get('eyes', '')} eyes, {p.get('body', '')}")
-            cup = p.get("cup")
-            if cup:
-                hint += f", proportions consistent with {cup}-cup bust"
-
-            full_prompt = hint + ". " + user_prompt
-            send_message(chat, "🖼️ Generating…")
-
-            # Fast NSFW job
-            _spawn_image_job(chat, full_prompt, 512, 704, seed=stable_seed(p.get('name', 'Girl')), nsfw=True)
-
-            if str(uid) != OWNER_ID:
-                STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
-                save_state()
-            return "OK", 200  
             hint = (f"{p.get('name', 'Girl')} consistent look: {p.get('img_tags', '')}, "
                     f"{p.get('hair', '')} hair, {p.get('eyes', '')} eyes, {p.get('body', '')}")
             cup = p.get("cup")
