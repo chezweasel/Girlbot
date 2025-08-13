@@ -191,3 +191,12 @@ if __name__=="__main__":
     load_state()
     threading.Thread(target=set_webhook,daemon=True).start()
     app.run(host="0.0.0.0",port=int(os.environ.get("PORT",8080)))
+from flask import Flask
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Girlbot is running!"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
