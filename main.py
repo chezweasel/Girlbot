@@ -1452,8 +1452,8 @@ def hook():
                 send_photo(chat, fn)
                 send_message(chat, "there's more of these and it only gets better ✨")
                 s["teased"]=True; save_state()
-            except Exception as e:
-                print("TEASE ERR:", e)
+except Exception as e:
+    print("TEASE ERR:", str(e))
 
         fact=(p.get("origin","") or "").split(";")[0]
         taste=random.choice([
