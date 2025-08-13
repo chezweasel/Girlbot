@@ -1528,7 +1528,7 @@ def hook():
         if any(k in low for k in ["book","music","movie","walk","coffee"]): ar+=0.2
         ar=min(3.0, ar); s["arousal"]=ar; save_state()
 
-        if (not s.get("teased")) and s.get("u_msg",0)>=5:
+if (not s.get("teased")) and s.get("u_msg",0)>=5:
             try:
                 seed=stable_seed(p.get("name","Girl"))
                 fn=generate_image(selfie_prompt(p, vibe="teasing smile, shoulder-up, tasteful, SFW", nsfw=False),
