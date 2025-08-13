@@ -1229,26 +1229,36 @@ def gen_replicate(prompt, w=640, h=896, seed=None):
 def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
     """
     Stable Horde generation with:
+      - auto downscale to meet anon/low-kudos limits (<=576 on longest side)
       - proper string seed
-      - clearer auth/validation errors
-      - configurable queue wait
-      - strict result checks
+      - clear errors
     """
     if not HORDE:
         raise RuntimeError("Horde: missing HORDE_API_KEY")
 
     headers = {
         "apikey": HORDE,
-        "Client-Agent": "flirtpixel/3.2"  # identify your app politely
+        "Client-Agent": "flirtpixel/3.3"
     }
 
-    # Horde wants the seed as a string; keep it stable but stringify it
+    # --- Respect Horde free/low-kudos size limits (longest side <= 576 by default) ---
+    max_side = int(os.getenv("HORDE_MAX_SIDE", "576"))
+    W, H = int(w), int(h)
+    if max(W, H) > max_side:
+        scale = max_side / float(max(W, H))
+        W = int(round(W * scale))
+        H = int(round(H * scale))
+        # Round to multiples of 64 (commonly required by backends)
+        def _round64(n): return max(64, int(round(n / 64.0) * 64))
+        W, H = _round64(W), _round64(H)
+
+    # Horde wants seed as a *string*
     seed_str = str(int(seed)) if seed is not None else None
 
     params = {
-        "steps": 22,
-        "width": int(w),
-        "height": int(h),
+        "steps": 22,                # keep well under step limits
+        "width": W,
+        "height": H,
         "n": 1,
         "nsfw": bool(nsfw),
         "sampler_name": "k_euler",
@@ -1267,14 +1277,14 @@ def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
 
     r = requests.post(
         "https://stablehorde.net/api/v2/generate/async",
-        json=job,
-        headers=headers,
-        timeout=45
+        json=job, headers=headers, timeout=45
     )
 
-    # Clearer error handling for common cases
     if r.status_code == 401:
         raise RuntimeError("Horde auth failed (401): invalid API key?")
+    if r.status_code == 403:
+        # Likely size/steps/kudos restriction
+        raise RuntimeError(f"Horde 403 (limits): {r.text[:200]}")
     if r.status_code == 429:
         raise RuntimeError("Horde rate limited (429): try again soon")
     if r.status_code not in (200, 202):
@@ -1285,20 +1295,16 @@ def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
         raise RuntimeError(f"Horde queue error: {r.text[:200]}")
 
     waited = 0
-    max_wait = int(os.getenv("HORDE_MAX_WAIT", "360"))  # seconds
-
-    # Poll until done (or timeout)
+    max_wait = int(os.getenv("HORDE_MAX_WAIT", "360"))
     while True:
         s = requests.get(
             f"https://stablehorde.net/api/v2/generate/check/{rid}",
             timeout=30
         ).json()
-
         if s.get("faulted"):
             raise RuntimeError("Horde: job faulted")
         if s.get("done"):
             break
-
         time.sleep(2)
         waited += 2
         if waited > max_wait:
@@ -1308,7 +1314,6 @@ def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
         f"https://stablehorde.net/api/v2/generate/status/{rid}",
         timeout=45
     ).json()
-
     gens = st.get("generations", [])
     if not gens:
         raise RuntimeError(f"Horde empty result: {str(st)[:200]}")
