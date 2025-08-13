@@ -1,241 +1,32 @@
-import os, time, json, base64, threading, requests
-from flask import Flask, render_template_string, request
-from telebot import TeleBot, types
+import os, requests
+from flask import Flask, request
 
-# ===== ENV (strip whitespace to avoid 404s) =====
-TG_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"].strip()
-OWNER_ID = os.environ["OWNER_ID"].strip()
-PUBLIC_URL = os.environ["PUBLIC_URL"].strip()
-WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"].strip()
-HORDE_KEY = os.getenv("HORDE_API_KEY","0000000000").strip()
-TOKEN_CODES = set(x.strip() for x in os.getenv("TOKEN_CODES","").split(",") if x.strip())
-API_BASE = f"https://api.telegram.org/bot{TG_TOKEN}"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+OWNER_ID = os.getenv("OWNER_ID")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}"
 
-# ===== SETTINGS / SAFETY =====
-FREE_PER_DAY=2; PRIVATE_ONLY=True
-FORBID={"minor","underage","child","incest","stepbro","stepsis",
-        "rape","forced","nonconsensual","bestiality","animal","beast","shota",
-        "real name","celebrity","celeb","revenge porn","deepfake","face swap"}
-
-PERS=[("Nicole","playful"),("Lurleen","down home country girl"),("Tia","adventurous"),
-      ("Cassidy","romantic"),("Carly","bold"),("Kate","flirty"),("Ivy","retro"),
-      ("Chelsey","teasing"),("Juliet","passionate"),("Riley","sweet"),
-      ("Scarlett","bossy"),("Tessa","dreamy"),("Brittany","tender"),
-      ("Zoey","party"),("Grace","calm")]
-
-# ===== BOT + STATE =====
-bot=TeleBot(TG_TOKEN, parse_mode=None)
-STATE_FILE="state.json"; STATE={}
-def load_state():
-    global STATE
-    if os.path.exists(STATE_FILE):
-        try: STATE=json.load(open(STATE_FILE))
-        except: STATE={}
-def save_state():
-    try: json.dump(STATE, open(STATE_FILE,"w"))
-    except: pass
-def now(): return time.time()
-def is_private(m): return getattr(m.chat,"type","private")=="private"
-def gu(uid):
-    u=str(uid)
-    if u not in STATE: STATE[u]={"f":0,"g":0,"t":now(),"ok":(u==OWNER_ID),"nsfw":False}
-    if now()-STATE[u]["t"]>86400: STATE[u]["f"]=0; STATE[u]["t"]=now(); save_state()
-    return STATE[u]
-def allowed(uid): s=gu(uid); return s["ok"] or s["f"]<FREE_PER_DAY
-def mark(uid): s=gu(uid); s["f"]+=0 if s["ok"] else 1; save_state()
-def clean_ok(t): return not any(w in t.lower() for w in FORBID)
-def names_list(): return "\n".join(f"{i+1}. {n}" for i,(n,_) in enumerate(PERS))
-def vibe(uid):
-    s=gu(uid); i=s["g"]%len(PERS); n,d=PERS[i]
-    return n,d,f"{n} vibe {d}. supportive, flirty, AI fantasy"
-
-# ===== RAW TELEGRAM SEND (reliable + logs) =====
-def api_send(cid, text):
-    try:
-        r=requests.post(f"{API_BASE}/sendMessage", json={"chat_id":int(cid),"text":text}, timeout=15)
-        print("API_SEND RESP:", r.status_code, r.text[:200])
-        if r.status_code==200: return True
-    except Exception as e:
-        print("API_SEND EXC:", e)
-    try:
-        bot.send_message(int(cid), text)
-        return True
-    except Exception as e:
-        print("BOT SEND ERROR:", e)
-    return False
-
-# ===== STABLE HORDE (image gen) =====
-H="https://stablehorde.net/api/v2"
-def horde_generate(prompt,steps=28,w=832,h=1216,nsfw=True):
-    hd={"apikey":HORDE_KEY,"Client-Agent":"tg-girlbot/1.0"}
-    job={"prompt":prompt,"params":{"steps":steps,"width":w,"height":h,"n":1,"nsfw":nsfw},
-         "r2":True,"censor_nsfw":False}
-    rid=requests.post(f"{H}/generate/async",json=job,headers=hd,timeout=45).json().get("id")
-    if not rid: raise RuntimeError("Horde rejected job or busy.")
-    waited=0
-    while True:
-        s=requests.get(f"{H}/generate/check/{rid}",timeout=30).json()
-        if s.get("faulted"): raise RuntimeError("Horde fault; try simpler prompt.")
-        if s.get("done"): break
-        time.sleep(2); waited+=2
-        if waited>180: raise TimeoutError("Horde queue slow; try later.")
-    st=requests.get(f"{H}/generate/status/{rid}",timeout=45).json()
-    g=st.get("generations",[])
-    if not g: raise RuntimeError("No image returned.")
-    fn=f"out_{int(now())}.png"
-    open(fn,"wb").write(base64.b64decode(g[0]["img"]))
-    return fn
-
-# ===== HANDLERS =====
-HELP_TXT=("Commands:\nhi — menu\n/girls — list\n/pick # or name — choose\n/who — show current\n"
-"/nsfw_on — enable 18+\n/nsfw_off — disable\n/gen <prompt> — make pic\n/status — free images left\n/token <code> — unlock unlimited")
-
-@bot.message_handler(commands=["help","start"])
-def help_cmd(m):
-    if PRIVATE_ONLY and not is_private(m): return
-    print("HANDLER help:", m.text)
-    api_send(m.chat.id, HELP_TXT)
-
-@bot.message_handler(func=lambda m:m.text and m.text.lower().strip() in {"hi","hello","hey","hiya"})
-def greet(m):
-    if PRIVATE_ONLY and not is_private(m): return
-    print("HANDLER greet:", m.text)
-    gu(m.from_user.id)
-    api_send(m.chat.id, "Hi 😘 Pick:\n"+names_list()+"\n"+HELP_TXT)
-
-@bot.message_handler(commands=["girls"])
-def girls(m):
-    if PRIVATE_ONLY and not is_private(m): return
-    print("HANDLER girls")
-    api_send(m.chat.id, names_list())
-
-@bot.message_handler(commands=["pick"])
-def pick(m):
-    if PRIVATE_ONLY and not is_private(m): return
-    print("HANDLER pick:", m.text)
-    a=m.text.split(maxsplit=1)
-    if len(a)<2: return api_send(m.chat.id,"Use: /pick 1-15 or name")
-    t=a[1].strip().lower(); idx=None
-    if t.isdigit(): n=int(t); idx=n-1 if 1<=n<=len(PERS) else None
-    else:
-        for i,(n,_) in enumerate(PERS):
-            if n.lower()==t: idx=i; break
-    if idx is None: return api_send(m.chat.id,"Can’t find her 😉 Try /girls")
-    gu(m.from_user.id)["g"]=idx; save_state()
-    api_send(m.chat.id, f"You picked {PERS[idx][0]} 💋")
-
-@bot.message_handler(commands=["who"])
-def who(m):
-    if PRIVATE_ONLY and not is_private(m): return
-    print("HANDLER who")
-    n,_,_=vibe(m.from_user.id); api_send(m.chat.id, f"Your girl: {n}.")
-
-@bot.message_handler(commands=["nsfw_on"])
-def nsfw_on(m):
-    if PRIVATE_ONLY and not is_private(m): return
-    print("HANDLER nsfw_on")
-    gu(m.from_user.id)["nsfw"]=True; save_state()
-    api_send(m.chat.id, "NSFW on. 18+ only. No real people/illegal content.")
-
-@bot.message_handler(commands=["nsfw_off"])
-def nsfw_off(m):
-    if PRIVATE_ONLY and not is_private(m): return
-    print("HANDLER nsfw_off")
-    gu(m.from_user.id)["nsfw"]=False; save_state()
-    api_send(m.chat.id, "NSFW off. Keeping it suggestive 😇")
-
-@bot.message_handler(commands=["token"])
-def token_cmd(m):
-    if PRIVATE_ONLY and not is_private(m): return
-    print("HANDLER token:", m.text)
-    a=m.text.split(maxsplit=1)
-    if len(a)<2: return api_send(m.chat.id,"Use: /token YOUR_CODE")
-    if a[1].strip() in TOKEN_CODES:
-        gu(m.from_user.id)["ok"]=True; save_state(); api_send(m.chat.id,"✅ Unlimited unlocked.")
-    else:
-        api_send(m.chat.id,"❌ Invalid code.")
-
-@bot.message_handler(commands=["status"])
-def status_cmd(m):
-    if PRIVATE_ONLY and not is_private(m): return
-    print("HANDLER status")
-    s=gu(m.from_user.id); left=max(0,FREE_PER_DAY-s["f"])
-    api_send(m.chat.id, "✅ Unlimited" if s["ok"] else f"🧮 Free images left today: {left}/{FREE_PER_DAY}")
-
-@bot.message_handler(commands=["gen"])
-def gen(m):
-    if PRIVATE_ONLY and not is_private(m): return
-    print("HANDLER gen:", m.text)
-    u=str(m.from_user.id); s=gu(u); a=m.text.split(maxsplit=1)
-    if len(a)<2: return api_send(m.chat.id,"/gen <prompt>")
-    p=a[1].strip()
-    if not s["nsfw"]: return api_send(m.chat.id,"Turn on /nsfw_on for spicy pics.")
-    if not clean_ok(p): return api_send(m.chat.id,"I won’t generate that. Try something else.")
-    if not allowed(u): return api_send(m.chat.id,"Baby, you’ve used your free ones 😏")
-    n,d,v=vibe(u); api_send(m.chat.id,"🎨 One moment…")
-    try:
-        fn=horde_generate(f"{v}. {p}")
-        try:
-            with open(fn,"rb") as f:
-                r=requests.post(f"{API_BASE}/sendPhoto", files={"photo":f},
-                                data={"chat_id":int(m.chat.id)}, timeout=60)
-                print("API_PHOTO RESP:", r.status_code, r.text[:200])
-                if r.status_code!=200: bot.send_photo(int(m.chat.id), open(fn,"rb"))
-        except Exception as e:
-            print("API_PHOTO EXC:", e); bot.send_photo(int(m.chat.id), open(fn,"rb"))
-        mark(u)
-    except Exception as e:
-        api_send(m.chat.id, f"Queue/busy: {e}")
-
-@bot.message_handler(func=lambda m: True)
-def fallback(m):
-    print("HANDLER fallback:", getattr(m,"text",None))
-    api_send(m.chat.id, "👋 I see you. Try: hi, /girls, /pick 2, /nsfw_on, /gen …")
-
-# ===== WEBSITE + WEBHOOK =====
-app=Flask(__name__)
-HOME="""<!doctype html><html><head><meta name=viewport content="width=device-width,initial-scale=1">
-<title>FlirtPixel</title><style>body{font-family:system-ui;background:#0f0f12;color:#eee;margin:0}
-.wrap{max-width:860px;margin:0 auto;padding:40px}.card{background:#17171c;border:1px solid #2a2a33;border-radius:14px;padding:24px;margin:16px 0}
-h1{font-size:28px;margin:0 0 6px}.muted{color:#aaa}.btn{display:inline-block;padding:10px 14px;border-radius:10px;background:#6b5cff;color:#fff}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.girl{padding:12px;background:#1d1d24;border-radius:12px;border:1px solid #2b2b34}
-</style></head><body><div class=wrap><h1>FlirtPixel Bot</h1>
-<p class=muted>Status page · Free/day: <b>{{free}}</b></p>
-<a class=btn href="https://t.me/{{bot_username}}" target=_blank>Open Telegram Bot</a>
-<div class=card><h3>Girls</h3><div class=grid>{% for n,d in girls %}<div class=girl><b>{{n}}</b><br><span class=muted>{{d}}</span></div>{% endfor %}</div></div>
-</div></body></html>"""
-@app.route("/")
-def home():
-    try: name="@"+bot.get_me().username
-    except: name="(bot offline?)"
-    return render_template_string(HOME,free=FREE_PER_DAY,girls=PERS,bot_username=name.strip("@"))
-@app.route("/_up")
-def up(): return "ok",200
-
-@app.route(f"/telegram/{WEBHOOK_SECRET}",methods=["GET","POST"])
-def telegram():
-    if request.method=="GET": return "hook ok",200
-    raw=request.get_data(as_text=True) or ""
-    print("TG UPDATE RAW:", raw[:600])
-    try:
-        upd=types.Update.de_json(raw)
-        bot.process_new_updates([upd])
-    except Exception as e:
-        print("PROCESS ERROR:", e)
-    return "ok",200
+app = Flask(__name__)
 
 def set_webhook():
-    try:
-        hook=f"{PUBLIC_URL}/telegram/{WEBHOOK_SECRET}"
-        r=requests.post(f"{API_BASE}/setWebhook",
-                        json={"url":hook,"allowed_updates":["message","edited_message","callback_query"]},
-                        timeout=15)
-        print("SET HOOK RESP:", r.status_code, r.text)
-        api_send(int(OWNER_ID), "✅ READY — webhook set")
-    except Exception as e:
-        print("Webhook error:", e)
+    r = requests.get(f"{API_URL}/setWebhook", params={"url": WEBHOOK_URL})
+    print("SET HOOK RESP:", r.status_code, r.text)
 
-if __name__=="__main__":
-    load_state()
-    threading.Thread(target=set_webhook,daemon=True).start()
-    app.run(host="0.0.0.0",port=int(os.environ.get("PORT",8080)))
+@app.route(f"/telegram/pix3lhook", methods=["POST"])
+def telegram_webhook():
+    update = request.json
+    print("TG UPDATE RAW:", update)
+    if "message" in update:
+        chat_id = update["message"]["chat"]["id"]
+        text = update["message"].get("text", "")
+        if text.lower() in ["hi","hello","hey"]:
+            send_message(chat_id, "Hey there 😉 Which girl would you like to chat with?")
+    return "OK"
+
+def send_message(chat_id, text):
+    r = requests.post(f"{API_URL}/sendMessage", json={"chat_id": chat_id, "text": text})
+    print("API_SEND RESP:", r.status_code, r.text)
+
+if __name__ == "__main__":
+    set_webhook()
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8080)))
