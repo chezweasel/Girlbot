@@ -699,41 +699,69 @@ def hook():
                 send_photo(chat, fn); send_message(chat,"there’s more of these and it only gets better ✨")
             except Exception as e: print("TEASE ERR:", e)
 
+        # ===== Conversational progression =====
+        # Safety check on text intent
+        if not clean_ok(text):
+            send_message(chat, "Nope.")
+            return "OK", 200
+
+        # Arousal ramp: 0..3
+        ar = s.get("arousal", 0.0)
+        slow = PERS[s["g"] % len(PERS)].get("arousal_slow", True)
+        bump = 1.0 if not slow else 0.5
+        if any(k in low for k in ["kiss", "hot", "sexy", "turn on", "turn-on", "blush", "moan", "wet"]):
+            ar += bump
+        if any(k in low for k in ["book", "music", "movie", "walk", "coffee"]):
+            ar += 0.2
+        if ar > 3.0:
+            ar = 3.0
+        s["arousal"] = ar
+        save_state()
+
+        # Auto-tease once after ~5 user messages (SFW)
+        if (not s.get("teased")) and s.get("u_msg", 0) >= 5:
+            try:
+                seed = stable_seed(p["name"])
+                fn = generate_image(
+                    selfie_prompt(p, vibe="teasing smile, shoulder-up, tasteful, SFW", nsfw=False),
+                    nsfw=False,
+                    seed=seed
+                )
+                send_photo(chat, fn)
+                send_message(chat, "there's more of these and it only gets better ✨")
+                s["teased"] = True
+                save_state()
+            except Exception as e:
+                print("TEASE ERR:", e)
+
         # Reply crafting
-# ---- Conversational fallback ----
-if not clean_ok(text):
-    send_message(chat, "Nope.")
-    return "OK", 200
+        fact = p["origin"].split(";")[0]
+        taste = random.choice([
+            ", ".join(p["music"][:1]),
+            ", ".join(p["movies"][:1]),
+            ", ".join(p["tv"][:1])
+        ])
+        bookline = (" " + book_snack(p)) if random.random() < 0.3 else ""
+        feels = arousal_line(p, s)
 
-# (keep your arousal bump + teaser selfie code above this)
+        if s["arousal"] < 1:
+            hook = "I'm curious; what's your vibe?"
+        elif s["arousal"] < 2:
+            hook = "...okay now I'm leaning in closer."
+        elif s["arousal"] < 3:
+            hook = "I'm warming up—my cheeks and maybe more."
+        else:
+            hook = "Say one more nice thing and I might need a cold shower."
 
-fact = p["origin"].split(";")[0]
-taste = random.choice([", ".join(p["music"][:1]),
-                       ", ".join(p["movies"][:1]),
-                       ", ".join(p["tv"][:1])])
-bookline = (" " + book_snack(p)) if random.random() < 0.3 else ""
-
-feels = arousal_line(p, s)
-
-if s["arousal"] < 1:
-    hook = "I'm curious; what's your vibe?"
-elif s["arousal"] < 2:
-    hook = "...okay now I'm leaning in closer."
-elif s["arousal"] < 3:
-    hook = "I'm warming up—my cheeks and maybe more."
-else:
-    hook = "Say one more nice thing and I might need a cold shower."
-
-send_message(
-    chat,
-    f"{p['name']} ({p['persona']}, {p['age']}): \"{text[:80]}\" — {feels}. {fact}. I'm into {taste}.{bookline} {hook}"
-)
-return "OK", 200
+        send_message(
+            chat,
+            f"{p['name']} ({p['persona']}, {p['age']}): \"{text[:80]}\" — {feels}. {fact}. I'm into {taste}.{bookline} {hook}"
+        )
+        return "OK", 200
 
     except Exception as e:
         print("PROCESS ERROR:", e)
-        return "OK",200
-
+        return "OK", 200
 # ===== Webhook =====
 def set_webhook():
     try: requests.post(f"{API}/deleteWebhook",timeout=8)
