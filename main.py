@@ -2,27 +2,26 @@ import os,time,json,base64,threading,requests,hmac,hashlib
 from flask import Flask,render_template_string,request
 from telebot import TeleBot,types
 
-# ===== ENV (Railway → Variables) =====
-TG_TOKEN    = os.environ["TELEGRAM_BOT_TOKEN"]
-OWNER_ID    = os.environ["OWNER_ID"]                    # string, e.g. "7414541468"
-PUBLIC_URL  = os.environ["PUBLIC_URL"]                  # like https://app.up.railway.app
-WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"]           # any random string
-HORDE_KEY   = os.getenv("HORDE_API_KEY","0000000000")
+# ===== ENV (safer: all optional except token/owner) =====
+TG_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
+OWNER_ID = os.environ["OWNER_ID"]            # string
+PUBLIC_URL = os.getenv("PUBLIC_URL","")      # may be empty on 1st deploy
+WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET","hook")
+HORDE_KEY = os.getenv("HORDE_API_KEY","0000000000")
 ANON_SECRET = os.getenv("ANON_SECRET","change_me")
 TOKEN_CODES = set(x.strip() for x in os.getenv("TOKEN_CODES","").split(",") if x.strip())
 
 # ===== Settings & safety =====
-FREE_PER_DAY = 2
-PRIVATE_ONLY = True
-FORBID = {"teen","minor","underage","child","young-looking","incest","stepbro","stepsis",
-          "rape","forced","nonconsensual","bestiality","animal","beast","loli","shota",
-          "real name","celebrity","celeb","revenge porn","deepfake","face swap"}
+FREE_PER_DAY=2; PRIVATE_ONLY=True
+FORBID={"teen","minor","underage","child","young-looking","incest","stepbro","stepsis",
+        "rape","forced","nonconsensual","bestiality","animal","beast","loli","shota",
+        "real name","celebrity","celeb","revenge porn","deepfake","face swap"}
 PERS=[("Ava","playful"),("Sofia","elegant"),("Harper","adventurous"),("Lila","romantic"),
       ("Camille","bold"),("Maya","flirty"),("Ivy","retro"),("Jade","teasing"),
       ("Elena","passionate"),("Riley","sweet"),("Scarlett","bossy"),("Tessa","dreamy"),
       ("Noelle","tender"),("Zoey","party"),("Grace","calm")]
 
-# ===== Bot + state (persist) =====
+# ===== Bot + state =====
 bot=TeleBot(TG_TOKEN,parse_mode=None)
 STATE_FILE="state.json"; STATE={}
 def load_state():
@@ -48,7 +47,7 @@ def vibe(uid):
     s=gu(uid); i=s["g"]%len(PERS); n,d=PERS[i]
     return n,d,f"{n} vibe {d}. supportive, flirty, AI fantasy"
 
-# ===== Stable Horde (free GPUs) =====
+# ===== Stable Horde =====
 H="https://stablehorde.net/api/v2"
 def horde_generate(prompt,steps=28,w=832,h=1216,nsfw=True):
     headers={"apikey":HORDE_KEY,"Client-Agent":"tg-girlbot/1.0"}
@@ -177,8 +176,10 @@ def telegram():
     upd=types.Update.de_json(request.get_data().decode("utf-8"))
     bot.process_new_updates([upd]); return "ok",200
 
-# ===== Start (webhook mode) =====
 def set_webhook():
+    if not PUBLIC_URL: 
+        print("PUBLIC_URL not set yet; visit Railway URL, add PUBLIC_URL var, redeploy.")
+        return
     try:
         bot.remove_webhook()
         bot.set_webhook(url=f"{PUBLIC_URL}/telegram/{WEBHOOK_SECRET}",drop_pending_updates=True)
