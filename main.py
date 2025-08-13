@@ -723,6 +723,42 @@ STORIES = {
 }
 
 # Attach life stories to personas
+# ===== PERSONAS (ensure PERS exists) =====
+# If you already define PERS elsewhere (e.g., another module),
+# we'll try to import it. Otherwise, we auto-build a minimal list
+# from the STORIES keys so the bot can run.
+try:
+    PERS  # does it already exist?
+except NameError:
+    try:
+        from personas import PERS as _EXTERNAL_PERS  # optional external source
+        PERS = _EXTERNAL_PERS
+    except Exception:
+        def _default_persona(name):
+            # Minimal safe defaults; other fields are optional throughout the code.
+            return {
+                "name": name,
+                "persona": "",
+                "age": 25,
+                "location": "Internet",
+                "origin": "",
+                "job": "student",
+                "fav_color": "blue",
+                "fav_flower": "peony",
+                "music": [],
+                "movies": [],
+                "tv": [],
+                "body": "slim",
+                "hair": "brunette",
+                "eyes": "brown",
+                "cup": "B",
+                "img_tags": "natural look, soft lighting",
+                "underwear": [{"style":"lace thong","color":"black","fabric":"lace"}],
+                "arousal_slow": True,
+                "nsfw_prefs": {},
+            }
+        # Build personas from the names in STORIES:
+        PERS = [_default_persona(n) for n in STORIES.keys()]
 for p in PERS:
     p["life_memories"] = STORIES.get(p.get("name",""), {}).get("sfw_memories", [])
 
