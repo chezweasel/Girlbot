@@ -1141,9 +1141,6 @@ def gen_replicate(prompt, w=640, h=896, seed=None):
         time.sleep(2)
     raise RuntimeError("Replicate: timeout")
 
-def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
-    headers = {"apikey": HORDE, "Client-Agent": "flirtpixel/3.1"}
-
     # Ensure seed is a string if provided
     if seed is None:
         seed = str(random.randint(1, 2**31 - 1))
