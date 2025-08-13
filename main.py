@@ -102,10 +102,9 @@ def help_cmd(m):
 
 @bot.message_handler(func=lambda m:m.text and m.text.lower().strip() in {"hi","hello","hey","hiya"})
 def greet(m):
-    if PRIVATE_ONLY and not is_private(m): return
     print("HANDLER greet:", m.text)
     gu(m.from_user.id)
-    bot.reply_to(m,"Hi 😘 Pick:\n"+names_list()+"\n"+HELP_TXT)
+    safe_reply(m.chat.id, "Hi 😘 Pick:\n"+names_list()+"\n"+HELP_TXT)
 
 @bot.message_handler(commands=["girls"])
 def girls(m):
