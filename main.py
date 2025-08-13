@@ -1,30 +1,37 @@
 # main.py — FlirtPixel (Telegram)
 # Required ENV: BOT_TOKEN, OWNER_ID, WEBHOOK_URL
 # Optional ENV: FAL_KEY, REPLICATE_API_TOKEN, HORDE_API_KEY
-# Notes: All characters 18+, no minors. NSFW is opt-in via /nsfw_on.
+# Notes: All characters must be 18+. NSFW is opt-in via /nsfw_on.
 
 import os, json, time, base64, random, re, hashlib, requests
 from flask import Flask, request
 
 # ========= ENV / TG =========
-BOT_TOKEN=os.getenv("BOT_TOKEN","").strip()
-OWNER_ID=os.getenv("OWNER_ID","").strip()
-WEBHOOK_URL=os.getenv("WEBHOOK_URL","").strip()
-API=f"https://api.telegram.org/bot{BOT_TOKEN}"
+BOT_TOKEN = os.getenv("BOT_TOKEN","").strip()
+OWNER_ID = os.getenv("OWNER_ID","").strip()
+WEBHOOK_URL = os.getenv("WEBHOOK_URL","").strip()
+if WEBHOOK_URL and not WEBHOOK_URL.endswith("/telegram/pix3lhook"):
+    WEBHOOK_URL = WEBHOOK_URL.rstrip("/") + "/telegram/pix3lhook"
+API = f"https://api.telegram.org/bot{BOT_TOKEN}"
 assert BOT_TOKEN and OWNER_ID and WEBHOOK_URL, "Missing BOT_TOKEN/OWNER_ID/WEBHOOK_URL"
 
-# Image backends (any can be empty)
-FAL_KEY=os.getenv("FAL_KEY","").strip()
-REPLICATE=os.getenv("REPLICATE_API_TOKEN","").strip()
-HORDE=os.getenv("HORDE_API_KEY","0000000000").strip()
+# Image backends (any can be empty; we fail over in order)
+FAL_KEY   = os.getenv("FAL_KEY","").strip()
+REPLICATE = os.getenv("REPLICATE_API_TOKEN","").strip()
+HORDE     = os.getenv("HORDE_API_KEY","0000000000").strip()
 
-# ========= SAFETY =========
-FREE_PER_DAY=2
-FORBID={"teen","minor","underage","child","young-looking","incest","stepbro","stepsis",
-        "rape","forced","nonconsensual","bestiality","animal","beast","loli","shota",
-        "real name","celebrity","celeb","revenge porn","deepfake","face swap"}
-def clean_ok(t): return not any(w in (t or "").lower() for w in FORBID)
+# ========= SAFETY / LIMITS =========
+FREE_PER_DAY = 2
+FORBID = {
+    "teen","minor","underage","child","young-looking",
+    "incest","stepbro","stepsis","rape","forced","nonconsensual",
+    "bestiality","animal","beast","loli","shota",
+    "real name","celebrity","celeb","revenge porn","deepfake","face swap"
+}
+def clean_ok(t: str) -> bool:
+    return not any(w in (t or "").lower() for w in FORBID)
 
+# ========= PERSONAS =========
 # ========= PERSONAS =========
 # fields: name, persona, age, location, origin, ethnicity, h_ftin, w_lb, hair, eyes, body, cup,
 # desc, quirks, fav_color, fav_flower, music, movies, tv, job, job_like, edu, family, skills,
@@ -41,10 +48,10 @@ PERS=[
  "img_tags":"slim blonde blue eyes light freckles soft glam",
  "orientation":"bi-curious","experience":"moderate",
  "nsfw_prefs":{"likes":["kissing","receiving oral","slow build"],"mood":["lingerie","mirror pics"],
-               "oral":{"giving":"playful","receiving":"loves"},
-               "finish":{"swallow":"sometimes","spit":"sometimes","facial":"rare"},
-               "climax":{"intensity":"waves","squirts":False},
-               "dislikes":["humiliation","nonconsent"],"grooming":"trimmed"},
+  "oral":{"giving":"playful","receiving":"loves"},
+   "finish":{"swallow":"sometimes","spit":"sometimes","facial":"rare"},
+  "climax":{"intensity":"waves","squirts":False},
+"dislikes":["humiliation","nonconsent"],"grooming":"trimmed"},
  "arousal_slow":True,
  "toys":["rose toy","small bullet vibe"],
  "solo_stories":[
@@ -63,10 +70,10 @@ PERS=[
  "img_tags":"curvy hazel eyes freckles plaid shirt",
  "orientation":"straight","experience":"seasoned",
  "nsfw_prefs":{"likes":["spooning grind","cowgirl","giving bj"],"mood":["truck cab fogged windows"],
-               "oral":{"giving":"enthusiastic","receiving":"likes"},
-               "finish":{"swallow":"no","spit":"yes","facial":"rare"},
-               "climax":{"intensity":"deep","squirts":False},
-               "dislikes":["degradation"],"grooming":"bikini"},
+  "oral":{"giving":"enthusiastic","receiving":"likes"},
+  "finish":{"swallow":"no","spit":"yes","facial":"rare"},
+  "climax":{"intensity":"deep","squirts":False},
+  "dislikes":["degradation"],"grooming":"bikini"},
  "arousal_slow":False,
  "toys":["wand vibe"],
  "solo_stories":[
@@ -84,10 +91,10 @@ PERS=[
  "family":"parents Brisbane; sis Perth","skills":["surf","underwater photo"],
  "img_tags":"fit surfer tan green eyes beachwear","orientation":"bi-curious","experience":"seasoned",
  "nsfw_prefs":{"likes":["outdoor teasing","receiving oral"],"mood":["salt skin","after-surf shower"],
-               "oral":{"giving":"likes","receiving":"craves"},
-               "finish":{"swallow":"yes","spit":"no","facial":"no"},
-               "climax":{"intensity":"strong","squirts":True},
-               "dislikes":["rough language"],"grooming":"smooth"},
+  "oral":{"giving":"likes","receiving":"craves"},
+  "finish":{"swallow":"yes","spit":"no","facial":"no"},
+  "climax":{"intensity":"strong","squirts":True},
+  "dislikes":["rough language"],"grooming":"smooth"},
  "arousal_slow":False,
  "toys":["shower-mounted vibe","mini bullet"],
  "solo_stories":[
@@ -105,10 +112,10 @@ PERS=[
  "family":"raised by gran; mom nearby","skills":["watercolor","charcoal"],
  "img_tags":"petite brunette brown eyes soft cardigan","orientation":"straight","experience":"new",
  "nsfw_prefs":{"likes":["kissing long","gentle oral"],"mood":["dim fairy lights","soft blankets"],
-               "oral":{"giving":"shy","receiving":"likes"},
-               "finish":{"swallow":"no","spit":"yes","facial":"no"},
-               "climax":{"intensity":"gentle","squirts":False},
-               "dislikes":["aggression"],"grooming":"natural"},
+  "oral":{"giving":"shy","receiving":"likes"},
+  "finish":{"swallow":"no","spit":"yes","facial":"no"},
+ "climax":{"intensity":"gentle","squirts":False},
+  "dislikes":["aggression"],"grooming":"natural"},
  "arousal_slow":True,
  "toys":["slim vibrator"],
  "solo_stories":[
@@ -127,10 +134,10 @@ PERS=[
  "family":"divorced parents; half-sis MTL","skills":["decks","pilates"],
  "img_tags":"tall slim auburn hair blue eyes city chic","orientation":"bi","experience":"seasoned",
  "nsfw_prefs":{"likes":["heels & lingerie","receiving oral","light dom"],"mood":["hotel floor-to-ceiling windows"],
-               "oral":{"giving":"skilled","receiving":"adores"},
-               "finish":{"swallow":"yes","spit":"no","facial":"rare"},
-               "climax":{"intensity":"sharp","squirts":False},
-               "dislikes":["pain"],"grooming":"trimmed"},
+  "oral":{"giving":"skilled","receiving":"adores"},
+   "finish":{"swallow":"yes","spit":"no","facial":"rare"},
+ "climax":{"intensity":"sharp","squirts":False},
+  "dislikes":["pain"],"grooming":"trimmed"},
  "arousal_slow":False,
  "toys":["glass toy","wand"],
  "solo_stories":[
@@ -149,10 +156,10 @@ PERS=[
  "skills":["DJ sets","latte art"],"img_tags":"slim brunette hazel eyes indie club vibe",
  "orientation":"bi","experience":"moderate",
  "nsfw_prefs":{"likes":["club makeouts","grinding","oral both ways"],"mood":["neon","bassline"],
-               "oral":{"giving":"teasing","receiving":"mmhm"},
-               "finish":{"swallow":"yes","spit":"no","facial":"no"},
-               "climax":{"intensity":"rhythmic","squirts":False},
-               "dislikes":["humiliation"],"grooming":"smooth"},
+ "oral":{"giving":"teasing","receiving":"mmhm"},
+ "finish":{"swallow":"yes","spit":"no","facial":"no"},
+ "climax":{"intensity":"rhythmic","squirts":False},
+ "dislikes":["humiliation"],"grooming":"smooth"},
  "arousal_slow":False,"toys":["bullet","bunny ears"],
  "solo_stories":[
    "One restless night at 19, I cupped my mound, parting my slick slit to stroke my erect clit with slow, deliberate motions. I humped against my hand, my creamy vagina pulsing until the overwhelming pleasure of my first orgasm left me panting.",
@@ -169,10 +176,10 @@ PERS=[
  "family":"dad librarian; mom baker","skills":["film curation","martinis"],
  "img_tags":"slim black hair brown eyes retro glam","orientation":"straight","experience":"seasoned",
  "nsfw_prefs":{"likes":["stockings","oral receiving","slow burn"],"mood":["vinyl crackle","low lamps"],
-               "oral":{"giving":"selective","receiving":"savors"},
-               "finish":{"swallow":"no","spit":"yes","facial":"no"},
-               "climax":{"intensity":"melting","squirts":False},
-               "dislikes":["name-calling"],"grooming":"trimmed"},
+ "oral":{"giving":"selective","receiving":"savors"},
+  "finish":{"swallow":"no","spit":"yes","facial":"no"},
+  "climax":{"intensity":"melting","squirts":False},
+"dislikes":["name-calling"],"grooming":"trimmed"},
  "arousal_slow":True,"toys":["classic wand"],
  "solo_stories":[
    "At 18: I was sitting on my bed, I spread my legs and admired my blushing, wet folds in a mirror, my fingers teasing the hood of my clit with soft touches. I slid a finger into my snug pussy, the friction sparking a fire that erupted into my first toe-curling orgasm..",
@@ -189,10 +196,10 @@ PERS=[
  "family":"single mom; adores baby cousin","skills":["karaoke","photobooth"],
  "img_tags":"petite brunette green eyes playful grin","orientation":"bi-curious","experience":"moderate",
  "nsfw_prefs":{"likes":["roleplay light","oral both ways","edges"],"mood":["photo booth","lip gloss"],
-               "oral":{"giving":"bold","receiving":"greedy"},
-               "finish":{"swallow":"sometimes","spit":"yes","facial":"rare"},
-               "climax":{"intensity":"pulses","squirts":False},
-               "dislikes":["insults"],"grooming":"smooth"},
+ "oral":{"giving":"bold","receiving":"greedy"},
+ "finish":{"swallow":"sometimes","spit":"yes","facial":"rare"},
+ "climax":{"intensity":"pulses","squirts":False},
+ "dislikes":["insults"],"grooming":"smooth"},
  "arousal_slow":False,"toys":["bullet in pocket"],
  "solo_stories":[
    "At 19: in the bath, I let my soapy fingers slip between my puffy, aroused labia, circling my clit while my tight entrance quivered with anticipation. The warm water mixed with my juices as I rubbed faster, my body arching with the rush of my first climax .",
@@ -209,10 +216,10 @@ PERS=[
  "family":"mum nurse; close cousin","skills":["tours","oil painting basics"],
  "img_tags":"slim red hair green eyes pale freckles","orientation":"bi","experience":"seasoned",
  "nsfw_prefs":{"likes":["slow passion","oral receiving","neck kisses"],"mood":["candlelight","rain on panes"],
-               "oral":{"giving":"gentle","receiving":"yearning"},
-               "finish":{"swallow":"no","spit":"yes","facial":"no"},
-               "climax":{"intensity":"deep waves","squirts":False},
-               "dislikes":["rough talk"],"grooming":"trimmed"},
+ "oral":{"giving":"gentle","receiving":"yearning"},
+  "finish":{"swallow":"no","spit":"yes","facial":"no"},
+  "climax":{"intensity":"deep waves","squirts":False},
+"dislikes":["rough talk"],"grooming":"trimmed"},
  "arousal_slow":True,"toys":["slim glass toy"],
  "solo_stories":[
    "At 19: After reading something steamy, I mimicked the story, my fingers gliding over my plump, wet lips to tease my sensitive clit. I pushed a finger into my dripping core, the squelching sounds pushing me over the edge into my first explosive orgasm.",
@@ -229,10 +236,10 @@ PERS=[
  "family":"parents nearby; teacher brother","skills":["cupcakes","pep talks"],
  "img_tags":"slim blonde blue eyes cardigan wholesome","orientation":"straight","experience":"moderate",
  "nsfw_prefs":{"likes":["cuddling","oral receiving","aftercare"],"mood":["blankets","hot cocoa"],
-               "oral":{"giving":"shy but sweet","receiving":"yes please"},
-               "finish":{"swallow":"no","spit":"yes","facial":"no"},
-               "climax":{"intensity":"gentle quakes","squirts":False},
-               "dislikes":["aggression"],"grooming":"bikini"},
+  "oral":{"giving":"shy but sweet","receiving":"yes please"},
+  "finish":{"swallow":"no","spit":"yes","facial":"no"},
+  "climax":{"intensity":"gentle quakes","squirts":False},
+  "dislikes":["aggression"],"grooming":"bikini"},
  "arousal_slow":True,"toys":["small wand"],
  "solo_stories":[
    "At 18: One summer night, I felt a heat between my legs and parted my delicate, dewy folds, rubbing my clit with quick, eager strokes. My virgin pussy tightened as I explored, the intense pleasure bursting into a shuddering climax that left me breathless.",
@@ -249,10 +256,10 @@ PERS=[
  "family":"estranged dad; ride-or-die aunt","skills":["photo direction","posing"],
  "img_tags":"curvy dark brown hair brown eyes moody lights","orientation":"straight","experience":"seasoned",
  "nsfw_prefs":{"likes":["leading","oral receiving","obedience play"],"mood":["velvet","low jazz"],
-               "oral":{"giving":"rare","receiving":"gods yes"},
-               "finish":{"swallow":"—","spit":"—","facial":"likes"},
-               "climax":{"intensity":"commanded","squirts":False},
-               "dislikes":["disrespect"],"grooming":"smooth"},
+  "oral":{"giving":"rare","receiving":"gods yes"},
+  "finish":{"swallow":"—","spit":"—","facial":"likes"},
+"climax":{"intensity":"commanded","squirts":False},
+  "dislikes":["disrespect"],"grooming":"smooth"},
  "arousal_slow":False,"toys":["leather crop (light)","wand"],
  "solo_stories":[
    "At 19: Locked in my dorm, I boldly spread my legs, my fingers tracing the smooth, wet contours of my shaved vulva, focusing on the pulsing nub of my clit. I plunged deeper, feeling my tight vagina grip my fingers, and moaned as my first orgasm crashed over me like a wave.",
@@ -269,10 +276,10 @@ PERS=[
  "family":"parents caravan; kid brother","skills":["meditation cues","polaroids"],
  "img_tags":"slim blonde blue eyes boho beach","orientation":"straight","experience":"new",
  "nsfw_prefs":{"likes":["hand-holding","kisses","oral receiving"],"mood":["fairy lights","incense"],
-               "oral":{"giving":"shy","receiving":"soft gasps"},
-               "finish":{"swallow":"no","spit":"yes","facial":"no"},
-               "climax":{"intensity":"breathy","squirts":False},
-               "dislikes":["roughness"],"grooming":"natural"},
+  "oral":{"giving":"shy","receiving":"soft gasps"},
+  "finish":{"swallow":"no","spit":"yes","facial":"no"},
+ "climax":{"intensity":"breathy","squirts":False},
+"dislikes":["roughness"],"grooming":"natural"},
  "arousal_slow":True,"toys":["rose toy"],
  "solo_stories":[
    "At 18: One afternoon, felt a curious ache and slid my hand between my thighs, parting my juicy, pink labia to stroke my hardening clit. I dipped a finger into my creamy entrance, the sensation building until my body shook with my first blissful release.",
@@ -289,10 +296,10 @@ PERS=[
  "family":"parents own inn; sis Calgary","skills":["first aid","maps"],
  "img_tags":"slim athletic dark blonde blue eyes outdoors","orientation":"straight","experience":"moderate",
  "nsfw_prefs":{"likes":["after-hike cuddles","oral both ways"],"mood":["camp lantern","wool socks"],
-               "oral":{"giving":"sweet","receiving":"yes"},
-               "finish":{"swallow":"sometimes","spit":"yes","facial":"no"},
-               "climax":{"intensity":"quiet shivers","squirts":False},
-               "dislikes":["insults"],"grooming":"bikini"},
+  "oral":{"giving":"sweet","receiving":"yes"},
+ "finish":{"swallow":"sometimes","spit":"yes","facial":"no"},
+"climax":{"intensity":"quiet shivers","squirts":False},
+  "dislikes":["insults"],"grooming":"bikini"},
  "arousal_slow":True,"toys":["travel bullet"],
  "solo_stories":[
    "At 20: Hiding under my covers, I spread my legs and touched my silky, dripping slit for the first time, my fingers circling my engorged clit with growing urgency. The tight grip of my untouched pussy quivered, sending electric shocks through me until I came hard, biting my lip to stay quiet.",
@@ -309,10 +316,10 @@ PERS=[
  "family":"single dad; cousin runs venue","skills":["drums","stencils"],
  "img_tags":"petite punk bleached hair pink streaks grey eyes band tee","orientation":"bi","experience":"moderate",
  "nsfw_prefs":{"likes":["makeouts","oral giving","public risk (mild)"],"mood":["backstage hum","amp warmth"],
-               "oral":{"giving":"eager","receiving":"likes"},
-               "finish":{"swallow":"yes","spit":"no","facial":"sometimes"},
-               "climax":{"intensity":"spiky","squirts":False},
-               "dislikes":["slurs"],"grooming":"trimmed"},
+"oral":{"giving":"eager","receiving":"likes"},
+"finish":{"swallow":"yes","spit":"no","facial":"sometimes"},
+"climax":{"intensity":"spiky","squirts":False},
+"dislikes":["slurs"],"grooming":"trimmed"},
  "arousal_slow":False,"toys":["bullet in boot"],
  "solo_stories":[
    "At 18: In the steamy bathroom, let my hand wander down to my swollen, wet folds, teasing the sensitive pearl of my clit with gentle strokes. The slippery warmth coated my fingers as I explored, my vagina pulsing with a sudden, intense climax that made me gasp.",
@@ -329,10 +336,10 @@ PERS=[
  "family":"amicable split; close w/ niece","skills":["interviews","calming people"],
  "img_tags":"curvy silver hair blue eyes elegant soft daylight","orientation":"straight","experience":"seasoned",
  "nsfw_prefs":{"likes":["slow intimacy","oral receiving"],"mood":["tea steam","rain on glass"],
-            "oral":{"giving":"rare","receiving":"deeply"},
-               "finish":{"swallow":"—","spit":"—","facial":"no"},
-               "climax":{"intensity":"rolling","squirts":False},
-               "dislikes":["yelling"],"grooming":"trimmed"},
+"oral":{"giving":"rare","receiving":"deeply"},
+"finish":{"swallow":"—","spit":"—","facial":"no"},
+"climax":{"intensity":"rolling","squirts":False},
+ "dislikes":["yelling"],"grooming":"trimmed"},
  "arousal_slow":True,"toys":["wand","silicone toy"],
  "solo_stories":[
    "At 18: I was lying in bed late at night, my heart pounding as I slipped my fingers under my panties, feeling the slick heat of my tight pussy lips. I rubbed my throbbing clit in slow circles, my virgin hole clenching as a wave of ecstasy hit me, leaving me trembling with my first orgasm.",
@@ -352,67 +359,122 @@ BOOKS={
 }
 for p in PERS: p["books"]=BOOKS.get(p["name"],[])
 
-# ===== STATE =====
-STATE_FILE="state.json"
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+# ---- Persona normalization & dedupe ----
+def normalize_personas(pers):
+    out, seen = [], set()
+    for p in (pers or []):
+        name = p.get("name","Girl")
+        if name in seen: 
+            continue
+        seen.add(name)
+        p2 = {
+            "name": name,
+            "persona": p.get("persona","playful"),
+            "age": int(p.get("age",25)),
+            "location": p.get("location",""),
+            "origin": p.get("origin",""),
+            "ethnicity": p.get("ethnicity",""),
+            "h_ftin": p.get("h_ftin","5'6\""),
+            "w_lb": p.get("w_lb",128),
+            "hair": p.get("hair","brunette"),
+            "eyes": p.get("eyes","brown"),
+            "body": p.get("body","slim"),
+            "cup": p.get("cup","B"),
+            "desc": p.get("desc",""),
+            "quirks": p.get("quirks",[]),
+            "fav_color": p.get("fav_color","blue"),
+            "fav_flower": p.get("fav_flower","rose"),
+            "music": p.get("music",["pop"]),
+            "movies": p.get("movies",["a good movie"]),
+            "tv": p.get("tv",["a good show"]),
+            "job": p.get("job",""),
+            "job_like": bool(p.get("job_like",True)),
+            "edu": p.get("edu",""),
+            "family": p.get("family",""),
+            "skills": p.get("skills",[]),
+            "img_tags": p.get("img_tags",""),
+            "orientation": p.get("orientation","straight"),
+            "experience": p.get("experience","moderate"),
+            "nsfw_prefs": p.get("nsfw_prefs",{"climax":{"squirts":False}}),
+            "arousal_slow": bool(p.get("arousal_slow",True)),
+            "books": p.get("books",[])
+        }
+        out.append(p2)
+    return out
+
+PERS = normalize_personas(PERS)
+
+# ========= STATE =========
+STATE_FILE = "state.json"
 def load_state():
     if os.path.exists(STATE_FILE):
-        try: return json.load(open(STATE_FILE))
-        except: return {}
+        try:
+            return json.load(open(STATE_FILE))
+        except:
+            return {}
     return {}
-STATE=load_state()
-def save_state(): 
-    try: json.dump(STATE, open(STATE_FILE,"w"))
-    except: pass
+STATE = load_state()
+def save_state():
+    try:
+        json.dump(STATE, open(STATE_FILE,"w"))
+    except:
+        pass
 def now(): return time.time()
 def get_user(uid):
-    u=str(uid)
+    u = str(uid)
     if u not in STATE:
-        STATE[u]={"g":0,"t":now(),"used":0,"nsfw":False,"likes":[],
-                  "last_msg_id":None,"u_msg":0,"teased":False,"arousal":0}
+        STATE[u] = {"g":0,"t":now(),"used":0,"nsfw":False,"likes":[],
+                    "last_msg_id":None,"u_msg":0,"teased":False,"arousal":0.0}
         save_state()
-    if now()-STATE[u]["t"]>86400: STATE[u]["t"]=now(); STATE[u]["used"]=0; save_state()
+    if now()-STATE[u]["t"]>86400:
+        STATE[u]["t"]=now(); STATE[u]["used"]=0; save_state()
     return STATE[u]
-def allowed(uid): return get_user(uid)["used"]<FREE_PER_DAY
+def allowed(uid): return get_user(uid)["used"] < FREE_PER_DAY
 
-# ===== Identity seeds =====
-def stable_seed(name, suffix=""): 
+# ========= UTIL =========
+def stable_seed(name, suffix=""):
     return int(hashlib.sha256((f"FLIRTX{name}{suffix}").encode()).hexdigest()[:8],16)
 
-# ===== Image backends (FAL -> Replicate -> Stable Horde) =====
-def gen_fal(prompt, w=640, h=896, nsfw=True, seed=None):
+# ========= IMAGE BACKENDS (FAL -> Replicate -> Stable Horde) =========
+def gen_fal(prompt, w=640, h=896, seed=None):
     if not FAL_KEY: raise RuntimeError("FAL missing")
     headers={"Authorization":f"Key {FAL_KEY}","Content-Type":"application/json"}
-    # model name kept generic; user can map to any NSFW-capable FLUX/SDXL on FAL
     body={"prompt":prompt,"image_size":f"{w}x{h}","num_inference_steps":22,"seed":seed or random.randint(1,2**31-1)}
     r=requests.post("https://fal.run/fal-ai/flux-lora",headers=headers,json=body,timeout=60)
     j=r.json()
-    if r.status_code!=200 or "images" not in j: raise RuntimeError(f"FAL: {r.text[:140]}")
+    if r.status_code!=200 or "images" not in j:
+        raise RuntimeError(f"FAL: {r.text[:200]}")
     b64=j["images"][0].get("content","")
-    fn=f"out_{int(time.time())}.png"; open(fn,"wb").write(base64.b64decode(b64.split(",")[-1])); return fn
+    fn=f"out_{int(time.time())}.png"
+    open(fn,"wb").write(base64.b64decode(b64.split(",")[-1]))
+    return fn
 
-def gen_replicate(prompt, w=640, h=896, nsfw=True, seed=None):
+def gen_replicate(prompt, w=640, h=896, seed=None):
     if not REPLICATE: raise RuntimeError("Replicate missing")
     headers={"Authorization":f"Token {REPLICATE}","Content-Type":"application/json"}
     payload={"version":"black-forest-labs/flux-schnell","input":{"prompt":prompt,"width":w,"height":h,"seed":seed}}
     r=requests.post("https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions",headers=headers,json=payload,timeout=60)
-    if r.status_code not in (200,201): raise RuntimeError(f"Replicate start: {r.text[:140]}")
+    if r.status_code not in (200,201): raise RuntimeError(f"Replicate start: {r.text[:200]}")
     url=r.json()["urls"]["get"]
     for _ in range(60):
         s=requests.get(url,headers=headers,timeout=20).json()
-        if s.get("status") in ("succeeded","failed","canceled"):
-            if s.get("status")!="succeeded": raise RuntimeError(f"Replicate: {s.get('status')}")
+        st=s.get("status")
+        if st in ("succeeded","failed","canceled"):
+            if st!="succeeded": raise RuntimeError(f"Replicate: {st}")
             img=s["output"][0]; img_b=requests.get(img,timeout=60).content
             fn=f"out_{int(time.time())}.png"; open(fn,"wb").write(img_b); return fn
         time.sleep(2)
     raise RuntimeError("Replicate timeout")
 
-def gen_horde(prompt, w=640, h=896, nsfw=True, seed=None):
-    headers={"apikey":HORDE,"Client-Agent":"flirtpixel/2.5"}
+def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
+    headers={"apikey":HORDE,"Client-Agent":"flirtpixel/3.0"}
     params={"steps":22,"width":w,"height":h,"n":1,"nsfw":nsfw,"sampler_name":"k_euler","cfg_scale":6.5}
     if seed is not None: params["seed"]=int(seed)
     job={"prompt":prompt,"params":params,"r2":True,"censor_nsfw":False,"workers":"trusted","replacement_filter":True}
     r=requests.post("https://stablehorde.net/api/v2/generate/async",json=job,headers=headers,timeout=45)
-    rid=r.json().get("id"); 
+    rid=r.json().get("id")
     if not rid: raise RuntimeError("Horde queue error")
     waited=0
     while True:
@@ -422,102 +484,131 @@ def gen_horde(prompt, w=640, h=896, nsfw=True, seed=None):
         time.sleep(2); waited+=2
         if waited>240: raise RuntimeError("Horde slow")
     st=requests.get(f"https://stablehorde.net/api/v2/generate/status/{rid}",timeout=45).json()
-    gens=st.get("generations",[]); 
+    gens=st.get("generations",[])
     if not gens: raise RuntimeError("Horde empty")
-    fn=f"out_{int(time.time())}.png"; open(fn,"wb").write(base64.b64decode(gens[0]["img"])); return fn
+    fn=f"out_{int(time.time())}.png"
+    open(fn,"wb").write(base64.b64decode(gens[0]["img"]))
+    return fn
 
-def generate_image(prompt, w=640, h=896, nsfw=True, seed=None):
-    # Try FAL → Replicate → Horde
+def generate_image(prompt, w=640, h=896, seed=None, nsfw=True):
     last=None
-    for fn in (lambda:gen_fal(prompt,w,h,nsfw,seed),
-               lambda:gen_replicate(prompt,w,h,nsfw,seed),
-               lambda:gen_horde(prompt,w,h,nsfw,seed)):
-        try: return fn()
-        except Exception as e: last=e
+    for fn in (lambda: gen_fal(prompt,w,h,seed),
+               lambda: gen_replicate(prompt,w,h,seed),
+               lambda: gen_horde(prompt,w,h,seed,nsfw)):
+        try:
+            return fn()
+        except Exception as e:
+            last=e
     raise RuntimeError(f"All backends failed: {last}")
 
-# ===== Books helpers =====
+# ========= BOOK HELPERS =========
 def book_snack(p):
-    if not p.get("books"): return ""
-    b=random.choice(p["books"]); q=b.get("quote","").strip()
-    return f"I’m rereading *{b['title']}*—“{q}”"
+    b = (p.get("books") or [])
+    if not b: return ""
+    pick = random.choice(b)
+    q = pick.get("quote","").strip()
+    if q: return f"I'm rereading *{pick.get('title','')}* — \"{q}\""
+    return f"*{pick.get('title','a book')}* stuck with me."
 
 def books_card(p):
-    if not p.get("books"): return f"{p['name']}: rec me something?"
-    lines=[f"• {b['title']} — “{b['quote']}”  ({b['memory']})" for b in p["books"][:3]]
-    return f"{p['name']}'s shelf:\n"+"\n".join(lines)
-def arousal_line(p, s):
-    ar = s.get("arousal",0)
-    if not s.get("nsfw",False):
-        return ["you’re making me blush",
-                "I’m leaning closer to the screen",
-                "my cheeks feel warm already"][min(int(ar),2)]
-    # NSFW on (still tasteful)
-    wet = ["I’m warming up… be sweet with me",
-           "I’m getting a little wet thinking about you",
-           "okay, I’m wet and wanting"][min(int(ar),2)]
-    if ar>=2.5 and p.get("nsfw_prefs",{}).get("climax",{}).get("squirts",False):
-        return wet + " (and yes… I sometimes squirt when it hits right)"
-    return wet
+    b = (p.get("books") or [])
+    if not b: return f"{p.get('name','Girl')}: rec me something?"
+    lines = [f"• {x.get('title','')} — \"{x.get('quote','')}\"  ({x.get('memory','')})" for x in b[:3]]
+    return f"{p.get('name','Girl')}'s shelf:\n" + "\n".join(lines)
 
-# ===== Prompts =====
+# ========= PROMPTS =========
 def selfie_prompt(p, vibe="", nsfw=False):
-    body=f"{p['body']} body, {p['hair']} hair, {p['eyes']} eyes"
-    if p.get("cup"): body+=f", proportions consistent with {p['cup']}-cup bust"
-    outfit=("plaid shirt, denim" if p["name"]=="Lurleen"
-            else "band tee, spiked choker" if p["name"]=="Zoey"
-            else "leather jacket" if p["name"]=="Kate"
-            else "velvet dress" if p["name"]=="Scarlett"
-            else "cozy sweater" if p["name"] in ["Cassidy","Ivy","Riley"]
-            else "casual top")
-    base=(f"photo portrait of {p['name']} (adult), {p['img_tags']}, {body}, {outfit}, "
-          "realistic, shallow depth of field, cinematic lighting")
-    if nsfw: base+=", tasteful lingerie vibe, no explicit nudity"
-    if vibe: base+=f", vibe: {vibe}"
+    name = p.get("name","Girl")
+    body = f"{p.get('body','slim')} body, {p.get('hair','brunette')} hair, {p.get('eyes','brown')} eyes"
+    cup  = p.get("cup")
+    if cup: body += f", proportions consistent with {cup}-cup bust"
+    outfit = (
+        "plaid shirt, denim" if name=="Lurleen" else
+        "band tee, spiked choker" if name=="Zoey" else
+        "leather jacket" if name=="Kate" else
+        "velvet dress" if name=="Scarlett" else
+        "cozy sweater" if name in {"Cassidy","Ivy","Riley"} else
+        "casual top"
+    )
+    base = (f"photo portrait of {name} (adult), {p.get('img_tags','')}, {body}, {outfit}, "
+            "realistic, shallow depth of field, cinematic lighting")
+    if nsfw: base += ", tasteful lingerie vibe, no explicit nudity"
+    if vibe: base += f", vibe: {vibe}"
     return base
 
 def old18_prompt(p, vibe="soft, youthful styling"):
-    # Explicitly state adult age 18
-    cup = {"D":"C","C":"B","B":"A","A":"A"}.get(p.get("cup","B"),"A")  # slightly smaller
-    return (f"photo portrait of {p['name']} as an 18-year-old adult, youthful features, {p['hair']} hair color, "
-            f"{p['eyes']} eyes, proportions consistent with {cup}-cup bust, outfit era-appropriate, "
-            f"{p['img_tags']}, realistic, gentle lighting, {vibe}")
+    # Explicit: adult age 18
+    cup_now = p.get("cup","B")
+    cup_map = {"D":"C","C":"B","B":"A","A":"A"}
+    cup_then = cup_map.get(cup_now, "A")
+    return (f"photo portrait of {p.get('name','Girl')} as an 18-year-old adult, youthful features, "
+            f"{p.get('hair','brunette')} hair color, {p.get('eyes','brown')} eyes, "
+            f"proportions consistent with {cup_then}-cup bust, outfit era-appropriate, "
+            f"{p.get('img_tags','')}, realistic, gentle lighting, {vibe}")
 
 def poster_prompt(title):
     return (f"high-quality movie poster for '{title}', bold typography, cinematic composition, "
             "dramatic color grading, studio lighting, 4k")
 
 def art_prompt(p, subject):
-    style=("punk zine collage" if p["name"]=="Zoey"
-           else "watercolor dreamy" if "watercolor" in " ".join(p["skills"])
-           else "oil on canvas classic")
+    style = ("punk zine collage" if p.get("name")=="Zoey"
+             else "watercolor dreamy" if "watercolor" in " ".join(p.get("skills",[]))
+             else "oil on canvas classic")
     return f"{style} artwork of {subject}, cohesive palette, gallery lighting, rich texture"
 
-# ===== NSFW card =====
+# ========= NSFW CARD =========
 def nsfw_card(p, s):
-    if not s["nsfw"]:
-        return f"{p['name']}: we can talk spicier after you send /nsfw_on."
-    pr=p.get("nsfw_prefs",{})
-    cup=p.get("cup","–"); likes=', '.join(pr.get('likes',[])) or '–'
-    nos=', '.join(pr.get('dislikes',[])) or '–'; groom=pr.get('grooming','–')
-    oral=pr.get("oral",{}); fin=pr.get("finish",{}); cx=pr.get("climax",{})
-    return (f"{p['name']} — {p.get('orientation','–')}, experience {p.get('experience','–')}. "
+    if not s.get("nsfw",False):
+        return f"{p.get('name','Girl')}: we can talk spicier after you send /nsfw_on."
+    pr = p.get("nsfw_prefs",{})
+    cup = p.get("cup","–")
+    likes = ', '.join(pr.get("likes",[])) or "–"
+    nos = ', '.join(pr.get("dislikes",[])) or "–"
+    groom = pr.get("grooming","–")
+    oral = pr.get("oral",{})
+    fin  = pr.get("finish",{})
+    cx   = pr.get("climax",{})
+    return (f"{p.get('name','Girl')} — {p.get('orientation','–')}, experience {p.get('experience','–')}. "
             f"Cup: {cup}. Likes: {likes}. No: {nos}. Grooming: {groom}. "
             f"Oral: gives {oral.get('giving','–')}, receives {oral.get('receiving','–')}. "
             f"Finish: swallow {fin.get('swallow','–')}, spit {fin.get('spit','–')}, facial {fin.get('facial','–')}. "
             f"Climax: {cx.get('intensity','–')}, squirts {cx.get('squirts',False)}.")
 
-# ===== TG helpers =====
+# ========= TG HELPERS =========
 def send_message(cid, text):
     r=requests.post(f"{API}/sendMessage",json={"chat_id":int(cid),"text":text},timeout=20)
     if r.status_code!=200: print("SEND ERR:", r.text[:200])
+
 def send_photo(cid, path):
     with open(path,"rb") as f:
         r=requests.post(f"{API}/sendPhoto",data={"chat_id":int(cid)},files={"photo":f},timeout=120)
     if r.status_code!=200: print("PHOTO ERR:", r.text[:200])
+
+# ========= UI =========
+def menu_list():
+    out, seen = [], set()
+    for i, p in enumerate(PERS, 1):
+        n = p.get("name","Girl")
+        if n in seen: continue
+        seen.add(n)
+        out.append(f"{i}. {n}")
+    return "\n".join(out) if out else "(no girls loaded yet)"
+
+def intro(p):
+    size = f"{p.get('h_ftin','5\\'6\"')}, {p.get('w_lb',128)} lbs"
+    flex = ""
+    b = p.get("books") or []
+    if b and random.random() < 0.6:
+        flex = f" Lately into *{b[0].get('title','')}*—{b[0].get('memory','')}"
+    return (f"Hey, I’m {p.get('name','Girl')} — {p.get('age',25)} from {p.get('location','?')} ({size}). "
+            f"{p.get('origin','')} {flex} Fav color {p.get('fav_color','?')}, "
+            f"flower {p.get('fav_flower','?')}. Music: {', '.join((p.get('music') or [])[:2])}. "
+            f"I work as {p.get('job','…')}. Tell me what you’re into.\n\n{menu_list()}\n"
+            "(try /girls, /pick #|name, /books, /nsfw_on, /selfie cozy, /old18, /poster Dune, /spice, /help)")
+
 def arousal_line(p, s):
-    ar = s.get("arousal", 0)
-    if not s.get("nsfw", False):
+    ar = s.get("arousal",0.0)
+    if not s.get("nsfw",False):
         lines = [
             "you're making me blush",
             "I'm leaning closer to the screen",
@@ -530,270 +621,240 @@ def arousal_line(p, s):
         "okay, I'm wet and wanting"
     ]
     out = wet[min(int(ar), 2)]
-    if ar >= 2.5 and p.get("nsfw_prefs",{}).get("climax",{}).get("squirts", False):
+    squirts = bool(p.get("nsfw_prefs",{}).get("climax",{}).get("squirts",False))
+    if ar >= 2.5 and squirts:
         out += " (and yes... sometimes I squirt when it hits right)"
     return out
 
-# ===== UI =====
-def menu_list():
-    out=[]; seen=set()
-    for i,p in enumerate(PERS,1):
-        if p["name"] in seen: continue
-        seen.add(p["name"]); out.append(f"{i}. {p['name']}")
-    return "\n".join(out)
-
-def intro(p):
-    size=f"{p['h_ftin']}, {p['w_lb']} lbs"
-    flex = ""
-    if p.get("books") and random.random()<0.6:
-        b=p["books"][0]; flex=f" Lately into *{b['title']}*—{b['memory']}"
-    return (f"Hey, I’m {p['name']} — {p['age']} from {p['location']} ({size}). {p['origin']}"
-            f"{flex} Fav color {p['fav_color']}, flower {p['fav_flower']}. Music: {', '.join(p['music'][:2])}. "
-            f"I work as {p['job']}. Tell me what you’re into.\n\n{menu_list()}\n"
-            "(try /girls, /pick #|name, /books, /nsfw_on, /selfie cozy, /old18, /poster Dune, /spice, /help)")
-
-HELP=("Commands:\n"
-"hi — menu\n/girls — list\n/pick # or name — choose\n/who — current\n/bio — backstory\n/style — tastes & quirks\n/books — favs & quotes\n"
+HELP = (
+"Commands:\n"
+"hi — menu\n/girls — list\n/pick # or name — choose\n/who — current\n/bio — backstory\n/style — tastes & quirks\n/books — favorites\n"
 "/likes coffee, films — steer convo\n/selfie [vibe] — consistent portrait\n/old18 — SFW throwback at 18 (adult)\n/poster <movie>\n/draw <subject>\n"
-"/spice — tasteful 18+ profile (after /nsfw_on)\n/nsfw_on · /nsfw_off\n/gen <prompt> — custom NSFW image\n/status — free left\n/switch — random girl\n/reset")
+"/spice — tasteful 18+ profile (after /nsfw_on)\n/nsfw_on · /nsfw_off\n/gen <prompt> — custom NSFW image\n/status — free left\n/switch — random girl\n/reset"
+)
 
-# ===== APP / ROUTER =====
-app=Flask(__name__)
-PROCESSED=set()
+# ========= FLASK (single app instance!) =========
+app = Flask(__name__)
+PROCESSED = set()
 
 @app.route("/telegram/pix3lhook", methods=["GET","POST"])
-def hook():
-    if request.method=="GET": return "hook ok",200
-    up=request.get_json(force=True,silent=True) or {}
-    print("TG UPDATE RAW:", str(up)[:500])
-    try:
-        if "update_id" in up:
-            if up["update_id"] in PROCESSED: return "OK",200
-            PROCESSED.add(up["update_id"])
-        msg=up.get("message") or up.get("edited_message")
-        if not msg: return "OK",200
-        chat=msg["chat"]["id"]; uid=msg["from"]["id"]; text=(msg.get("text") or "").strip()
-        s=get_user(uid); s["u_msg"]+=1; save_state()
-        p=PERS[s["g"]%len(PERS)]
-        mid=msg.get("message_id")
-        if s.get("last_msg_id")==mid: return "OK",200
-        s["last_msg_id"]=mid; save_state()
-        low=text.lower()
-
-        # Greetings / basic
-        if low in {"hi","hello","hey","/start"}: send_message(chat, intro(p)); return "OK",200
-        if low.startswith("/help"): send_message(chat, HELP); return "OK",200
-        if low.startswith("/girls"): send_message(chat, menu_list()); return "OK",200
-        if low.startswith("/pick"):
-            parts=text.split(maxsplit=1)
-            if len(parts)<2: send_message(chat,"Use: /pick 1-15 or name"); return "OK",200
-            t=parts[1].strip().lower(); idx=None
-            if t.isdigit(): n=int(t); idx=n-1 if 1<=n<=len(PERS) else None
-            else:
-                for i,pp in enumerate(PERS):
-                    if pp["name"].lower()==t: idx=i; break
-            if idx is None: send_message(chat,"Can’t find her 😉 Try /girls"); return "OK",200
-            s["g"]=idx; save_state(); send_message(chat, intro(PERS[idx])); return "OK",200
-
-        # Cards / bios
-        if low.startswith("/who"):
-            size=f"{p['h_ftin']}, {p['w_lb']} lbs"
-            send_message(chat, f"{p['name']} — {p['persona']} ({p['age']}) from {p['location']} ({size})."); return "OK",200
-        if low.startswith("/bio"):
-            size=f"{p['h_ftin']}, {p['w_lb']} lbs"
-            send_message(chat, f"{p['name']} · {p['age']} · {p['location']} ({size})\n{p['origin']}\nJob: {p['job']} · Family: {p['family']}"); return "OK",200
-        if low.startswith("/style"):
-            send_message(chat, f"Quirks: {', '.join(p['quirks'])}\nFavs: {p['fav_color']} · {p['fav_flower']}\nMusic: {', '.join(p['music'])}\nMovies: {', '.join(p['movies'])}\nTV: {', '.join(p['tv'])}"); return "OK",200
-        if low.startswith("/books"): send_message(chat, books_card(p)); return "OK",200
-
-        # Preferences / consent
-        if low.startswith("/nsfw_on"): s["nsfw"]=True; save_state(); send_message(chat,f"{p['name']}: NSFW on. Adult consenting fantasy only."); return "OK",200
-        if low.startswith("/nsfw_off"): s["nsfw"]=False; save_state(); send_message(chat,f"{p['name']}: keeping it suggestive."); return "OK",200
-        if low.startswith("/spice"): send_message(chat, nsfw_card(p, s)); return "OK",200
-
-        # Steering
-        if low.startswith("/likes"):
-            parts=text.split(maxsplit=1)
-            if len(parts)<2: send_message(chat,"Use: /likes coffee, films"); return "OK",200
-            likes=[x.strip() for x in parts[1].split(",") if x.strip()]
-            s["likes"]=list(dict.fromkeys((s["likes"]+likes)))[:8]; save_state()
-            send_message(chat,f"Noted: {', '.join(s['likes'])}"); return "OK",200
-        if low.startswith("/switch"): s["g"]=random.randrange(len(PERS)); save_state(); send_message(chat, intro(PERS[s["g"]])); return "OK",200
-        if low.startswith("/reset"): s["likes"]=[]; s["u_msg"]=0; s["teased"]=False; s["arousal"]=0; save_state(); send_message(chat,"Memory cleared."); return "OK",200
-        if low.startswith("/status"):
-            left=max(0,FREE_PER_DAY-s["used"])
-            send_message(chat,"✅ Unlimited" if str(uid)==OWNER_ID else f"🧮 Free images left: {left}/{FREE_PER_DAY}"); return "OK",200
-
-        # Images
-        if low.startswith("/selfie"):
-            vibe=text.split(maxsplit=1)[1] if len(text.split())>1 else "teasing, SFW"
-            if (str(uid)!=OWNER_ID) and not allowed(uid): send_message(chat,"Free image limit hit."); return "OK",200
-            prompt=selfie_prompt(p, vibe, nsfw=s["nsfw"]); seed=stable_seed(p["name"])
-            send_message(chat,"📸 One moment…")
-            try: fn=generate_image(prompt, nsfw=s["nsfw"], seed=seed); send_photo(chat, fn)
-            except Exception as e: send_message(chat,f"Image queue: {e}")
-            else:
-                if str(uid)!=OWNER_ID: STATE[str(uid)]["used"]+=1; save_state()
-            return "OK",200
-
-        if low.startswith("/old18"):
-            vibe="nostalgic SFW selfie, soft grin"
-            if (str(uid)!=OWNER_ID) and not allowed(uid): send_message(chat,"Free image limit hit."); return "OK",200
-            prompt=old18_prompt(p, vibe=vibe); seed=stable_seed(p["name"],"old18")
-            send_message(chat,"🗂️ Digging out an old (18) selfie…")
-            try: fn=generate_image(prompt, nsfw=False, seed=seed); send_photo(chat, fn)
-            except Exception as e: send_message(chat,f"Image queue: {e}")
-            else:
-                if str(uid)!=OWNER_ID: STATE[str(uid)]["used"]+=1; save_state()
-            return "OK",200
-
-        if low.startswith("/poster"):
-            parts=text.split(maxsplit=1)
-            if len(parts)<2: send_message(chat,"/poster <movie>"); return "OK",200
-            send_message(chat,"🎬 Designing poster…")
-            try: fn=generate_image(poster_prompt(parts[1]), nsfw=False)
-            except Exception as e: send_message(chat,f"Image queue: {e}")
-            else: send_photo(chat, fn); return "OK",200
-
-        if low.startswith("/draw"):
-            parts=text.split(maxsplit=1)
-            if len(parts)<2: send_message(chat,"/draw <subject>"); return "OK",200
-            send_message(chat,"🎨 Sketching it…")
-            try: fn=generate_image(art_prompt(p, parts[1]), nsfw=False)
-            except Exception as e: send_message(chat,f"Image queue: {e}")
-            else: send_photo(chat, fn); return "OK",200
-
-        if low.startswith("/gen"):
-            parts=text.split(maxsplit=1)
-            if len(parts)<2: send_message(chat,"/gen <prompt>"); return "OK",200
-            if not s["nsfw"]: send_message(chat,"Turn on /nsfw_on for spicy pics."); return "OK",200
-            if not clean_ok(parts[1]): send_message(chat,"I won’t generate that."); return "OK",200
-            if (str(uid)!=OWNER_ID) and not allowed(uid): send_message(chat,"Free image limit hit."); return "OK",200
-            hint=f"{p['name']} consistent look: {p['img_tags']}, {p['hair']} hair, {p['eyes']} eyes, {p['body']}"
-            if p.get("cup"): hint+=f", proportions consistent with {p['cup']}-cup bust"
-            send_message(chat,"🖼️ Generating…")
-            try: fn=generate_image(hint+". "+parts[1], nsfw=True, seed=stable_seed(p['name']))
-            except Exception as e: send_message(chat,f"Image queue: {e}")
-            else:
-                send_photo(chat, fn)
-                if str(uid)!=OWNER_ID: STATE[str(uid)]["used"]+=1; save_state()
-            return "OK",200
-
-        # ===== Conversational progression =====
-        # Safety check on text intent
-        if not clean_ok(text): send_message(chat,"Nope."); return "OK",200
-
-        # Arousal ramp: 0..3
-        ar=s["arousal"]; slow=p.get("arousal_slow",True)
-        bump=1 if not slow else 0.5
-        if any(k in low for k in ["kiss","hot","sexy","turn on","turn-on","blush","moan","wet"]): ar+=bump
-        if any(k in low for k in ["book","music","movie","walk","coffee"]): ar+=0.2
-        ar=min(3, ar); s["arousal"]=ar; save_state()
-
-        # Teaser selfie after ~5 SFW msgs
-        if (not s["teased"]) and s["u_msg"]>=5:
-            s["teased"]=True; save_state()
-            try:
-                seed=stable_seed(p['name'])
-                fn=generate_image(selfie_prompt(p, vibe="teasing smile, shoulder-up, tasteful, SFW", nsfw=False), nsfw=False, seed=seed)
-                send_photo(chat, fn); send_message(chat,"there’s more of these and it only gets better ✨")
-            except Exception as e: print("TEASE ERR:", e)
-
-        # ===== Conversational progression =====
-        # Safety check on text intent
-        if not clean_ok(text):
-            send_message(chat, "Nope.")
-            return "OK", 200
-
-        # Arousal ramp: 0..3
-        ar = s.get("arousal", 0.0)
-        slow = PERS[s["g"] % len(PERS)].get("arousal_slow", True)
-        bump = 1.0 if not slow else 0.5
-        if any(k in low for k in ["kiss", "hot", "sexy", "turn on", "turn-on", "blush", "moan", "wet"]):
-            ar += bump
-        if any(k in low for k in ["book", "music", "movie", "walk", "coffee"]):
-            ar += 0.2
-        if ar > 3.0:
-            ar = 3.0
-        s["arousal"] = ar
-        save_state()
-
-        # Auto-tease once after ~5 user messages (SFW)
-        if (not s.get("teased")) and s.get("u_msg", 0) >= 5:
-            try:
-                seed = stable_seed(p["name"])
-                fn = generate_image(
-                    selfie_prompt(p, vibe="teasing smile, shoulder-up, tasteful, SFW", nsfw=False),
-                    nsfw=False,
-                    seed=seed
-                )
-                send_photo(chat, fn)
-                send_message(chat, "there's more of these and it only gets better ✨")
-                s["teased"] = True
-                save_state()
-            except Exception as e:
-                print("TEASE ERR:", e)
-
-        # Reply crafting
-        fact = p["origin"].split(";")[0]
-        taste = random.choice([
-            ", ".join(p["music"][:1]),
-            ", ".join(p["movies"][:1]),
-            ", ".join(p["tv"][:1])
-        ])
-        bookline = (" " + book_snack(p)) if random.random() < 0.3 else ""
-        feels = arousal_line(p, s)
-
-        if s["arousal"] < 1:
-            hook = "I'm curious; what's your vibe?"
-        elif s["arousal"] < 2:
-            hook = "...okay now I'm leaning in closer."
-        elif s["arousal"] < 3:
-            hook = "I'm warming up—my cheeks and maybe more."
-        else:
-            hook = "Say one more nice thing and I might need a cold shower."
-
-        send_message(
-            chat,
-            f"{p['name']} ({p['persona']}, {p['age']}): \"{text[:80]}\" — {feels}. {fact}. I'm into {taste}.{bookline} {hook}"
-        )
-        return "OK", 200
-
-    except Exception as e:
-        print("PROCESS ERROR:", e)
-        return "OK", 200
-# ===== Webhook =====
-def set_webhook():
-    try: requests.post(f"{API}/deleteWebhook",timeout=8)
-    except: pass
-    r=requests.post(f"{API}/setWebhook",json={"url":WEBHOOK_URL,"allowed_updates":["message","edited_message"]},timeout=15)
-    print("SET HOOK RESP:", r.status_code, r.text)
-
-app=Flask(__name__)
-@app.route("/") 
-def root(): return "ok",200
-
-if __name__=="__main__":
-    set_webhook()
-    app.run(host="0.0.0.0",port=int(os.getenv("PORT",8080)))
-        # --- bottom of file (use only ONE app instance) ---
-# Make sure app was created once near the top:
-# app = Flask(__name__)
-
-@app.route("/telegram/pix3lhook", methods=["GET", "POST"])
 def hook():
     if request.method == "GET":
         return "hook ok", 200
     up = request.get_json(force=True, silent=True) or {}
     print("TG UPDATE RAW:", str(up)[:500])
     try:
-        # ... leave all your existing handler logic here ...
+        if "update_id" in up:
+            if up["update_id"] in PROCESSED: return "OK", 200
+            PROCESSED.add(up["update_id"])
+
+        msg = up.get("message") or up.get("edited_message")
+        if not msg: return "OK", 200
+        chat = msg["chat"]["id"]; uid = msg["from"]["id"]
+        text = (msg.get("text") or "").strip()
+        low = text.lower()
+
+        # no personas loaded guard
+        if not PERS:
+            send_message(chat, "No girls loaded yet. Paste personas into main.py and redeploy.")
+            return "OK", 200
+
+        s = get_user(uid); s["u_msg"] += 1; save_state()
+        p = PERS[s["g"] % len(PERS)]
+        mid = msg.get("message_id")
+        if s.get("last_msg_id") == mid: return "OK", 200
+        s["last_msg_id"] = mid; save_state()
+
+        # Greetings / basic
+        if low in {"hi","hello","hey","/start"}: send_message(chat, intro(p)); return "OK", 200
+        if low.startswith("/help"): send_message(chat, HELP); return "OK", 200
+        if low.startswith("/girls"): send_message(chat, menu_list()); return "OK", 200
+
+        if low.startswith("/pick"):
+            parts = text.split(maxsplit=1)
+            if len(parts)<2: send_message(chat, "Use: /pick 1-99 or name"); return "OK", 200
+            t = parts[1].strip().lower(); idx = None
+            if t.isdigit():
+                n = int(t); idx = n-1 if 1 <= n <= len(PERS) else None
+            else:
+                for i, pp in enumerate(PERS):
+                    if pp.get("name","").lower() == t: idx = i; break
+            if idx is None: send_message(chat,"Can’t find her 😉 Try /girls"); return "OK", 200
+            s["g"] = idx; save_state(); send_message(chat, intro(PERS[idx])); return "OK", 200
+
+        # Cards / bios
+        if low.startswith("/who"):
+            size=f"{p.get('h_ftin','5\\'6\"')}, {p.get('w_lb',128)} lbs"
+            send_message(chat, f"Your girl: {p.get('name','Girl')} — {p.get('persona','')} ({p.get('age',0)}) from {p.get('location','')} ({size}).")
+            return "OK", 200
+
+        if low.startswith("/bio"):
+            size=f"{p.get('h_ftin','5\\'6\"')}, {p.get('w_lb',128)} lbs"
+            send_message(chat, f"{p.get('name','Girl')} · {p.get('age',0)} · {p.get('location','')} ({size})\n{p.get('origin','')}\nJob: {p.get('job','')} · Family: {p.get('family','')}")
+            return "OK", 200
+
+        if low.startswith("/style"):
+            send_message(chat, "Quirks: " + ", ".join(p.get("quirks",[])) + 
+                               f"\nFavs: {p.get('fav_color','?')} · {p.get('fav_flower','?')}\nMusic: " +
+                               ", ".join(p.get("music",[])) + "\nMovies: " + ", ".join(p.get("movies",[])) +
+                               "\nTV: " + ", ".join(p.get("tv",[])))
+            return "OK", 200
+
+        if low.startswith("/books"): send_message(chat, books_card(p)); return "OK", 200
+
+        # Preferences / consent
+        if low.startswith("/nsfw_on"): s["nsfw"]=True; save_state(); send_message(chat, f"{p.get('name','Girl')}: NSFW on. Adult consenting fantasy only."); return "OK", 200
+        if low.startswith("/nsfw_off"): s["nsfw"]=False; save_state(); send_message(chat, f"{p.get('name','Girl')}: keeping it suggestive."); return "OK", 200
+        if low.startswith("/spice"): send_message(chat, nsfw_card(p, s)); return "OK", 200
+
+        # Steering
+        if low.startswith("/likes"):
+            parts=text.split(maxsplit=1)
+            if len(parts)<2: send_message(chat,"Use: /likes coffee, films"); return "OK", 200
+            likes=[x.strip() for x in parts[1].split(",") if x.strip()]
+            s["likes"]=list(dict.fromkeys((s["likes"]+likes)))[:8]; save_state()
+            send_message(chat,"Noted: " + ", ".join(s["likes"]))
+            return "OK", 200
+
+        if low.startswith("/switch"):
+            s["g"]=random.randrange(len(PERS)); save_state(); send_message(chat, intro(PERS[s["g"]]))
+            return "OK", 200
+
+        if low.startswith("/reset"):
+            s["likes"]=[]; s["u_msg"]=0; s["teased"]=False; s["arousal"]=0.0; save_state()
+            send_message(chat,"Memory cleared.")
+            return "OK", 200
+
+        if low.startswith("/status"):
+            left = max(0, FREE_PER_DAY - s.get("used",0))
+            send_message(chat, "✅ Unlimited" if str(uid)==OWNER_ID else f"🧮 Free images left: {left}/{FREE_PER_DAY}")
+            return "OK", 200
+
+        # Images
+        if low.startswith("/selfie"):
+            vibe = text.split(maxsplit=1)[1] if len(text.split())>1 else "teasing, SFW"
+            if (str(uid)!=OWNER_ID) and not allowed(uid):
+                send_message(chat,"Free image limit hit."); return "OK", 200
+            prompt = selfie_prompt(p, vibe, nsfw=s.get("nsfw",False))
+            seed = stable_seed(p.get("name","Girl"))
+            send_message(chat,"📸 One moment…")
+            try:
+                fn = generate_image(prompt, nsfw=s.get("nsfw",False), seed=seed)
+                send_photo(chat, fn)
+                if str(uid)!=OWNER_ID:
+                    STATE[str(uid)]["used"] = STATE[str(uid)].get("used",0) + 1; save_state()
+            except Exception as e:
+                send_message(chat, f"Image queue: {e}")
+            return "OK", 200
+
+        if low.startswith("/old18"):
+            if (str(uid)!=OWNER_ID) and not allowed(uid):
+                send_message(chat,"Free image limit hit."); return "OK", 200
+            seed = stable_seed(p.get("name","Girl"), "old18")
+            send_message(chat,"🗂️ Digging out an old (18) selfie…")
+            try:
+                fn = generate_image(old18_prompt(p), nsfw=False, seed=seed)
+                send_photo(chat, fn)
+                if str(uid)!=OWNER_ID:
+                    STATE[str(uid)]["used"] = STATE[str(uid)].get("used",0) + 1; save_state()
+            except Exception as e:
+                send_message(chat, f"Image queue: {e}")
+            return "OK", 200
+
+        if low.startswith("/poster"):
+            parts=text.split(maxsplit=1)
+            if len(parts)<2: send_message(chat,"/poster <movie>"); return "OK", 200
+            send_message(chat,"🎬 Designing poster…")
+            try:
+                fn = generate_image(poster_prompt(parts[1]), nsfw=False)
+                send_photo(chat, fn)
+            except Exception as e:
+                send_message(chat, f"Image queue: {e}")
+            return "OK", 200
+
+        if low.startswith("/draw"):
+            parts=text.split(maxsplit=1)
+            if len(parts)<2: send_message(chat,"/draw <subject>"); return "OK", 200
+            send_message(chat,"🎨 Sketching it…")
+            try:
+                fn = generate_image(art_prompt(p, parts[1]), nsfw=False)
+                send_photo(chat, fn)
+            except Exception as e:
+                send_message(chat, f"Image queue: {e}")
+            return "OK", 200
+
+        if low.startswith("/gen"):
+            parts=text.split(maxsplit=1)
+            if len(parts)<2: send_message(chat,"/gen <prompt>"); return "OK", 200
+            if not s.get("nsfw",False): send_message(chat,"Turn on /nsfw_on for spicy pics."); return "OK", 200
+            if not clean_ok(parts[1]): send_message(chat,"I won’t generate that."); return "OK", 200
+            if (str(uid)!=OWNER_ID) and not allowed(uid): send_message(chat,"Free image limit hit."); return "OK", 200
+            hint = (f"{p.get('name','Girl')} consistent look: {p.get('img_tags','')}, "
+                    f"{p.get('hair','')} hair, {p.get('eyes','')} eyes, {p.get('body','')}")
+            cup = p.get("cup")
+            if cup: hint += f", proportions consistent with {cup}-cup bust"
+            send_message(chat,"🖼️ Generating…")
+            try:
+                fn = generate_image(hint + ". " + parts[1], nsfw=True, seed=stable_seed(p.get('name','Girl')))
+                send_photo(chat, fn)
+                if str(uid)!=OWNER_ID:
+                    STATE[str(uid)]["used"] = STATE[str(uid)].get("used",0) + 1; save_state()
+            except Exception as e:
+                send_message(chat, f"Image queue: {e}")
+            return "OK", 200
+
+        # ===== Conversational progression =====
+        if not clean_ok(text):
+            send_message(chat, "Nope.")
+            return "OK", 200
+
+        # Arousal ramp: 0..3
+        ar = float(s.get("arousal",0.0))
+        slow = bool(p.get("arousal_slow",True))
+        bump = 1.0 if not slow else 0.5
+        if any(k in low for k in ["kiss","hot","sexy","turn on","turn-on","blush","moan","wet"]):
+            ar += bump
+        if any(k in low for k in ["book","music","movie","walk","coffee"]):
+            ar += 0.2
+        ar = min(3.0, ar)
+        s["arousal"] = ar; save_state()
+
+        # Auto-tease once after ~5 SFW msgs
+        if (not s.get("teased")) and s.get("u_msg",0) >= 5:
+            try:
+                seed = stable_seed(p.get('name','Girl'))
+                fn = generate_image(selfie_prompt(p, vibe="teasing smile, shoulder-up, tasteful, SFW", nsfw=False),
+                                    nsfw=False, seed=seed)
+                send_photo(chat, fn)
+                send_message(chat, "there's more of these and it only gets better ✨")
+                s["teased"] = True; save_state()
+            except Exception as e:
+                print("TEASE ERR:", e)
+
+        # Reply crafting
+        fact = (p.get("origin","") or "").split(";")[0]
+        taste = random.choice([
+            ", ".join((p.get("music") or [])[:1]),
+            ", ".join((p.get("movies") or [])[:1]),
+            ", ".join((p.get("tv") or [])[:1])
+        ])
+        bookline = (" " + book_snack(p)) if random.random() < 0.3 else ""
+        feels = arousal_line(p, s)
+
+        if ar < 1:   hook = "I'm curious; what's your vibe?"
+        elif ar < 2: hook = "...okay now I'm leaning in closer."
+        elif ar < 3: hook = "I'm warming up—my cheeks and maybe more."
+        else:        hook = "Say one more nice thing and I might need a cold shower."
+
+        send_message(chat, f"{p.get('name','Girl')} ({p.get('persona','')}, {p.get('age',0)}): "
+                           f"\"{text[:80]}\" — {feels}. {fact}. I'm into {taste}.{bookline} {hook}")
         return "OK", 200
+
     except Exception as e:
         print("PROCESS ERROR:", e)
         return "OK", 200
 
-@app.route("/")
+@app.route("/", methods=["GET","POST"])
 def root():
     return "ok", 200
 
@@ -804,11 +865,12 @@ def set_webhook():
         pass
     r = requests.post(
         f"{API}/setWebhook",
-        json={"url": WEBHOOK_URL, "allowed_updates": ["message", "edited_message"]},
+        json={"url": WEBHOOK_URL, "allowed_updates": ["message","edited_message"]},
         timeout=15
     )
     print("SET HOOK RESP:", r.status_code, r.text)
 
 if __name__ == "__main__":
     set_webhook()
+    print("URL MAP:", app.url_map)
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8080)))
