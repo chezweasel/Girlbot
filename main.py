@@ -1531,6 +1531,20 @@ def _spawn_image_job(chat, prompt, w, h, seed, nsfw):
             send_message(chat, f"❌ Error: {e}")
     Thread(target=job).start()
 
+# ===== background image job helper =====
+def _spawn_image_job(chat, prompt, w, h, seed, nsfw):
+    def job():
+        try:
+            send_message(chat, "🎨 Generating your image...")
+            out = generate_image(prompt, w, h, seed, nsfw)
+            if out:
+                send_photo(chat, out)
+            else:
+                send_message(chat, "❌ Image generation failed.")
+        except Exception as e:
+            send_message(chat, f"❌ Error: {e}")
+    Thread(target=job).start()
+
 # ===== UI =====
 def menu_list():
     out, seen = [], set()
