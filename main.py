@@ -515,6 +515,24 @@ def send_photo(cid, path):
     with open(path,"rb") as f:
         r=requests.post(f"{API}/sendPhoto",data={"chat_id":int(cid)},files={"photo":f},timeout=120)
     if r.status_code!=200: print("PHOTO ERR:", r.text[:200])
+            def arousal_line(p, s):
+    ar = s.get("arousal", 0)
+    if not s.get("nsfw", False):
+        lines = [
+            "you're making me blush",
+            "I'm leaning closer to the screen",
+            "my cheeks feel warm already"
+        ]
+        return lines[min(int(ar), 2)]
+    wet = [
+        "I'm warming up... be sweet with me",
+        "I'm getting a little wet thinking about you",
+        "okay, I'm wet and wanting"
+    ]
+    out = wet[min(int(ar), 2)]
+    if ar >= 2.5 and p.get("nsfw_prefs",{}).get("climax",{}).get("squirts", False):
+        out += " (and yes... sometimes I squirt when it hits right)"
+    return out
 
 # ===== UI =====
 def menu_list():
@@ -682,18 +700,35 @@ def hook():
             except Exception as e: print("TEASE ERR:", e)
 
         # Reply crafting
-        fact=p["origin"].split(";")[0]
-        taste=random.choice([", ".join(p["music"][:1]), ", ".join(p["movies"][:1]), ", ".join(p["tv"][:1])])
-        bookline=(" "+book_snack(p)) if random.random()<0.3 else ""
-        feels=random.choice(["you’re kinda getting to me","I’m trying to play it cool","you make me grin at my screen"])
-        if ar<1: hook="I’m curious; what’s your vibe?"
-        elif ar<2: hook="…okay now I’m leaning in closer."
-        elif ar<3: hook="I’m warming up—my cheeks and maybe more."
-        else: hook="Say one more nice thing and I might need a cold shower."
-        feel= arousal_line(p, s)
-send_message(chat, f"{p['name']} ({p['persona']}, {p['age']}): \"{text[:80]}\" — {feel}. {fact}. I’m into {taste}. {bookline} {hook}")
-            
-        return "OK",200
+# ---- Conversational fallback ----
+if not clean_ok(text):
+    send_message(chat, "Nope.")
+    return "OK", 200
+
+# (keep your arousal bump + teaser selfie code above this)
+
+fact = p["origin"].split(";")[0]
+taste = random.choice([", ".join(p["music"][:1]),
+                       ", ".join(p["movies"][:1]),
+                       ", ".join(p["tv"][:1])])
+bookline = (" " + book_snack(p)) if random.random() < 0.3 else ""
+
+feels = arousal_line(p, s)
+
+if s["arousal"] < 1:
+    hook = "I'm curious; what's your vibe?"
+elif s["arousal"] < 2:
+    hook = "...okay now I'm leaning in closer."
+elif s["arousal"] < 3:
+    hook = "I'm warming up—my cheeks and maybe more."
+else:
+    hook = "Say one more nice thing and I might need a cold shower."
+
+send_message(
+    chat,
+    f"{p['name']} ({p['persona']}, {p['age']}): \"{text[:80]}\" — {feels}. {fact}. I'm into {taste}.{bookline} {hook}"
+)
+return "OK", 200
 
     except Exception as e:
         print("PROCESS ERROR:", e)
