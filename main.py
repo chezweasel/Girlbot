@@ -1143,6 +1143,16 @@ def gen_replicate(prompt, w=640, h=896, seed=None):
 
 def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
     headers = {"apikey": HORDE, "Client-Agent": "flirtpixel/3.1"}
+
+    # Ensure seed is a string if provided
+    if seed is None:
+        seed = str(random.randint(1, 2**31 - 1))
+    else:
+        try:
+            seed = str(int(seed) & 0xFFFFFFFF)  # Clamp to safe positive int
+        except (ValueError, TypeError):
+            seed = str(random.randint(1, 2**31 - 1))
+
     params = {
         "steps": 22,
         "width": int(w),
@@ -1151,7 +1161,38 @@ def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
         "nsfw": bool(nsfw),
         "sampler_name": "k_euler",
         "cfg_scale": 6.5,
+        "seed": seed,
+        "prompt": prompt,
     }
+
+    url = "https://stablehorde.net/api/v2/generate/async"
+    r = requests.post(url, json=params, headers=headers, timeout=30)
+    if r.status_code != 200:
+        raise RuntimeError(f"Horde queue error: {r.status_code} {r.text}")
+
+    js = r.json()
+    job_id = js.get("id")
+    if not job_id:
+        raise RuntimeError(f"No job ID in Horde response: {js}")
+
+    # Poll until done
+    while True:
+        poll_url = f"https://stablehorde.net/api/v2/generate/status/{job_id}"
+        pr = requests.get(poll_url, headers=headers, timeout=30)
+        if pr.status_code != 200:
+            raise RuntimeError(f"Horde status error: {pr.status_code} {pr.text}")
+
+        ps = pr.json()
+        if ps.get("done"):
+            gens = ps.get("generations", [])
+            if not gens:
+                raise RuntimeError(f"Horde finished but no images: {ps}")
+            b64 = gens[0].get("img")
+            if not b64:
+                raise RuntimeError(f"No image data in Horde result: {gens[0]}")
+            return base64.b64decode(b64)
+
+        time.sleep(3)
     if seed is not None:
         params["seed"] = int(seed)
     job = {
