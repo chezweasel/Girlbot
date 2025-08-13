@@ -2068,11 +2068,25 @@ def hook():
             send_message(chat, "\n".join(lines))
             return "OK", 200
 
-        if low.startswith("/selfie"):
+                    if low.startswith("/selfie"):
             vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "teasing, SFW"
             if (str(uid) != OWNER_ID) and not allowed(uid):
                 send_message(chat, "Free image limit hit.")
                 return "OK", 200
+
+            prompt = selfie_prompt(p, vibe, nsfw=s.get("nsfw", False))
+            seed = stable_seed(p.get("name", "Girl"))
+
+            send_message(chat, "📸 One moment…")
+            # Smaller, faster size to keep queues happy
+            _spawn_image_job(chat, prompt, 512, 704, seed, s.get("nsfw", False))
+
+            if str(uid) != OWNER_ID:
+                STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
+                save_state()
+
+            return "OK", 200
+       
             prompt = selfie_prompt(p, vibe, nsfw=s.get("nsfw", False))
             seed = stable_seed(p.get("name", "Girl"))
             send_message(chat, "📸 One moment…")
@@ -2086,10 +2100,22 @@ def hook():
                 send_message(chat, f"Image queue: {e_img}")
             return "OK", 200
 
-        if low.startswith("/old18"):
+                if low.startswith("/old18"):
             if (str(uid) != OWNER_ID) and not allowed(uid):
                 send_message(chat, "Free image limit hit.")
                 return "OK", 200
+
+            seed = stable_seed(p.get("name", "Girl"), "old18")
+            prompt = old18_prompt(p)
+            send_message(chat, "🗂️ Digging out an old (18) selfie…")
+
+            # Fast, smaller job
+            _spawn_image_job(chat, prompt, 512, 704, seed, nsfw=False)
+
+            if str(uid) != OWNER_ID:
+                STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
+                save_state()
+            return "OK", 200
             seed = stable_seed(p.get("name", "Girl"), "old18")
             send_message(chat, "🗂️ Digging out an old (18) selfie…")
             try:
@@ -2102,11 +2128,19 @@ def hook():
                 send_message(chat, f"Image queue: {e_old}")
             return "OK", 200
 
-        if low.startswith("/poster"):
+               if low.startswith("/poster"):
             parts = text.split(maxsplit=1)
             if len(parts) < 2:
                 send_message(chat, "/poster <movie>")
                 return "OK", 200
+
+            title = parts[1]
+            prompt = poster_prompt(title)
+            send_message(chat, "🎬 Designing poster…")
+
+            # Fast, smaller job (portrait-ish)
+            _spawn_image_job(chat, prompt, 512, 704, seed=None, nsfw=False)
+            return "OK", 200
             send_message(chat, "🎬 Designing poster…")
             try:
                 fn = generate_image(poster_prompt(parts[1]), nsfw=False)
@@ -2115,11 +2149,19 @@ def hook():
                 send_message(chat, f"Image queue: {e_pos}")
             return "OK", 200
 
-        if low.startswith("/draw"):
+        if         if low.startswith("/draw"):
             parts = text.split(maxsplit=1)
             if len(parts) < 2:
                 send_message(chat, "/draw <subject>")
                 return "OK", 200
+
+            subj = parts[1]
+            prompt = art_prompt(p, subj)
+            send_message(chat, "🎨 Sketching it…")
+
+            # Fast job
+            _spawn_image_job(chat, prompt, 512, 704, seed=None, nsfw=False)
+            return "OK", 200
             send_message(chat, "🎨 Sketching it…")
             try:
                 fn = generate_image(art_prompt(p, parts[1]), nsfw=False)
@@ -2128,7 +2170,7 @@ def hook():
                 send_message(chat, f"Image queue: {e_draw}")
             return "OK", 200
 
-        if low.startswith("/gen"):
+             if low.startswith("/gen"):
             parts = text.split(maxsplit=1)
             if len(parts) < 2:
                 send_message(chat, "/gen <prompt>")
@@ -2136,12 +2178,30 @@ def hook():
             if not s.get("nsfw", False):
                 send_message(chat, "Turn on /nsfw_on for spicy pics.")
                 return "OK", 200
-            if not clean_ok(parts[1]):
+            user_prompt = parts[1]
+            if not clean_ok(user_prompt):
                 send_message(chat, "I won’t generate that.")
                 return "OK", 200
             if (str(uid) != OWNER_ID) and not allowed(uid):
                 send_message(chat, "Free image limit hit.")
                 return "OK", 200
+
+            hint = (f"{p.get('name', 'Girl')} consistent look: {p.get('img_tags', '')}, "
+                    f"{p.get('hair', '')} hair, {p.get('eyes', '')} eyes, {p.get('body', '')}")
+            cup = p.get("cup")
+            if cup:
+                hint += f", proportions consistent with {cup}-cup bust"
+
+            full_prompt = hint + ". " + user_prompt
+            send_message(chat, "🖼️ Generating…")
+
+            # Fast NSFW job
+            _spawn_image_job(chat, full_prompt, 512, 704, seed=stable_seed(p.get('name', 'Girl')), nsfw=True)
+
+            if str(uid) != OWNER_ID:
+                STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
+                save_state()
+            return "OK", 200  
             hint = (f"{p.get('name', 'Girl')} consistent look: {p.get('img_tags', '')}, "
                     f"{p.get('hair', '')} hair, {p.get('eyes', '')} eyes, {p.get('body', '')}")
             cup = p.get("cup")
@@ -2191,19 +2251,13 @@ def hook():
         ar = min(3.0, ar)
         s["arousal"] = ar
         save_state()
-
         if (not s.get("teased")) and s.get("u_msg", 0) >= 5:
-            try:
-                seed = stable_seed(p.get("name", "Girl"))
-                fn = generate_image(selfie_prompt(p, vibe="teasing smile, shoulder-up, tasteful, SFW", nsfw=False),
-                                    nsfw=False, seed=seed)
-                send_photo(chat, fn)
-                send_message(chat, "there's more of these and it only gets better ✨")
-                s["teased"] = True
-                save_state()
-            except Exception as e_tease:
-                print("TEASE ERR:", e_tease)
-
+            seed = stable_seed(p.get("name", "Girl"))
+            prompt = selfie_prompt(p, vibe="teasing smile, shoulder-up, tasteful, SFW", nsfw=False)
+            _spawn_image_job(chat, prompt, 512, 704, seed, nsfw=False)
+            send_message(chat, "there's more of these and it only gets better ✨")
+            s["teased"] = True
+            save_state()
         fact = (p.get("origin", "") or "").split(";")[0]
         taste = random.choice([
             ", ".join((p.get("music") or [])[:1]),
