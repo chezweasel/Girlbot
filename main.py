@@ -849,9 +849,12 @@ BOOKS = {
     "Juliet": [{"title": "Jane Eyre", "quote": "I am no bird.", "memory": "Nan’s copy with a pressed thistle."}],
     "Ivy": [{"title": "Master and Margarita", "quote": "Manuscripts don’t burn.", "memory": "Powell’s first edition scent."}],
     "Cassidy": [{"title": "Braiding Sweetgrass", "quote": "All flourishing is mutual.", "memory": "Gran read it to me on the porch."}],
-}
 for p in PERS:
-    p["books"] = BOOKS.get(p["# -------- Persona normalizer: make each girl unique & non-default (self-contained) --------
+    p["books"] = BOOKS.get(p["name"], [])
+    # you might also have life_memories setup here if needed
+    # p["life_memories"] = ...
+
+# -------- Persona normalizer: make each girl unique & non-default (self-contained) --------
 import hashlib
 
 def _name_seed(name: str, salt: str = "defaults") -> int:
@@ -864,15 +867,12 @@ def _seeded_choice(name, options, salt="choice"):
 
 def _seeded_height_weight(name):
     rnd = random.Random(_name_seed(name, "size"))
-    # Height: 5'2"–5'10"
-    inches = rnd.randint(62, 70)
+    inches = rnd.randint(62, 70)  # Height: 5'2"–5'10"
     h_ft, h_in = divmod(inches, 12)
     h_str = f"{h_ft}'{h_in}\""
-    # Weight: 110–165 lbs
-    w_lb = rnd.randint(110, 165)
+    w_lb = rnd.randint(110, 165)  # Weight: 110–165 lbs
     return h_str, w_lb
 
-# Optional “known” hometowns for some names (use if location missing)
 _FALLBACK_LOCATIONS = {
     "Nicole": "Vancouver",
     "Lurleen": "Calgary",
@@ -895,9 +895,8 @@ _COLOR_POOL  = ["sage", "peony pink", "midnight blue", "amber", "seafoam", "char
 _FLOWER_POOL = ["peony", "wildflower mix", "lily", "sunflower", "hibiscus", "hydrangea", "thistle", "daisy", "orchid", "ranunculus"]
 
 def personalize_personas():
-    # These are the placeholder values used in your baseline PERS
     try:
-        _default_h = DEFAULT_HFTIN  # defined elsewhere in your file
+        _default_h = DEFAULT_HFTIN
     except NameError:
         _default_h = "5'6\""
     _default_w = 128
@@ -908,25 +907,25 @@ def personalize_personas():
     for p in PERS:
         name = p.get("name", "Girl") or "Girl"
 
-        # ---- Location (replace if missing or default-y) ----
+        # Location
         loc = (p.get("location") or "").strip()
-        if (not loc) or (loc.lower() in _default_loc_candidates):
+        if not loc or loc.lower() in _default_loc_candidates:
             p["location"] = _FALLBACK_LOCATIONS.get(
                 name,
                 _seeded_choice(name, list(_FALLBACK_LOCATIONS.values()), salt="locpool")
             )
 
-        # ---- Favorite color ----
+        # Favorite color
         fav_color = p.get("fav_color")
         if fav_color in _default_color_candidates:
             p["fav_color"] = _seeded_choice(name, _COLOR_POOL, salt="color")
 
-        # ---- Favorite flower ----
+        # Favorite flower
         fav_flower = p.get("fav_flower")
         if fav_flower in _default_flower_candidates:
             p["fav_flower"] = _seeded_choice(name, _FLOWER_POOL, salt="flower")
 
-        # ---- Height/Weight ----
+        # Height/Weight
         h = p.get("h_ftin")
         w = p.get("w_lb")
         need_size = (not h or h == _default_h) or (not w or w == _default_w)
@@ -935,14 +934,16 @@ def personalize_personas():
             p["h_ftin"] = h_new
             p["w_lb"] = w_new
 
-        # ---- Ensure life_memories present if STORIES has them ----
+        # Life memories
         if not p.get("life_memories"):
             lm = (STORIES.get(name, {}) or {}).get("sfw_memories", [])
             if lm:
                 p["life_memories"] = lm
 
-# Run once at startup after PERS/books/life_memories are set
+# Call the function to apply changes
 personalize_personas()
+
+
 # -------- end normalizer --------
 
 # Optional “known” hometowns for some names (use if location missing)
