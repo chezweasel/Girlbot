@@ -13,7 +13,7 @@ TOKEN_CODES = set(x.strip() for x in os.getenv("TOKEN_CODES","").split(",") if x
 
 # ==== SETTINGS / SAFETY ====
 FREE_PER_DAY=2; PRIVATE_ONLY=True
-FORBID={""minor","underage","child","incest","stepbro","stepsis",
+FORBID={"minor","underage","child","incest","stepbro","stepsis",
         "rape","forced","nonconsensual","bestiality","animal","beast","loli","shota",
         "real name","revenge porn","deepfake","face swap"}
 
