@@ -25,7 +25,7 @@ assert BOT_TOKEN and OWNER_ID and WEBHOOK_URL, "Missing BOT_TOKEN/OWNER_ID/WEBHO
 # Backends
 FAL_KEY = os.getenv("FAL_KEY", "").strip()
 REPLICATE = os.getenv("REPLICATE_API_TOKEN", "").strip()
-HORDE = os.getenv("HORDE_API_KEY", "0000000000").strip()
+HORDE = "oUYuhedorKvsB6TDukI7cw"
 
 # ===== LIMITS / SAFETY =====
 FREE_PER_DAY = 2
