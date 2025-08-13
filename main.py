@@ -1081,6 +1081,48 @@ def hook():
         if low in {"hi","hello","hey","/start"}: send_message(chat, intro(p)); return "OK", 200
         if low.startswith("/help"): send_message(chat, HELP); return "OK", 200
         if low.startswith("/girls"): send_message(chat, menu_list()); return "OK", 200
+                    # ===== Quick-pick shorthand (number or name without /pick), with fuzzy matching =====
+        if not low.startswith("/"):
+            def _switch_to(index: int):
+                s["g"] = index
+                save_state()
+                send_message(chat, intro(PERS[index]))
+
+            text_stripped = low.strip()
+
+            # Case A: "pick <something>" (no slash)
+            if text_stripped.startswith("pick "):
+                t = text_stripped.split(" ", 1)[1].strip()
+                if t.isdigit():
+                    n = int(t)
+                    if 1 <= n <= len(PERS):
+                        _switch_to(n - 1)
+                        return "OK", 200
+                res = find_girl_indexes_by_name(t)
+                if isinstance(res, int):
+                    _switch_to(res)
+                    return "OK", 200
+                elif isinstance(res, list) and res:
+                    opts = ", ".join(PERS[i].get("name","Girl") for i in res[:6])
+                    send_message(chat, f"Did you mean: {opts}? (try the full name or number)")
+                    return "OK", 200
+
+            # Case B: bare number
+            if text_stripped.isdigit():
+                n = int(text_stripped)
+                if 1 <= n <= len(PERS):
+                    _switch_to(n - 1)
+                    return "OK", 200
+
+            # Case C: bare name (fuzzy)
+            res = find_girl_indexes_by_name(text_stripped)
+            if isinstance(res, int):
+                _switch_to(res)
+                return "OK", 200
+            elif isinstance(res, list) and res:
+                opts = ", ".join(PERS[i].get("name","Girl") for i in res[:6])
+                send_message(chat, f"Did you mean: {opts}? (try the full name or number)")
+                return "OK", 200p
 
         if low.startswith("/pick"):
             parts=text.split(maxsplit=1)
