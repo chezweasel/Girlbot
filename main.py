@@ -852,7 +852,66 @@ BOOKS = {
 }
 for p in PERS:
     p["books"] = BOOKS.get(p["name"], [])
+# -------- Persona normalizer: make each girl unique & non-default --------
+def _seeded_choice(name, options):
+    rnd = random.Random(stable_seed(name, "defaults"))
+    return options[rnd.randrange(len(options))]
 
+# Optional “known” hometowns for some names (use if location missing)
+_FALLBACK_LOCATIONS = {
+    "Nicole": "Vancouver",
+    "Lurleen": "Calgary",
+    "Tia": "Gold Coast",
+    "Cassidy": "St. Andrews",
+    "Carly": "Toronto",
+    "Kate": "Manchester",
+    "Ivy": "Portland",
+    "Chelsey": "Halifax",
+    "Juliet": "Edinburgh",
+    "Riley": "Seattle",
+    "Scarlett": "Montreal",
+    "Tessa": "Sydney",
+    "Brittany": "Banff",
+    "Zoey": "Brooklyn",
+    "Grace": "Isle of Wight",
+}
+
+_COLOR_POOL  = ["sage", "peony pink", "midnight blue", "amber", "seafoam", "charcoal", "lavender", "crimson", "teal", "buttercream"]
+_FLOWER_POOL = ["peony", "wildflower mix", "lily", "sunflower", "hibiscus", "hydrangea", "thistle", "daisy", "orchid", "ranunculus"]
+
+def _seeded_height_weight(name):
+    rnd = random.Random(stable_seed(name, "size"))
+    # Height: 5'2"–5'10" biased around 5'6"
+    inches = rnd.randint(62, 70)   # total inches
+    h_ft = inches // 12
+    h_in = inches % 12
+    h_str = f"{h_ft}'{h_in}\""
+    # Weight: 110–165 lbs with small jitter
+    w_lb = rnd.randint(110, 165)
+    return h_str, w_lb
+
+def personalize_personas():
+    for p in PERS:
+        name = p.get("name","Girl")
+        # Location
+        loc = (p.get("location") or "").strip()
+        if not loc or loc.lower() in {"?", "internet"}:
+            p["location"] = _FALLBACK_LOCATIONS.get(name, _seeded_choice(name, list(_FALLBACK_LOCATIONS.values())))
+        # Fav color / flower
+        if not p.get("fav_color"):  p["fav_color"]  = _seeded_choice(name, _COLOR_POOL)
+        if not p.get("fav_flower"): p["fav_flower"] = _seeded_choice(name, _FLOWER_POOL)
+        # Height / weight
+        if not p.get("h_ftin") or not p.get("w_lb"):
+            h, w = _seeded_height_weight(name)
+            p.setdefault("h_ftin", h)
+            p.setdefault("w_lb", w)
+        # Make sure life_memories attached if STORIES exists
+        if not p.get("life_memories"):
+            lm = (STORIES.get(name, {}) or {}).get("sfw_memories", [])
+            if lm: p["life_memories"] = lm
+
+# Run once at startup after PERS/books are built
+personalize_personas()
 # ===== STATE =====
 STATE_FILE = "state.json"
 
