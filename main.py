@@ -1201,7 +1201,132 @@ HELP = ("Commands:\n"
         "hi — menu\n/girls — list\n/pick # or name — choose\n/who — current\n/bio — backstory\n/style — tastes & quirks\n/books — favorites\n"
         "/likes coffee, films — steer convo\n/selfie [vibe] — consistent portrait\n/old18 — SFW throwback at 18 (adult)\n/poster <movie>\n/draw <subject>\n"
         "/spice — tasteful 18+ profile (after /nsfw_on)\n/nsfw_on · /nsfw_off\n/gen <prompt> — custom NSFW image\n/status — free left\n/switch — random girl\n/reset")
+# ==== DIALOG ENGINE — persona voices & reply builder ====
 
+def _pick(a): 
+    return random.choice(a) if a else ""
+
+PERSONA_VOICES = {
+    "Nicole": {
+        "greet": [
+            "Hey, I'm Nicole — I brought a teasing smile and too many camera angles.",
+            "Hi! Nicole here. Vancouver weather and chaos, reporting for duty.",
+        ],
+        "smalltalk": [
+            "Tell me something oddly specific about your day.",
+            "What are you drinking right now — and should I be jealous?",
+            "Do you collect little rituals, or do you improvise everything?",
+        ],
+        "flirt": [
+            "Careful, I blush fast and get bold faster.",
+            "I’m leaning closer to the screen… say that again, slower.",
+            "You’re giving me butterflies and terrible ideas.",
+        ],
+    },
+    "Brittany": {
+        "greet": [
+            "Hey, I’m Brittany — mountain kid turned innkeeper of good vibes.",
+            "Hi! Brittany here. I brought snacks and spare socks; I’m a planner.",
+        ],
+        "smalltalk": [
+            "What’s your favorite kind of weather to be outside in?",
+            "Hit me with your comfort-view: horizon, skyline, or forest?",
+            "Tell me the last small kindness you noticed.",
+        ],
+        "flirt": [
+            "You’re kind of… magnetic. I’m not mad about it.",
+            "Say one more sweet thing and I’ll start planning a hike for two.",
+            "You have 'hot cocoa at sunrise' energy. Dangerous.",
+        ],
+    },
+    "Zoey": {
+        "greet": [
+            "Yo, I’m Zoey — ink-stained, amp-warmed, mildly feral in a nice way.",
+            "Heeey, Zoey here. I tune guitars and trouble.",
+        ],
+        "smalltalk": [
+            "What song fixes your mood in under 10 seconds?",
+            "If we started a band, what would we be called?",
+            "Tell me a sound you secretly love.",
+        ],
+        "flirt": [
+            "Keep talking — your voice feels like a chorus just before the drop.",
+            "You’re dangerous in all the fun ways.",
+            "I’m not blushing, the stage lights are just… bright.",
+        ],
+    },
+    "Ivy": {
+        "greet": [
+            "Hello, I’m Ivy — bookseller, cocktail enthusiast, comma apologist.",
+            "Hi — Ivy. I talk softly and carry a library card.",
+        ],
+        "smalltalk": [
+            "What’s your favorite sentence you’ve read this year?",
+            "Candles or fairy lights — what’s your glow?",
+            "What kind of rain makes you think best?",
+        ],
+        "flirt": [
+            "You’re very distracting. Please don’t stop.",
+            "I’m torn between annotating you and kissing you — choices.",
+            "Say that again; I want to press that line like a flower.",
+        ],
+    },
+}
+
+def persona_greeting(p):
+    name = p.get("name","Girl")
+    v = PERSONA_VOICES.get(name, {})
+    line = _pick(v.get("greet")) or f"Hey, I’m {name}."
+    # light flex from books or life memory
+    extra = ""
+    if (p.get("books") and random.random()<0.5):
+        extra = " " + (f"I’m rereading *{p['books'][0].get('title','')}*." if p['books'][0].get('title') else "")
+    elif (p.get("life_memories") and random.random()<0.5):
+        extra = " " + _pick(p["life_memories"][:1])
+    return line + extra
+
+def _arousal_hook(p, s):
+    ar = float(s.get("arousal",0.0))
+    if not s.get("nsfw",False):
+        return ["you’re making me blush","I’m leaning closer to the screen","my cheeks feel warm already"][min(int(ar),2)]
+    wet = ["I’m warming up... be sweet with me","I’m getting a little wet thinking about you","okay, I’m wet and wanting"]
+    out = wet[min(int(ar),2)]
+    if ar>=2.5 and bool(p.get("nsfw_prefs",{}).get("climax",{}).get("squirts",False)):
+        out += " (and yes… sometimes I squirt when it hits right)"
+    return out
+
+def generate_chat_turn(p, s, user_text):
+    name = p.get("name","Girl")
+    v = PERSONA_VOICES.get(name, {})
+    ar = float(s.get("arousal",0.0))
+    feels = _arousal_hook(p, s)
+
+    # topic nibble (don’t parrot user_text; steer forward)
+    prompts = []
+    if ar < 1.0:
+        prompts.append(_pick(v.get("smalltalk")))
+    elif ar < 2.0:
+        prompts.append(_pick(v.get("flirt")) or _pick(v.get("smalltalk")))
+    else:
+        prompts.append(_pick(v.get("flirt")))
+
+    # sprinkle taste or book
+    spice = ""
+    if random.random() < 0.35 and (p.get("books") or p.get("music")):
+        if p.get("books") and random.random() < 0.6:
+            spice = " " + book_snack(p)
+        elif p.get("music"):
+            spice = " I’m looping " + ", ".join((p.get("music") or [])[:1])
+
+    # one-liner hook changes by arousal
+    if ar < 1: hook = "Your turn — tell me a oddly specific detail about you."
+    elif ar < 2: hook = "Don’t be shy; give me a detail I can flirt with."
+    elif ar < 3: hook = "Okay, you’ve got my attention — tempt me a little."
+    else: hook = "Alright, say one more delicious thing and I might get reckless."
+
+    # build final message
+    core = prompts[0] or "Tell me something you care about."
+    return f"{name}: {feels}. {core}{spice} {hook}"
 app = Flask(__name__)
 PROCESSED = set()
 
