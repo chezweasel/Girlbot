@@ -12,6 +12,7 @@ import re
 import hashlib
 import requests
 from flask import Flask, request
+from threading import Thread
 
 # ===== ENV / TG =====
 BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
@@ -1240,7 +1241,37 @@ def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
         "apikey": HORDE,
         "Client-Agent": "flirtpixel/3.3"
     }
+import threading
 
+def gen_with_fallback(prompt, w=640, h=896, nsfw=True):
+    result = {}
+    done = threading.Event()
+
+    # Try Horde first
+    def try_horde():
+        try:
+            img = gen_horde(prompt, w, h, nsfw=nsfw)
+            if img:
+                result["img"] = img
+                done.set()
+        except Exception as e:
+            print("Horde error:", e)
+
+    t = threading.Thread(target=try_horde)
+    t.start()
+
+    # Wait 15 seconds for Horde
+    if not done.wait(timeout=15):
+        print("Horde too slow, using fallback...")
+        try:
+            img = gen_fal(prompt, w, h, nsfw=nsfw)  # <-- Your FAL.ai function
+            if img:
+                result["img"] = img
+                done.set()
+        except Exception as e:
+            print("FAL fallback error:", e)
+
+    return result.get("img")
     # --- Respect Horde free/low-kudos size limits (longest side <= 576 by default) ---
     max_side = int(os.getenv("HORDE_MAX_SIDE", "576"))
     W, H = int(w), int(h)
