@@ -1264,7 +1264,7 @@ if low.startswith("/diag"):
 
             send_message(chat, "\n".join(results))
             return "OK", 200
-    if low.startswith("/diag"):
+if low.startswith("/diag"):
             import time
 
             lines = []
