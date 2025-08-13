@@ -1,7 +1,15 @@
 import os,time,json,base64,threading,requests,hmac,hashlib
 from flask import Flask,render_template_string,request
 from telebot import TeleBot,types
+import requests
+import os
 
+TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
+PUBLIC_URL = os.environ['PUBLIC_URL']
+WEBHOOK_SECRET = os.environ['WEBHOOK_SECRET']
+
+# Set the webhook with your secret path
+requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url={PUBLIC_URL}/{WEBHOOK_SECRET}")
 # ===== ENV (safer: all optional except token/owner) =====
 TG_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 OWNER_ID = os.environ["OWNER_ID"]            # string
@@ -200,3 +208,11 @@ def home():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
+        from flask import Flask, request
+app = Flask(__name__)
+
+@app.route(f"/{WEBHOOK_SECRET}", methods=["POST"])
+def webhook():
+    update = request.get_json()
+    # your bot’s message handling code goes here
+    return "ok"
