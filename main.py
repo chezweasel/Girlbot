@@ -1524,8 +1524,8 @@ def hook():
         ar=float(s.get("arousal",0.0))
         slow=bool(p.get("arousal_slow",True))
         bump=1.0 if not slow else 0.5
-        if any(k in low for k in ["kiss","hot","sexy","turn on","turn-on","blush","moan","wet"]): ar+=bump
-        if any(k in low for k in ["book","music","movie","walk","coffee"]): ar+=0.2
+if any(k in low for k in ["kiss","hot","sexy","turn on","turn-on","blush","moan","wet"]): ar+=bump
+if any(k in low for k in ["book","music","movie","walk","coffee"]): ar+=0.2
         ar=min(3.0, ar); s["arousal"]=ar; save_state()
 
 if (not s.get("teased")) and s.get("u_msg",0)>=5:
