@@ -1175,17 +1175,46 @@ def menu_list():
         out.append(f"{i}. {n}")
     return "\n".join(out) if out else "(no girls loaded)"
 
+def _nice_loc(p):
+    """Returns ` from <location>` if present, otherwise empty string."""
+    loc = (p.get("location") or "").strip()
+    return f" from {loc}" if loc else ""
 def intro(p):
     size = size_line(p)
+
+    # Build a friendly one-liner opener with a safe location fallback
+    opener_choices = [
+        f"Hey, I’m {p.get('name','Girl')}{_nice_loc(p)}.",
+        f"{p.get('name','Girl')} here{_nice_loc(p)}—hi!",
+        f"Hi! I’m {p.get('name','Girl')}{_nice_loc(p)}."
+    ]
+    opener = random.choice(opener_choices)
+
+    # Optional persona tag (only if you actually have one)
+    persona = (p.get('persona') or "").strip()
+    if persona:
+        opener += f" {persona}."
+
+    # Fun little flex from books if available
     flex = ""
     b = p.get("books") or []
     if b and random.random() < 0.6:
-        flex = f" Lately into *{b[0].get('title', '')}*—{b[0].get('memory', '')}"
-    return (f"Hey, I’m {p.get('name', 'Girl')} — {p.get('age', 25)} from {p.get('location', '?')} ({size}). "
-            f"{p.get('origin', '')} {flex} Fav color {p.get('fav_color', '?')}, flower {p.get('fav_flower', '?')}. "
-            f"Music: {', '.join((p.get('music') or [])[:2])}. I work as {p.get('job', '…')}.\n\n{menu_list()}\n"
-            "(try /girls, /pick #|name, /books, /nsfw_on, /selfie cozy, /old18, /poster Dune, /spice, /help)")
+        flex = f" Lately into *{b[0].get('title','')}*—{b[0].get('memory','')}"
 
+    # Taste bits with gentle defaults
+    favs = f"Fav color {p.get('fav_color','?')}, flower {p.get('fav_flower','?')}."
+    music = ", ".join((p.get("music") or [])[:2]) or "eclectic playlists"
+    job = p.get("job", "…")
+
+    # Put it all together
+    blurb = (
+        f"{opener} {p.get('age',25)} y/o ({size})."
+        f" I work as {job}.{flex} {favs} Music: {music}."
+    )
+
+    # Keep your existing menu + command hint
+    return blurb + "\n\n" + menu_list() + "\n" + \
+        "(try /girls, /pick #|name, /books, /nsfw_on, /selfie cozy, /old18, /poster Dune, /spice, /help)"
 def arousal_line(p, s):
     ar = s.get("arousal", 0.0)
     if not s.get("nsfw", False):
