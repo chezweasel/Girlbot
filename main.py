@@ -329,7 +329,7 @@ PERS=[
  "family":"amicable split; close w/ niece","skills":["interviews","calming people"],
  "img_tags":"curvy silver hair blue eyes elegant soft daylight","orientation":"straight","experience":"seasoned",
  "nsfw_prefs":{"likes":["slow intimacy","oral receiving"],"mood":["tea steam","rain on glass"],
-               "oral":{"giving":"rare","receiving":"deeply"],
+            "oral":{"giving":"rare","receiving":"deeply"},
                "finish":{"swallow":"—","spit":"—","facial":"no"},
                "climax":{"intensity":"rolling","squirts":False},
                "dislikes":["yelling"],"grooming":"trimmed"},
@@ -446,6 +446,19 @@ def books_card(p):
     if not p.get("books"): return f"{p['name']}: rec me something?"
     lines=[f"• {b['title']} — “{b['quote']}”  ({b['memory']})" for b in p["books"][:3]]
     return f"{p['name']}'s shelf:\n"+"\n".join(lines)
+        def arousal_line(p, s):
+    ar = s.get("arousal",0)
+    if not s.get("nsfw",False):
+        return ["you’re making me blush",
+                "I’m leaning closer to the screen",
+                "my cheeks feel warm already"][min(int(ar),2)]
+    # NSFW on (still tasteful)
+    wet = ["I’m warming up… be sweet with me",
+           "I’m getting a little wet thinking about you",
+           "okay, I’m wet and wanting"][min(int(ar),2)]
+    if ar>=2.5 and p.get("nsfw_prefs",{}).get("climax",{}).get("squirts",False):
+        return wet + " (and yes… I sometimes squirt when it hits right)"
+    return wet
 
 # ===== Prompts =====
 def selfie_prompt(p, vibe="", nsfw=False):
@@ -677,7 +690,9 @@ def hook():
         elif ar<2: hook="…okay now I’m leaning in closer."
         elif ar<3: hook="I’m warming up—my cheeks and maybe more."
         else: hook="Say one more nice thing and I might need a cold shower."
-        send_message(chat, f"{p['name']} ({p['persona']}, {p['age']}): “{text[:80]}” — {feels}. {fact}. I’m into {taste}.{bookline} {hook}")
+              feel = arousal_line(p, s)
+send_message(chat, f"{p['name']} ({p['persona']}, {p['age']}): “{text[:80]}” — {feel}. {fact}. I’m into {taste}.{bookline} {hook}")
+            
         return "OK",200
 
     except Exception as e:
