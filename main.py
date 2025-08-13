@@ -2068,37 +2068,37 @@ def hook():
             send_message(chat, "\n".join(lines))
             return "OK", 200
 
-                if low.startswith("/selfie"):
+    if low.startswith("/selfie"):
         vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "teasing, SFW"
-        if (str(uid) != OWNER_ID) and not allowed(uid):
+    if (str(uid) != OWNER_ID) and not allowed(uid):
             send_message(chat, "Free image limit hit.")
             return "OK", 200
         _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=False), nsfw=False)
 
     if low.startswith("/old18"):
         vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "nostalgic"
-        if (str(uid) != OWNER_ID) and not allowed(uid):
+    if (str(uid) != OWNER_ID) and not allowed(uid):
             send_message(chat, "Free image limit hit.")
             return "OK", 200
         _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=True), nsfw=True)
 
     if low.startswith("/poster"):
         desc = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "movie poster, epic lighting"
-        if (str(uid) != OWNER_ID) and not allowed(uid):
+    if (str(uid) != OWNER_ID) and not allowed(uid):
             send_message(chat, "Free image limit hit.")
             return "OK", 200
         _spawn_image_job(chat, poster_prompt(p, desc), nsfw=False)
 
     if low.startswith("/draw"):
         prompt_txt = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "cartoon doodle of us together"
-        if (str(uid) != OWNER_ID) and not allowed(uid):
+    if (str(uid) != OWNER_ID) and not allowed(uid):
             send_message(chat, "Free image limit hit.")
             return "OK", 200
         _spawn_image_job(chat, draw_prompt(p, prompt_txt), nsfw=False)
 
     if low.startswith("/gen"):
         prompt_txt = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "any cool scene"
-        if (str(uid) != OWNER_ID) and not allowed(uid):
+    if (str(uid) != OWNER_ID) and not allowed(uid):
             send_message(chat, "Free image limit hit.")
             return "OK", 200
         _spawn_image_job(chat, prompt_txt, nsfw=False)
