@@ -721,7 +721,38 @@ STORIES = {
     ]
   }
 }
-
+# ===== PERSONAS (ensure PERS exists) =====
+# If PERS is missing, try importing it; otherwise build from STORIES.
+try:
+    PERS  # already exists?
+except NameError:
+    try:
+        from personas import PERS as _EXTERNAL_PERS
+        PERS = _EXTERNAL_PERS
+    except Exception:
+        def _default_persona(name):
+            return {
+                "name": name,
+                "persona": "",
+                "age": 25,
+                "location": "Internet",
+                "origin": "",
+                "job": "student",
+                "fav_color": "blue",
+                "fav_flower": "peony",
+                "music": [],
+                "movies": [],
+                "tv": [],
+                "body": "slim",
+                "hair": "brunette",
+                "eyes": "brown",
+                "cup": "B",
+                "img_tags": "natural look, soft lighting",
+                "underwear": [{"style":"lace thong","color":"black","fabric":"lace"}],
+                "arousal_slow": True,
+                "nsfw_prefs": {},
+            }
+        PERS = [_default_persona(n) for n in STORIES.keys()]
 # Attach life stories to personas
 # ===== PERSONAS (ensure PERS exists) =====
 # If you already define PERS elsewhere (e.g., another module),
