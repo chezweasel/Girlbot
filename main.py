@@ -446,7 +446,7 @@ def books_card(p):
     if not p.get("books"): return f"{p['name']}: rec me something?"
     lines=[f"• {b['title']} — “{b['quote']}”  ({b['memory']})" for b in p["books"][:3]]
     return f"{p['name']}'s shelf:\n"+"\n".join(lines)
-        def arousal_line(p, s):
+        def arousal_line(p,s):
     ar = s.get("arousal",0)
     if not s.get("nsfw",False):
         return ["you’re making me blush",
