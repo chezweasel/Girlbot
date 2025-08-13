@@ -691,7 +691,7 @@ def hook():
         elif ar<3: hook="I’m warming up—my cheeks and maybe more."
         else: hook="Say one more nice thing and I might need a cold shower."
         feel= arousal_line(p, s)
-send_message(chat, f"{p['name']})({p['persona']}, {p['age']}): “{text[:80]}” — {feel}. {fact}. I’m into {taste}.{bookline} {hook}")
+send_message(chat, f"{p['name']} ({p['persona']}, {p['age']}): \"{text[:80]}\" — {feel}. {fact}. I’m into {taste}. {bookline} {hook}")
             
         return "OK",200
 
