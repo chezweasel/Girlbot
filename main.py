@@ -868,8 +868,188 @@ def size_line(p):
 
 def stable_seed(name, suffix=""):
     return int(hashlib.sha256((f"FLIRTX{name}{suffix}").encode()).hexdigest()[:8],16)
-
 # ===== IMAGING: FAL → Replicate → Horde =====
+def gen_fal(prompt, w=640, h=896, seed=None):
+    if not FAL_KEY:
+        raise RuntimeError("FAL: missing FAL_KEY")
+    headers = {"Authorization": f"Key {FAL_KEY}", "Content-Type": "application/json"}
+
+    # Allow override via env; default to previous endpoint
+    FAL_ENDPOINT = os.getenv("FAL_ENDPOINT", "https://fal.run/fal-ai/flux-lora").strip()
+
+    body = {
+        "prompt": prompt,
+        "image_size": f"{w}x{h}",
+        "num_inference_steps": 22,
+        "seed": int(seed if (seed is not None) else random.randint(1, 2**31 - 1)),
+    }
+    r = requests.post(FAL_ENDPOINT, headers=headers, json=body, timeout=60)
+    try:
+        j = r.json()
+    except Exception:
+        j = {}
+    if r.status_code != 200:
+        raise RuntimeError(f"FAL HTTP {r.status_code}: {r.text[:200]}")
+    if "images" not in j or not j["images"]:
+        raise RuntimeError(f"FAL bad response: {str(j)[:200]}")
+    b64 = j["images"][0].get("content", "")
+    if not b64:
+        raise RuntimeError("FAL empty image content")
+    fn = f"out_{int(time.time())}.png"
+    open(fn, "wb").write(base64.b64decode(b64.split(",")[-1]))
+    return fn
+
+def gen_replicate(prompt, w=640, h=896, seed=None):
+    """
+    Replicate requires a VERSION HASH (not just the model slug).
+    Set env REPLICATE_VERSION to the version ID for your chosen model
+    (e.g., a long sha-like string). Example:
+      REPLICATE_VERSION=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+    We call the generic /v1/predictions endpoint with that version.
+    """
+    if not REPLICATE:
+        raise RuntimeError("Replicate: missing REPLICATE_API_TOKEN")
+    version = os.getenv("REPLICATE_VERSION", "").strip()
+    if not version:
+        # Don’t silently fail; tell you exactly what to set.
+        raise RuntimeError("Replicate: missing REPLICATE_VERSION env var (must be a version hash)")
+
+    headers = {"Authorization": f"Token {REPLICATE}", "Content-Type": "application/json"}
+    payload = {
+        "version": version,
+        "input": {
+            "prompt": prompt,
+            "width": int(w),
+            "height": int(h),
+            # Some Replicate versions accept seed=None; some need an int, so guard it:
+            **({"seed": int(seed)} if seed is not None else {}),
+        },
+    }
+    # Create prediction
+    r = requests.post("https://api.replicate.com/v1/predictions", headers=headers, json=payload, timeout=60)
+    if r.status_code not in (200, 201):
+        raise RuntimeError(f"Replicate create failed {r.status_code}: {r.text[:200]}")
+    job = r.json()
+    get_url = job.get("urls", {}).get("get")
+    if not get_url:
+        raise RuntimeError(f"Replicate: missing get URL in response: {str(job)[:200]}")
+
+    # Poll for completion
+    for _ in range(90):
+        s = requests.get(get_url, headers=headers, timeout=20).json()
+        st = s.get("status")
+        if st in ("succeeded", "failed", "canceled"):
+            if st != "succeeded":
+                err_msg = s.get("error") or s.get("logs") or st
+                raise RuntimeError(f"Replicate: {err_msg}")
+            out = s.get("output")
+            if not out:
+                raise RuntimeError("Replicate: empty output")
+            img_url = out[0] if isinstance(out, list) else out
+            img_b = requests.get(img_url, timeout=60).content
+            fn = f"out_{int(time.time())}.png"
+            open(fn, "wb").write(img_b)
+            return fn
+        time.sleep(2)
+    raise RuntimeError("Replicate: timeout waiting for result")
+
+def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
+    """
+    Horde can 503/queue frequently. We:
+      - Avoid limiting to trusted workers (more capacity)
+      - Increase max wait
+      - Return clearer errors
+    """
+    headers = {"apikey": HORDE, "Client-Agent": "flirtpixel/3.1"}
+    params = {
+        "steps": 22,
+        "width": int(w),
+        "height": int(h),
+        "n": 1,
+        "nsfw": bool(nsfw),
+        "sampler_name": "k_euler",
+        "cfg_scale": 6.5,
+    }
+    if seed is not None:
+        params["seed"] = int(seed)
+
+    job = {
+        "prompt": prompt,
+        "params": params,
+        "r2": True,
+        "censor_nsfw": False,
+        # Remove 'trusted' restriction for more worker availability
+        # "workers": "trusted",
+        "replacement_filter": True,
+    }
+
+    r = requests.post("https://stablehorde.net/api/v2/generate/async", json=job, headers=headers, timeout=45)
+    if r.status_code not in (200, 202):
+        raise RuntimeError(f"Horde queue HTTP {r.status_code}: {r.text[:200]}")
+    rid = r.json().get("id")
+    if not rid:
+        raise RuntimeError(f"Horde queue error: {r.text[:200]}")
+
+    waited = 0
+    max_wait = int(os.getenv("HORDE_MAX_WAIT", "360"))  # allow longer queues
+    while True:
+        s = requests.get(f"https://stablehorde.net/api/v2/generate/check/{rid}", timeout=30).json()
+        if s.get("faulted"):
+            raise RuntimeError("Horde: job faulted")
+        if s.get("done"):
+            break
+        time.sleep(2)
+        waited += 2
+        if waited > max_wait:
+            raise RuntimeError("Horde: queue timeout")
+
+    st = requests.get(f"https://stablehorde.net/api/v2/generate/status/{rid}", timeout=45).json()
+    gens = st.get("generations", [])
+    if not gens:
+        # Bubble up a clearer error message if present
+        raise RuntimeError(f"Horde empty result: {str(st)[:200]}")
+    fn = f"out_{int(time.time())}.png"
+    open(fn, "wb").write(base64.b64decode(gens[0]["img"]))
+    return fn
+
+def generate_image(prompt, w=640, h=896, seed=None, nsfw=True):
+    """
+    Try only the backends that are actually configured.
+    - If FAL_KEY is set → try FAL
+    - If REPLICATE_API_TOKEN + REPLICATE_VERSION are set → try Replicate
+    - Always try Horde last (it can work with a 'public' key but is less reliable)
+    """
+    errors = []
+    tried = []
+
+    def _try(fn, label):
+        nonlocal errors, tried
+        tried.append(label)
+        try:
+            return fn()
+        except Exception as e:
+            errors.append(f"{label}: {e}")
+            return None
+
+    # Prepare lambdas only if creds exist
+    if FAL_KEY:
+        out = _try(lambda: gen_fal(prompt, w, h, seed), "FAL")
+        if out:
+            return out
+
+    # Replicate needs both token and version hash
+    if REPLICATE and os.getenv("REPLICATE_VERSION", "").strip():
+        out = _try(lambda: gen_replicate(prompt, w, h, seed), "Replicate")
+        if out:
+            return out
+
+    # Horde last
+    out = _try(lambda: gen_horde(prompt, w, h, seed, nsfw), "Horde")
+    if out:
+        return out
+
+    raise RuntimeError(f"All backends failed ({', '.join(tried)}): " + " | ".join(errors[:3]))
 def gen_fal(prompt, w=640, h=896, seed=None):
     if not FAL_KEY: raise RuntimeError("FAL missing")
     headers={"Authorization":f"Key {FAL_KEY}","Content-Type":"application/json"}
