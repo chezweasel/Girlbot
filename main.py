@@ -1672,9 +1672,8 @@ def hook():
         else:
             hook = "Say one more nice thing and I might need a cold shower."
 
-        send_message(chat, f"{p.get('name', 'Girl')} ({p.get('persona', '')}, {p.get('age', 0)}): "
-                           f"\"{text[:80]}\" — {feels}. {fact}. I'm into {taste}.{bookline} {hook}")
-        return "OK", 200
+        send_message(chat, generate_chat_turn(p, s, text))
+return "OK", 200
 
     except Exception as e:
         print("PROCESS ERROR:", e)
