@@ -1,44 +1,38 @@
-import os,time,json,base64,threading,requests,hmac,hashlib
-from flask import Flask,render_template_string,request
-from telebot import TeleBot,types
-import requests
-import os
+import os, time, json, base64, threading, requests
+from flask import Flask, render_template_string, request
+from telebot import TeleBot, types
 
-TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
-PUBLIC_URL = os.environ['PUBLIC_URL']
-WEBHOOK_SECRET = os.environ['WEBHOOK_SECRET']
-
-# Set the webhook with your secret path
-requests.get(f"https://api.telegram.org/bot{TOKEN}/setWebhook?url={PUBLIC_URL}/{WEBHOOK_SECRET}")
-# ===== ENV (safer: all optional except token/owner) =====
+# ===== ENV =====
 TG_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
-OWNER_ID = os.environ["OWNER_ID"]            # string
-PUBLIC_URL = os.getenv("PUBLIC_URL","")      # may be empty on 1st deploy
-WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET","hook")
-HORDE_KEY = os.getenv("HORDE_API_KEY","0000000000")
-ANON_SECRET = os.getenv("ANON_SECRET","change_me")
+OWNER_ID = os.environ["OWNER_ID"]                    # e.g. "7414541468"
+PUBLIC_URL = os.environ["PUBLIC_URL"]                # e.g. https://flirtpixel.up.railway.app
+WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"]        # any random string
+HORDE_KEY = os.getenv("HORDE_API_KEY","0000000000")  # optional free key
 TOKEN_CODES = set(x.strip() for x in os.getenv("TOKEN_CODES","").split(",") if x.strip())
 
-# ===== Settings & safety =====
-FREE_PER_DAY=2; PRIVATE_ONLY=True
-FORBID={"teen","minor","underage","child","young-looking","incest","stepbro","stepsis",
-        "rape","forced","nonconsensual","bestiality","animal","beast","loli","shota",
-        "real name","celebrity","celeb","revenge porn","deepfake","face swap"}
-PERS=[("Ava","playful"),("Sofia","elegant"),("Harper","adventurous"),("Lila","romantic"),
-      ("Camille","bold"),("Maya","flirty"),("Ivy","retro"),("Jade","teasing"),
-      ("Elena","passionate"),("Riley","sweet"),("Scarlett","bossy"),("Tessa","dreamy"),
-      ("Noelle","tender"),("Zoey","party"),("Grace","calm")]
+# ===== SETTINGS / SAFETY =====
+FREE_PER_DAY = 2
+PRIVATE_ONLY = True
+FORBID = {
+  "minor","underage","child","young-looking","stepbro",
+  "rape","forced","nonconsensual","bestiality","animal","beast","loli","shota",
+  "revenge porn","deepfake"
+}
+PERS=[("Rochelle","playful"),("Sophia","elegant"),("Nicole","adventurous"),("Tia","romantic"),
+      ("Kendra","bold"),("Cassandra","flirty"),("Ivy","retro"),("Jade","teasing"),
+      ("Brittany","passionate"),("Riley","sweet"),("Scarlett","bossy"),("Tess","dreamy"),
+      ("Ana","tender"),("Zoey","party"),("Chelsea","calm")]
 
-# ===== Bot + state =====
-bot=TeleBot(TG_TOKEN,parse_mode=None)
+# ===== BOT + STATE (persist) =====
+bot=TeleBot(TG_TOKEN, parse_mode=None)
 STATE_FILE="state.json"; STATE={}
 def load_state():
     global STATE
     if os.path.exists(STATE_FILE):
-        try: STATE=json.load(open(STATE_FILE,"r"))
+        try: STATE=json.load(open(STATE_FILE)); 
         except: STATE={}
 def save_state():
-    try: json.dump(STATE,open(STATE_FILE,"w"))
+    try: json.dump(STATE, open(STATE_FILE,"w"))
     except: pass
 def now(): return time.time()
 def is_private(m): return getattr(m.chat,"type","private")=="private"
@@ -55,14 +49,14 @@ def vibe(uid):
     s=gu(uid); i=s["g"]%len(PERS); n,d=PERS[i]
     return n,d,f"{n} vibe {d}. supportive, flirty, AI fantasy"
 
-# ===== Stable Horde =====
+# ===== STABLE HORDE (NSFW OK, with guardrails) =====
 H="https://stablehorde.net/api/v2"
 def horde_generate(prompt,steps=28,w=832,h=1216,nsfw=True):
-    headers={"apikey":HORDE_KEY,"Client-Agent":"tg-girlbot/1.0"}
+    hd={"apikey":HORDE_KEY,"Client-Agent":"tg-girlbot/1.0"}
     job={"prompt":prompt,"params":{"steps":steps,"width":w,"height":h,"n":1,"nsfw":nsfw},
          "r2":True,"censor_nsfw":False}
-    rid=requests.post(f"{H}/generate/async",json=job,headers=headers,timeout=45).json().get("id")
-    if not rid: raise RuntimeError("Horde rejected job or rate-limited.")
+    rid=requests.post(f"{H}/generate/async",json=job,headers=hd,timeout=45).json().get("id")
+    if not rid: raise RuntimeError("Horde rejected job or busy.")
     waited=0
     while True:
         s=requests.get(f"{H}/generate/check/{rid}",timeout=30).json()
@@ -71,17 +65,28 @@ def horde_generate(prompt,steps=28,w=832,h=1216,nsfw=True):
         time.sleep(2); waited+=2
         if waited>180: raise TimeoutError("Horde queue slow; try later.")
     st=requests.get(f"{H}/generate/status/{rid}",timeout=45).json()
-    gens=st.get("generations",[])
-    if not gens: raise RuntimeError("No image returned.")
-    imgb=gens[0]["img"]; fn=f"out_{int(now())}.png"
-    open(fn,"wb").write(base64.b64decode(imgb)); return fn
+    g=st.get("generations",[])
+    if not g: raise RuntimeError("No image returned.")
+    fn=f"out_{int(now())}.png"
+    open(fn,"wb").write(base64.b64decode(g[0]["img"]))
+    return fn
 
-# ===== Handlers =====
+# ===== HANDLERS =====
+HELP_TXT=("Commands:\n"
+"hi — menu\n/girls — list\n/pick # or name — choose\n/who — show current\n"
+"/nsfw_on — enable 18+\n/nsfw_off — disable\n/gen <prompt> — make pic\n"
+"/status — free images left\n/token <code> — unlock unlimited")
+
+@bot.message_handler(commands=["help","start"])
+def help(m): 
+    if PRIVATE_ONLY and not is_private(m): return
+    bot.reply_to(m, HELP_TXT)
+
 @bot.message_handler(func=lambda m:m.text and m.text.lower().strip() in {"hi","hello","hey","hiya"})
 def greet(m):
     if PRIVATE_ONLY and not is_private(m): return
     gu(m.from_user.id)
-    bot.reply_to(m,"Hi 😘 Pick:\n"+names_list()+"\n/pick # or name, /who, /nsfw_on, /gen <prompt>")
+    bot.reply_to(m,"Hi 😘 Pick:\n"+names_list()+"\n"+HELP_TXT)
 
 @bot.message_handler(commands=["girls"])
 def girls(m):
@@ -91,9 +96,9 @@ def girls(m):
 @bot.message_handler(commands=["pick"])
 def pick(m):
     if PRIVATE_ONLY and not is_private(m): return
-    parts=m.text.split(maxsplit=1)
-    if len(parts)<2: return bot.reply_to(m,"Use: /pick 1-15 or name")
-    t=parts[1].strip().lower(); idx=None
+    a=m.text.split(maxsplit=1)
+    if len(a)<2: return bot.reply_to(m,"Use: /pick 1-15 or name")
+    t=a[1].strip().lower(); idx=None
     if t.isdigit(): n=int(t); idx=n-1 if 1<=n<=len(PERS) else None
     else:
         for i,(n,_) in enumerate(PERS):
@@ -122,10 +127,9 @@ def nsfw_off(m):
 @bot.message_handler(commands=["token"])
 def token_cmd(m):
     if PRIVATE_ONLY and not is_private(m): return
-    parts=m.text.split(maxsplit=1)
-    if len(parts)<2: return bot.reply_to(m,"Use: /token YOUR_CODE")
-    code=parts[1].strip()
-    if code in TOKEN_CODES: gu(m.from_user.id)["ok"]=True; save_state(); bot.reply_to(m,"✅ Unlimited unlocked.")
+    a=m.text.split(maxsplit=1)
+    if len(a)<2: return bot.reply_to(m,"Use: /token YOUR_CODE")
+    if a[1].strip() in TOKEN_CODES: gu(m.from_user.id)["ok"]=True; save_state(); bot.reply_to(m,"✅ Unlimited unlocked.")
     else: bot.reply_to(m,"❌ Invalid code.")
 
 @bot.message_handler(commands=["status"])
@@ -137,9 +141,9 @@ def status_cmd(m):
 @bot.message_handler(commands=["gen"])
 def gen(m):
     if PRIVATE_ONLY and not is_private(m): return
-    u=str(m.from_user.id); s=gu(u); parts=m.text.split(maxsplit=1)
-    if len(parts)<2: return bot.reply_to(m,"/gen <prompt>")
-    p=parts[1].strip()
+    u=str(m.from_user.id); s=gu(u); a=m.text.split(maxsplit=1)
+    if len(a)<2: return bot.reply_to(m,"/gen <prompt>")
+    p=a[1].strip()
     if not s["nsfw"]: return bot.reply_to(m,"Turn on /nsfw_on for spicy pics.")
     if not clean_ok(p): return bot.reply_to(m,"I won’t generate that. Try something else.")
     if not allowed(u): return bot.reply_to(m,"Baby, you’ve used your free ones 😏")
@@ -156,7 +160,7 @@ def chatty(m):
     bot.reply_to(m, f"{n} ({d}): I like this 😘" if not gu(m.from_user.id)["nsfw"]
                    else f"{n} ({d}): mm… keep going; I want details.")
 
-# ===== Website + webhook =====
+# ===== WEBSITE + WEBHOOK =====
 app=Flask(__name__)
 HOME="""<!doctype html><html><head><meta name=viewport content="width=device-width,initial-scale=1">
 <title>Girlbot</title><style>body{font-family:system-ui;background:#0f0f12;color:#eee;margin:0}
@@ -185,12 +189,10 @@ def telegram():
     bot.process_new_updates([upd]); return "ok",200
 
 def set_webhook():
-    if not PUBLIC_URL: 
-        print("PUBLIC_URL not set yet; visit Railway URL, add PUBLIC_URL var, redeploy.")
-        return
     try:
-        bot.remove_webhook()
-        bot.set_webhook(url=f"{PUBLIC_URL}/telegram/{WEBHOOK_SECRET}",drop_pending_updates=True)
+        requests.get(f"https://api.telegram.org/bot{TG_TOKEN}/deleteWebhook",timeout=10)
+        requests.get(f"https://api.telegram.org/bot{TG_TOKEN}/setWebhook",
+                     params={"url":f"{PUBLIC_URL}/telegram/{WEBHOOK_SECRET}"},timeout=10)
         bot.send_message(OWNER_ID,"✅ READY — webhook set")
     except Exception as e:
         print("Webhook error:",e)
@@ -199,20 +201,3 @@ if __name__=="__main__":
     load_state()
     threading.Thread(target=set_webhook,daemon=True).start()
     app.run(host="0.0.0.0",port=int(os.environ.get("PORT",8080)))
-from flask import Flask
-app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return "Girlbot is running!"
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080)
-        from flask import Flask, request
-app = Flask(__name__)
-
-@app.route(f"/{WEBHOOK_SECRET}", methods=["POST"])
-def webhook():
-    update = request.get_json()
-    # your bot’s message handling code goes here
-    return "ok"
