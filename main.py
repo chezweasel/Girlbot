@@ -1228,9 +1228,140 @@ def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
     open(fn, "wb").write(base64.b64decode(gens[0]["img"]))
     return fn
 
+# ===== IMAGING: robust Horde + smart failover =====
+def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
+    """
+    Stable Horde generation with:
+      - proper string seed
+      - clearer auth/validation errors
+      - configurable queue wait
+      - strict result checks
+    """
+    if not HORDE:
+        raise RuntimeError("Horde: missing HORDE_API_KEY")
+
+    headers = {
+        "apikey": HORDE,
+        "Client-Agent": "flirtpixel/3.2"  # identify your app politely
+    }
+
+    # Horde wants the seed as a string; keep it stable but stringify it
+    seed_str = str(int(seed)) if seed is not None else None
+
+    params = {
+        "steps": 22,
+        "width": int(w),
+        "height": int(h),
+        "n": 1,
+        "nsfw": bool(nsfw),
+        "sampler_name": "k_euler",
+        "cfg_scale": 6.5,
+    }
+    if seed_str is not None:
+        params["seed"] = seed_str
+
+    job = {
+        "prompt": prompt,
+        "params": params,
+        "r2": True,
+        "censor_nsfw": False,
+        "replacement_filter": True,
+    }
+
+    r = requests.post(
+        "https://stablehorde.net/api/v2/generate/async",
+        json=job,
+        headers=headers,
+        timeout=45
+    )
+
+    # Clearer error handling for common cases
+    if r.status_code == 401:
+        raise RuntimeError("Horde auth failed (401): invalid API key?")
+    if r.status_code == 429:
+        raise RuntimeError("Horde rate limited (429): try again soon")
+    if r.status_code not in (200, 202):
+        raise RuntimeError(f"Horde queue HTTP {r.status_code}: {r.text[:200]}")
+
+    rid = (r.json() or {}).get("id")
+    if not rid:
+        raise RuntimeError(f"Horde queue error: {r.text[:200]}")
+
+    waited = 0
+    max_wait = int(os.getenv("HORDE_MAX_WAIT", "360"))  # seconds
+
+    # Poll until done (or timeout)
+    while True:
+        s = requests.get(
+            f"https://stablehorde.net/api/v2/generate/check/{rid}",
+            timeout=30
+        ).json()
+
+        if s.get("faulted"):
+            raise RuntimeError("Horde: job faulted")
+        if s.get("done"):
+            break
+
+        time.sleep(2)
+        waited += 2
+        if waited > max_wait:
+            raise RuntimeError("Horde: queue timeout")
+
+    st = requests.get(
+        f"https://stablehorde.net/api/v2/generate/status/{rid}",
+        timeout=45
+    ).json()
+
+    gens = st.get("generations", [])
+    if not gens:
+        raise RuntimeError(f"Horde empty result: {str(st)[:200]}")
+
+    fn = f"out_{int(time.time())}.png"
+    open(fn, "wb").write(base64.b64decode(gens[0]["img"]))
+    return fn
+
+
 def generate_image(prompt, w=640, h=896, seed=None, nsfw=True):
+    """
+    Smart failover:
+      1) FAL (if key present)
+      2) Replicate (if token + version present)
+      3) Horde (if key present)
+    Aggregates errors so you see *why* it failed.
+    """
     errors = []
     tried = []
+
+    def _try(label, fn):
+        tried.append(label)
+        try:
+            return fn()
+        except Exception as e:
+            errors.append(f"{label}: {e}")
+            return None
+
+    # 1) FAL
+    if FAL_KEY:
+        out = _try("FAL", lambda: gen_fal(prompt, w, h, seed))
+        if out:
+            return out
+
+    # 2) Replicate
+    if REPLICATE and os.getenv("REPLICATE_VERSION", "").strip():
+        out = _try("Replicate", lambda: gen_replicate(prompt, w, h, seed))
+        if out:
+            return out
+
+    # 3) Horde
+    if HORDE:
+        out = _try("Horde", lambda: gen_horde(prompt, w, h, seed, nsfw))
+        if out:
+            return out
+
+    # Nothing worked
+    if not tried:
+        raise RuntimeError("No image backends configured (FAL/Replicate/Horde keys missing).")
+    raise RuntimeError(f"All backends failed ({', '.join(tried)}): " + " | ".join(errors[:3]))
 
     def _try(fn, label):
         nonlocal errors, tried
