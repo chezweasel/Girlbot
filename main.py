@@ -1230,7 +1230,91 @@ HELP=("Commands:\n"
 "hi — menu\n/girls — list\n/pick # or name — choose\n/who — current\n/bio — backstory\n/style — tastes & quirks\n/books — favorites\n"
 "/likes coffee, films — steer convo\n/selfie [vibe] — consistent portrait\n/old18 — SFW throwback at 18 (adult)\n/poster <movie>\n/draw <subject>\n"
 "/spice — tasteful 18+ profile (after /nsfw_on)\n/nsfw_on · /nsfw_off\n/gen <prompt> — custom NSFW image\n/status — free left\n/switch — random girl\n/reset")
+        if low.startswith("/diag"):
+            import time
+            results = []
+            test_prompt = "tiny test image of a red square"
 
+            def try_backend(label, fn):
+                t0 = time.time()
+                try:
+                    fn()
+                    elapsed = time.time() - t0
+                    results.append(f"{label}: ✅ {elapsed:.1f}s")
+                except Exception as e:
+                    results.append(f"{label}: ❌ {str(e)[:120]}")
+
+            # Check FAL
+            if FAL_KEY:
+                try_backend("FAL", lambda: gen_fal(test_prompt, 96, 96, seed=1))
+            else:
+                results.append("FAL: (skipped, no FAL_KEY)")
+
+            # Check Replicate
+            if REPLICATE and os.getenv("REPLICATE_VERSION", "").strip():
+                try_backend("Replicate", lambda: gen_replicate(test_prompt, 96, 96, seed=1))
+            else:
+                results.append("Replicate: (skipped, no token/version)")
+
+            # Check Horde
+            if HORDE:
+                try_backend("Horde", lambda: gen_horde(test_prompt, 96, 96, seed=1, nsfw=False))
+            else:
+                results.append("Horde: (skipped, no HORDE_API_KEY)")
+
+            send_message(chat, "\n".join(results))
+            return "OK", 200
+                    if low.startswith("/diag"):
+            import time
+
+            lines = []
+            test_prompt = "tiny test image of a red square"
+
+            def attempt(label, fn):
+                t0 = time.time()
+                try:
+                    fn()
+                    lines.append(f"{label}: ✅ {time.time()-t0:.1f}s")
+                    return True
+                except Exception as e:
+                    lines.append(f"{label}: ❌ {str(e)[:160]}")
+                    return False
+
+            # Show which keys are present (so you know what should run)
+            lines.append(
+                "Keys -> "
+                f"FAL:{'set' if FAL_KEY else '—'} | "
+                f"Replicate:{'set' if REPLICATE else '—'} | "
+                f"Horde:{'set' if HORDE else '—'}"
+            )
+
+            # 1) Individual backend checks (small 96x96 to keep it cheap/fast)
+            if FAL_KEY:
+                attempt("FAL", lambda: gen_fal(test_prompt, 96, 96, seed=1))
+            else:
+                lines.append("FAL: (skipped, no FAL_KEY)")
+
+            if REPLICATE:
+                attempt("Replicate", lambda: gen_replicate(test_prompt, 96, 96, seed=1))
+            else:
+                lines.append("Replicate: (skipped, no REPLICATE_API_TOKEN)")
+
+            if HORDE:
+                attempt("Horde", lambda: gen_horde(test_prompt, 96, 96, seed=1, nsfw=False))
+            else:
+                lines.append("Horde: (skipped, no HORDE_API_KEY)")
+
+            # 2) Failover chain test (exactly like generate_image does: FAL -> Replicate -> Horde)
+            lines.append("— Failover chain (generate_image) —")
+            t0 = time.time()
+            try:
+                out_path = generate_image(test_prompt, 96, 96, seed=1, nsfw=False)
+                lines.append(f"generate_image(): ✅ {time.time()-t0:.1f}s (saved {out_path})")
+            except Exception as e:
+                lines.append(f"generate_image(): ❌ {str(e)[:200]}")
+
+            send_message(chat, "\n".join(lines))
+            return "OK", 200
 # ===== FLASK (single app) =====
 app=Flask(__name__)
 PROCESSED=set()
