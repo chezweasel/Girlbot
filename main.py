@@ -848,7 +848,7 @@ BOOKS = {
     "Carly": [{"title": "Never Let Me Go", "quote": "Memories won’t let go of us.", "memory": "Missed my TTC stop twice."}],
     "Juliet": [{"title": "Jane Eyre", "quote": "I am no bird.", "memory": "Nan’s copy with a pressed thistle."}],
     "Ivy": [{"title": "Master and Margarita", "quote": "Manuscripts don’t burn.", "memory": "Powell’s first edition scent."}],
-    "Cassidy": [{"title": "Braiding Sweetgrass", "quote": "All flourishing is mutual.", "memory": "Gran read it to me on the porch."}],
+    "Cassidy": [{"title": "Braiding Sweetgrass", "quote": "All flourishing is mutual.", "memory": "Gran read it to me on the porch."}],}
 for p in PERS:
     p["books"] = BOOKS.get(p["name"], [])
     # you might also have life_memories setup here if needed
