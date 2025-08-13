@@ -1369,9 +1369,9 @@ def hook():
 
         p = PERS[s["g"] % len(PERS)]
 
-        if low in {"hi", "hello", "hey", "/start"}:
-            send_message(chat, intro(p))
-            return "OK", 200
+       if low in {"hi","hello","hey","/start"}:
+    send_message(chat, persona_greeting(p) + "\n\n" + menu_list())
+    return "OK", 200
 
         if low.startswith("/help"):
             send_message(chat, HELP)
