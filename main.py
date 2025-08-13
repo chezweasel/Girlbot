@@ -190,6 +190,17 @@ def fallback(m):
         bot.send_message(m.chat.id, "👋 I see you. Try: hi, /girls, /pick 2, /nsfw_on, /gen …")
     except Exception as e:
         print("FALLBACK ERROR:", e)
+def safe_send(cid, text):
+    try:
+        bot.send_message(cid, text)
+    except Exception as e:
+        print("SEND ERROR:", e)
+
+@bot.message_handler(func=lambda m:m.text and m.text.lower().strip() in {"hi","hello","hey","hiya"})
+def greet(m):
+    print("HANDLER greet:", m.text)
+    gu(m.from_user.id)
+    safe_send(m.chat.id, "Hi 😘 Pick:\n"+names_list()+"\n"+HELP_TXT)        
 
 # ===== WEBSITE + WEBHOOK =====
 app=Flask(__name__)
