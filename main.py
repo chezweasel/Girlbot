@@ -515,7 +515,7 @@ def send_photo(cid, path):
     with open(path,"rb") as f:
         r=requests.post(f"{API}/sendPhoto",data={"chat_id":int(cid)},files={"photo":f},timeout=120)
     if r.status_code!=200: print("PHOTO ERR:", r.text[:200])
-            def arousal_line(p, s):
+def arousal_line(p, s):
     ar = s.get("arousal", 0)
     if not s.get("nsfw", False):
         lines = [
