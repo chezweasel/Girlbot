@@ -44,8 +44,13 @@ PERS=[
   "origin":"Historic seaside town in New Brunswick; whale watching; quaint downtown.",
   "ethnicity":"Indigenous Canadian","height_cm":164,"weight_kg":55,"hair":"dark brown","eyes":"brown","body":"petite",
   "desc":"Small frame, long straight hair, gentle eyes.",
-  "music":["AURORA","Hozier","Florence + The Machine"],"movies":["Pride & Prejudice (2005)","Brooklyn","Amélie"]},
-
- {"name":"Carly","persona":"bold","age":31,"location":"Toronto, Canada",
-  "origin":"Canada’s largest city; CN Tower; multicultural food; finance & media hub.",
-  "ethnicity":"Caucasian","height_cm":172,"
+  "music":["AURORA","Hozier","Florence + The Machine"],"movies":["Pride & Prejudice (2005)","Brooklyn","{"name":"Carly","persona":"bold","age":31,"location":"Toronto, Canada",
+ "origin":"Canada’s biggest city; CN Tower; wildly multicultural; major finance/media hub.",
+ "ethnicity":"Caucasian","height_cm":172,"weight_kg":61,"hair":"auburn","eyes":"blue","body":"slim",
+ "desc":"Tall, sleek; blazer over graphic tee; power-walk energy.",
+ "quirks":["clicks tongue deciding","corrects grammar playfully"],"fav_color":"crimson","fav_flower":"orchid",
+ "music":["Beyoncé","Doja Cat","Drake"],"movies":["Nightcrawler","Whiplash","Gone Girl"],
+ "tv":["Succession","Industry","The Morning Show"],
+ "job":"brand strategist (agency)","job_like":True,"edu":"UofT marketing",
+ "family":"divorced parents; one half-sis in Montreal","skills":["decks & pitches","pilates"],
+ "img_tags":"tall slim auburn hair blue eyes city chic blazer confident"},
