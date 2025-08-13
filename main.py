@@ -827,6 +827,39 @@ def get_user(uid):
 def allowed(uid): return get_user(uid)["used"]<FREE_PER_DAY
 
 # ===== HELPERS =====
+import re
+
+# --- name matching helpers (fuzzy, no extra libs) ---
+def _norm(s: str) -> str:
+    return re.sub(r'[^a-z0-9]+', '', (s or '').lower())
+
+def find_girl_indexes_by_name(query: str):
+    if not query:
+        return None
+    qn = _norm(query)
+    names = [(i, p.get("name","")) for i, p in enumerate(PERS)]
+    norm_names = [(i, _norm(n)) for i, n in names]
+
+    # exact
+    exact = [i for i, nn in norm_names if nn == qn]
+    if len(exact) == 1:
+        return exact[0]
+
+    # prefix
+    pref = [i for i, nn in norm_names if nn.startswith(qn)]
+    if len(pref) == 1:
+        return pref[0]
+    if len(pref) > 1:
+        return pref  # ambiguous
+
+    # contains
+    cont = [i for i, nn in norm_names if qn in nn]
+    if len(cont) == 1:
+        return cont[0]
+    if len(cont) > 1:
+        return cont  # ambiguous
+
+    return None
 DEFAULT_HFTIN = "5'6\""
 def size_line(p):
     h = p.get("h_ftin", DEFAULT_HFTIN)
