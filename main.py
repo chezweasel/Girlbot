@@ -6,7 +6,12 @@ def safe_reply(chat_id, text):
         bot.send_message(chat_id, text)
     except Exception as e:
         print("SEND ERROR:", e)
-
+def startup_ping():
+    try:
+        safe_send(int(OWNER_ID), "👋 Bot restarted, I can DM you now.")
+    except Exception as e:
+        print("STARTUP PING ERROR:", e)
+        threading.Thread(target=startup_ping, daemon=True).start()
 # ===== ENV (Railway → Variables) =====
 TG_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 OWNER_ID = os.environ["OWNER_ID"]                 # numeric id as string
