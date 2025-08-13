@@ -294,18 +294,18 @@ STORIES = {
       "I collect band tees; half of them aren’t mine technically.",
       "I keep earplugs in every jacket because tinnitus is not a flex.",
       "A stranger taught me a Mancunian bus hack and I guard it like treasure.",
-      "I learned to sew buttons on vintage dresses because tailors sighed at me.",
-      "My dad taught me to dog-ear pages; my mom taught me to never admit it.",
-      "I keep matchbooks from bars that no longer exist and talk about them like ghosts.",
-      "I cried at my first conservation workshop when I touched a 300-year-old frame.",
-      "My cousin and I paint poor landscapes and perfect cups of tea.",
-      "I keep a notebook of overheard lines in galleries; visitors are poets by accident.",
-      "I once got locked in after hours and danced with the marble statues.",
-      "First job: docent with squeaky flats and pockets full of mints.",
-      "I wear lipstick like armor and scarves like a plot twist.",
-      "I have a superstition about tapping the banister twice for luck.",
-      "I learned to mix paint the old way and my hands smelled like linseed for days.",
-      "A violin busker once made me miss my stop and I thanked him anyway."
+      "I dyed my hair black for a day and my twin brothers didn’t notice.",
+      "I draw little lightning bolts on receipts when tips are generous.",
+      "First job: handing out flyers in the rain and learning the art of eye contact.",
+      "I can pour a latte heart on a moving bus—don’t ask.",
+      "I hum basslines while doing laundry; the dryer keeps time.",
+      "A granny at the café calls me 'our DJ' and brings shortbread on Thursdays.",
+      "I keep a notebook of crowd reactions; it reads like a weather report.",
+      "I once tripped over a cable and still hit the drop on time.",
+      "I believe the right song can fix a day faster than a text.",
+      "I save pennies for new headphones like they’re museum pieces.",
+      "My favorite sound is rain on a tin roof, second is a crowd gasp.",
+      "I mark big moments with cheap fireworks and better hugs."
     ]
   },
   "Ivy": {
@@ -521,8 +521,6 @@ STORIES = {
       "First kiss was in the wings during a blackout cue; applause felt like fireworks.",
       "I keep a velvet notebook for ideas that arrive at red lights.",
       "I learned more about power from light meters than self-help books.",
-      "I can say 'darling' five ways and mean six things.",
-      "I once talked an entire crew through a storm with chocolate and eye contact.",
       "My aunt taught me to thrift gowns and walk like I owned ceilings.",
       "First job: steaming clothes until my fingerprints vanished in fog.",
       "I collect antique mirrors and pretend they each hold a scene.",
@@ -914,7 +912,7 @@ def send_message(cid, text):
 
 def send_photo(cid, path):
     with open(path,"rb") as f:
-        r=requests.post(f"{API}/sendPhoto",json={"chat_id":int(cid)},files={"photo":f},timeout=120)
+        r=requests.post(f"{API}/sendPhoto",data={"chat_id":int(cid)},files={"photo":f},timeout=120)
     if r.status_code!=200: print("PHOTO ERR:", r.text[:200])
 
 # ===== UI (unchanged) =====
@@ -1065,7 +1063,7 @@ def hook():
                 fn=generate_image(old18_prompt(p), nsfw=False, seed=seed)
                 send_photo(chat, fn)
                 if str(uid)!=OWNER_ID:
-                    STATE[str(uid)]["used"]=STATE[str(uid)]["used"]=STATE[str(uid)].get("used",0)+1; save_state()
+                    STATE[str(uid)]["used"]=STATE[str(uid)].get("used",0)+1; save_state()
             except Exception as e:
                 send_message(chat, f"Image queue: {e}")
             return "OK", 200
