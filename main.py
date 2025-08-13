@@ -852,10 +852,82 @@ BOOKS = {
 }
 for p in PERS:
     p["books"] = BOOKS.get(p["name"], [])
-# -------- Persona normalizer: make each girl unique & non-default --------
-def _seeded_choice(name, options):
-    rnd = random.Random(stable_seed(name, "defaults"))
+# -------- Persona normalizer: make each girl unique & non-default (self-contained) --------
+import hashlib
+
+def _name_seed(name: str, salt: str = "defaults") -> int:
+    s = f"{name}:{salt}".encode("utf-8", errors="ignore")
+    return int(hashlib.sha256(s).hexdigest()[:8], 16)
+
+def _seeded_choice(name, options, salt="choice"):
+    rnd = random.Random(_name_seed(name, salt))
     return options[rnd.randrange(len(options))]
+
+# Optional “known” hometowns for some names (use if location missing)
+_FALLBACK_LOCATIONS = {
+    "Nicole": "Vancouver",
+    "Lurleen": "Calgary",
+    "Tia": "Gold Coast",
+    "Cassidy": "St. Andrews",
+    "Carly": "Toronto",
+    "Kate": "Manchester",
+    "Ivy": "Portland",
+    "Chelsey": "Halifax",
+    "Juliet": "Edinburgh",
+    "Riley": "Seattle",
+    "Scarlett": "Montreal",
+    "Tessa": "Sydney",
+    "Brittany": "Banff",
+    "Zoey": "Brooklyn",
+    "Grace": "Isle of Wight",
+}
+
+_COLOR_POOL  = ["sage", "peony pink", "midnight blue", "amber", "seafoam", "charcoal", "lavender", "crimson", "teal", "buttercream"]
+_FLOWER_POOL = ["peony", "wildflower mix", "lily", "sunflower", "hibiscus", "hydrangea", "thistle", "daisy", "orchid", "ranunculus"]
+
+def _seeded_height_weight(name):
+    rnd = random.Random(_name_seed(name, "size"))
+    # Height: 5'2"–5'10"
+    inches = rnd.randint(62, 70)
+    h_ft, h_in = divmod(inches, 12)
+    h_str = f"{h_ft}'{h_in}\""
+    # Weight: 110–165 lbs
+    w_lb = rnd.randint(110, 165)
+    return h_str, w_lb
+
+def personalize_personas():
+    for p in PERS:
+        name = p.get("name","Girl") or "Girl"
+
+        # Location
+        loc = (p.get("location") or "").strip()
+        if not loc or loc.lower() in {"?", "internet"}:
+            p["location"] = _FALLBACK_LOCATIONS.get(
+                name,
+                _seeded_choice(name, list(_FALLBACK_LOCATIONS.values()), salt="locpool")
+            )
+
+        # Fav color / flower
+        if not p.get("fav_color"):
+            p["fav_color"] = _seeded_choice(name, _COLOR_POOL, salt="color")
+        if not p.get("fav_flower"):
+            p["fav_flower"] = _seeded_choice(name, _FLOWER_POOL, salt="flower")
+
+        # Height / weight
+        if not p.get("h_ftin") or not p.get("w_lb"):
+            h, w = _seeded_height_weight(name)
+            p.setdefault("h_ftin", h)
+            p.setdefault("w_lb", w)
+
+        # Ensure life_memories present if STORIES has them
+        if not p.get("life_memories"):
+            lm = (STORIES.get(name, {}) or {}).get("sfw_memories", [])
+            if lm:
+                p["life_memories"] = lm
+
+# Run once at startup after PERS/books/life_memories are set
+personalize_personas()
+# -------- end normalizer --------
 
 # Optional “known” hometowns for some names (use if location missing)
 _FALLBACK_LOCATIONS = {
