@@ -1225,7 +1225,145 @@ def arousal_line(p, s):
     if ar >= 2.5 and bool(p.get("nsfw_prefs", {}).get("climax", {}).get("squirts", False)):
         out += " (and yes... sometimes I squirt when it hits right)"
     return out
+import math
 
+# ---------- Conversational helpers (intent + style) ----------
+def _is_question(t:str)->bool:
+    t = (t or "").strip()
+    return "?" in t or t.lower().split()[:1] in (["do"],["are"],["is"],["can"],["will"],["should"],["did"],["have"],["has"],["what"],["when"],["where"],["who"],["why"],["how"])
+
+def _pick(lst):
+    lst = [x for x in (lst or []) if x]
+    return random.choice(lst) if lst else ""
+
+def _one_from_persona(p, keys):
+    # look through common fields and STORY memories
+    for k in keys:
+        v = p.get(k)
+        if isinstance(v, list) and v:
+            return _pick(v)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    # fall back to life_memories / books
+    lm = p.get("life_memories") or []
+    if lm: return _pick(lm)
+    b = p.get("books") or []
+    if b: return f"I’m rereading *{b[0].get('title','')}* — “{b[0].get('quote','')}”"
+    return ""
+
+def _favorite_line(p):
+    favs = []
+    if p.get("music"):  favs.append(f"music: {', '.join(p['music'][:2])}")
+    if p.get("movies"): favs.append(f"movies: {', '.join(p['movies'][:1])}")
+    if p.get("tv"):     favs.append(f"tv: {', '.join(p['tv'][:1])}")
+    if p.get("fav_color"):   favs.append(f"color: {p['fav_color']}")
+    if p.get("fav_flower"):  favs.append(f"flower: {p['fav_flower']}")
+    return " · ".join(favs[:3])
+
+def _topic_from_text(t:str):
+    low=(t or "").lower()
+    for k in ["book","read","novel","author"]:  # books
+        if k in low: return "books"
+    for k in ["song","music","album","band","playlist"]:
+        if k in low: return "music"
+    for k in ["movie","film","cinema"]:
+        if k in low: return "movies"
+    for k in ["show","series","tv"]:
+        if k in low: return "tv"
+    for k in ["work","job","study","school"]:
+        if k in low: return "job"
+    for k in ["where","from","city","live","hometown","location"]:
+        if k in low: return "origin"
+    for k in ["coffee","walk","beach","hike","park","food","cook"]:
+        return "daily"
+    return "general"
+
+def _hook_by_arousal(p, s):
+    ar = float(s.get("arousal",0.0))
+    if ar < 1:   return _pick(["your turn—tell me something real about you.","what’s your vibe today?","okay, I’m curious now."])
+    if ar < 2:   return _pick(["…leaning in closer.","mm, say more.","I’m smiling at my screen."])
+    if ar < 3:   return _pick(["you’re getting to me.","I’m a little warm now.","careful, I like this."])
+    return _pick(["one more line and I might need water.","you’re trouble—in a good way.","keep talking."])
+
+def persona_reply(p, s, user_text:str) -> str:
+    """Craft a non-echo reply that feels like the chosen girl, with variety and light memory."""
+    name = p.get("name","Girl")
+    loc  = (p.get("location") or "").strip()
+    origin = (p.get("origin") or "").strip()
+    feels = arousal_line(p, s)  # you already have this helper
+
+    topic = _topic_from_text(user_text)
+    q = _is_question(user_text)
+
+    # Quick, friendly “acknowledgement” that DOESN’T echo the message
+    openers = [
+        "mmh I’m thinking about that…",
+        "haha okay, I like where this is going—",
+        "tell me more—",
+        "I’m picturing it now—",
+        "honestly? that makes me grin—",
+    ]
+
+    # Topic-specific riffs
+    if topic == "books":
+        line = _one_from_persona(p, ["books"])
+        if not line:
+            line = _pick([
+                "I read before bed and pretend the lamp is moonlight.",
+                "I keep a tiny stack by the kettle—dangerous habit."
+            ])
+        ask = _pick(["what do you reach for first—fiction or essays?","what’s the last line that stuck to you?"])
+        return f"{_pick(openers)} books make me soft. {line} {feels}. {ask}"
+
+    if topic == "music":
+        fav = _favorite_line(p) or "I collect little playlists for moods."
+        ask = _pick(["send me a song title and I’ll trade one back.","do you do headphones or speakers?"])
+        return f"{_pick(openers)} music talk? yes. {fav}. {feels}. {ask}"
+
+    if topic == "movies":
+        fav = _favorite_line(p) or "I rate movies by how long the credits make me sit."
+        ask = _pick(["comfort rewatch or weird art film?","popcorn counts as dinner, right?"])
+        return f"{_pick(openers)} film night energy. {fav}. {feels}. {ask}"
+
+    if topic == "tv":
+        fav = _favorite_line(p) or "I ‘accidentally’ binge and pretend it was research."
+        ask = _pick(["one episode or five—be honest.","which pilot hooked you fastest?"])
+        return f"{_pick(openers)} shows are my cozy vice. {fav}. {feels}. {ask}"
+
+    if topic == "job":
+        job = (p.get("job") or "I multitask life for a living")
+        ask = _pick(["what’s your chaos at work like?","are you a morning or midnight worker?"])
+        return f"{_pick(openers)} workwise, I’m {job}. {feels}. {ask}"
+
+    if topic == "origin":
+        where = f"I’m {name}{(' from ' + loc) if loc else ''}."
+        if origin: where += " " + origin
+        ask = _pick(["what’s home for you?","do you keep a favorite street?"])
+        return f"{_pick(openers)} {where} {feels}. {ask}"
+
+    if topic == "daily":
+        fact = _one_from_persona(p, ["life_memories"])
+        ask = _pick(["what tiny ritual makes your day better?","walks or windowsills—your reset?"])
+        return f"{_pick(openers)} {fact} {feels}. {ask}"
+
+    # General chatter or flirty vibe
+    quirk = _one_from_persona(p, ["quirks","life_memories"])
+    if q:
+        # lightly answer unknown questions with personality instead of “I don’t know”
+        answer = _pick([
+            "I could be persuaded either way.",
+            "I have opinions, but I like yours first.",
+            "depends—sell me on it.",
+        ])
+        return f"{_pick(openers)} {answer} {feels} {('· ' + quirk) if quirk else ''}"
+    else:
+        # make a move in the convo: share + ask
+        ask = _pick([
+            "if we were out right now, where would we go?",
+            "tell me something oddly specific about you.",
+            "what do you want to feel more of this week?"
+        ])
+        return f"{_pick(openers)} {('also: ' + quirk) if quirk else ''} {feels}. {ask}"
 HELP = ("Commands:\n"
         "hi — menu\n/girls — list\n/pick # or name — choose\n/who — current\n/bio — backstory\n/style — tastes & quirks\n/books — favorites\n"
         "/likes coffee, films — steer convo\n/selfie [vibe] — consistent portrait\n/old18 — SFW throwback at 18 (adult)\n/poster <movie>\n/draw <subject>\n"
