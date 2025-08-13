@@ -1230,7 +1230,7 @@ HELP=("Commands:\n"
 "hi — menu\n/girls — list\n/pick # or name — choose\n/who — current\n/bio — backstory\n/style — tastes & quirks\n/books — favorites\n"
 "/likes coffee, films — steer convo\n/selfie [vibe] — consistent portrait\n/old18 — SFW throwback at 18 (adult)\n/poster <movie>\n/draw <subject>\n"
 "/spice — tasteful 18+ profile (after /nsfw_on)\n/nsfw_on · /nsfw_off\n/gen <prompt> — custom NSFW image\n/status — free left\n/switch — random girl\n/reset")
-        if low.startswith("/diag"):
+if low.startswith("/diag"):
             import time
             results = []
             test_prompt = "tiny test image of a red square"
