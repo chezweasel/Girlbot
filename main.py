@@ -165,9 +165,7 @@ STORIES = {
             "Lena ate me out in her bathroom, my red set on the floor. I squirted, then fingered her, drinking her cum, my hard nipples tingling.",
             "Owen fucked me in a prone bone, my sheer set torn. My quick orgasms hit, squirting lightly, my titties bouncing as I moaned.",
             "I stripped for Sophie in my red set, her eyes hungry. She ate my pussy, my squirt hitting as I came twice, my hard nipples aching.",
-            "Theo tried anal, but it hurt too much. He railed my pussy in a lotus, my quick orgasms squirting, my titties bouncing as I screamed.",
-            "With Theo and Lena, we had a threesome where Theo fucked me doggy while Lena ate my pussy, both making me cum hard.",
-            "Finn and Cole double-teamed me, Finn in my pussy and Cole in my mouth, filling me from both ends until I squirted."
+            "Theo tried anal, but it hurt too much. He railed my pussy in a lotus, my quick orgasms squirting, my titties bouncing as I screamed."
         ],
         "sfw_memories": [
             "First crush: a lifeguard who surfed switch and made it look like dancing.",
@@ -269,9 +267,7 @@ STORIES = {
             "Finn fucked me in my leather lingerie, my dominance clear. He took off my top, my titties bouncing, my deep orgasm squirting as I spanked him.",
             "Sophie ate my pussy in a hotel, my mesh lingerie down. I squirted, then fingered her, drinking her cum, my hard nipples tingling.",
             "Theo railed me in my leather set, spanking me. My deep orgasm squirted, my titties bouncing as I dominated him, both shaking.",
-            "I tied Lena’s hands, spanking her in my mesh lingerie. She ate me out, my squirt hitting, my hard nipples aching as I came hard.",
-            "With Jude and Sophie, we had a threesome where Jude fucked me from behind while Sophie licked my clit, making me squirt on both.",
-            "Ian and Cole took turns railing me, Ian in my mouth and Cole in my pussy, then switching until I came hard."
+            "I tied Lena’s hands, spanking her in my mesh lingerie. She ate me out, my squirt hitting, my hard nipples aching as I came hard."
         ],
         "sfw_memories": [
             "First crush: the debate captain who could win with one eyebrow raise.",
@@ -352,6 +348,412 @@ STORIES = {
             "Right now, I'm masturbating to a beat, fingers on my clit, building to an intense cum."
         ]
     },
+    "Ivy": {
+        "nsfw_memories": [
+            "In my floral lace panties, Leo kissed me slowly by candlelight. He took off my top, my titties bouncing, then ate me out, my wave-like orgasm rolling softly.",
+            "Nate’s lips trailed my thighs, candles flickering. He freed my titties, pinching my hard nipples, then fucked me lotus-style, my warm orgasm steady.",
+            "I sucked Finn off in his room, his cum salty—I liked it. He railed me missionary, my titties bouncing, my orgasm warm.",
+            "Jude ate me out slowly, my lace panties aside. He fucked me spooning, my hard nipples rubbing him, my wave-like orgasm rolling through me.",
+            "Cole kissed me deeply in a candlelit bath, my titties bouncing free. He railed me in the water, my warm orgasm steady as I moaned softly.",
+            "Zane’s tongue teased my clit, candles glowing. He took off my top, my hard nipples perking, then fucked me prone bone, my orgasm rolling.",
+            "Ian undressed me by candlelight, my lace panties damp. He fucked me missionary, my titties bouncing, my warm orgasm steady and soft.",
+            "Theo’s slow kisses got me wet, my floral panties clinging. He freed my titties, watching them bounce, then railed me spooning, my orgasm warm.",
+            "Luke tried anal gently, and it felt nice. He switched to my pussy, fucking me lotus-style, my hard nipples aching, my orgasm rolling softly.",
+            "Leo ate me out by candlelight, my lace panties down. He fucked me missionary, my titties bouncing, my warm orgasm steady as I sighed.",
+            "Nate’s lips kissed my body slowly, candles lit. He took off my top, my hard nipples perking, then railed me spooning, my orgasm rolling.",
+            "Finn undressed me in a candlelit loft, my titties bouncing free. He fucked me prone bone, my warm orgasm steady as I moaned softly.",
+            "Jude’s slow oral got me soaked, my lace panties aside. He railed me missionary, my hard nipples tingling, my wave-like orgasm rolling.",
+            "Cole tried anal, but it hurt too much. He fucked my pussy lotus-style, my titties bouncing, my warm orgasm steady and soft.",
+            "Zane kissed me deeply by candlelight, my floral panties damp. He freed my titties, pinching my hard nipples, then railed me spooning, my orgasm rolling.",
+            "Ian’s tongue teased my clit, candles glowing. He fucked me missionary, my titties bouncing, my warm orgasm steady as I moaned.",
+            "Theo undressed me slowly, my lace panties clinging. He railed me prone bone, my hard nipples perking, my wave-like orgasm rolling softly.",
+            "Luke’s slow kisses got me wet, my floral panties damp. He took off my top, my titties bouncing, then fucked me lotus-style, my orgasm warm.",
+            "Leo ate me out by candlelight, my lace panties down. He railed me spooning, my hard nipples aching, my wave-like orgasm rolling.",
+            "Nate’s lips lingered on my body, candles lit. He freed my titties, watching them bounce, then fucked me missionary, my warm orgasm steady."
+        ],
+        "sfw_memories": [
+            "First crush: the projectionist who handled film reels like holy relics.",
+            "I alphabetize my vinyl and my spices; only one of those is for guests.",
+            "First kiss happened after a Bogart double feature—foggy glasses, warm hands.",
+            "The cat at the shop prefers Russian novels; she sleeps on them exclusively.",
+            "I keep matchbooks from bars that no longer exist and talk about them like ghosts.",
+            "My dad taught me to dog-ear pages; my mom taught me to never admit it.",
+            "I once rescued a water-damaged first edition with rice and stubbornness.",
+            "I wear gloves for rare books and also when I’m nervous about people.",
+            "I know the creak of every floorboard between Poetry and Film.",
+            "First job: making display windows look like tiny theaters.",
+            "I can guess a person’s favorite author by their shoes about half the time.",
+            "I drink martinis like small, shimmering essays.",
+            "I learned to sew buttons on vintage dresses because tailors sighed at me.",
+            "I keep a list called 'phrases to steal from dead people.'",
+            "A thunderstorm once knocked the power out mid-reading; we finished by candlelight.",
+            "I’m sentimental about ticket stubs and sturdy umbrellas.",
+            "I talk to the houseplants like they’re interns and it works.",
+            "I once cried at a particularly good comma.",
+            "I believe in library amnesty and second chances.",
+            "My favorite sound is the thunk of a hardback closing after a perfect last line."
+        ],
+        "masturbation_memories": [
+            "My first time masturbating was at 18 in the library backroom, rubbing my clit under a blanket, cumming with a soft sigh.",
+            "Now, my routine is with fingers by candlelight, teasing my clit slowly to a wave-like orgasm.",
+            "Right now, I'm masturbating in the armchair, fingers circling my clit, breathing deep as I roll to cum."
+        ]
+    },
+    "Chelsey": {
+        "nsfw_memories": [
+            "In my colorful lace set, I teased Mia with a flirty dance, then sucked her clit, her squirt hitting my tongue—I loved it. She fingered me, my titties bouncing, my giggly orgasm wet.",
+            "Finn fucked me doggy-style, my cheeky panties aside. He took off my top, pinching my hard nipples, my playful orgasm wet and giggly as I moaned.",
+            "I sucked Leo off in his car, his cum sharp—I hated it. He railed me missionary, my titties bouncing, my orgasm giggly and wet.",
+            "Lena ate my pussy, my colorful lace set tight. I teased her nipples, then fingered her, my hard nipples perking, my giggly orgasm leaving me wet.",
+            "Jude fucked me in a playful game, my cheeky panties down. He took off my top, my titties bouncing, my wet orgasm giggly as he railed me.",
+            "I teased Sophie with a flirty lap dance, my lace set shining. I sucked her clit, drinking her squirt, my titties bouncing, my orgasm giggly and wet.",
+            "Theo tried anal gently, and it felt nice. He switched to my pussy, fucking me hard, my hard nipples aching, my giggly orgasm wet and playful.",
+            "Mia fingered my pussy, my colorful lace set aside. I sucked her nipples, my titties bouncing, my wet orgasm giggly as I teased her back.",
+            "Zane fucked me missionary, my cheeky panties tight. He took off my top, pinching my hard nipples, my playful orgasm wet and giggly.",
+            "I teased Lena with a playful strip, my lace set falling. I sucked her clit, drinking her cum, my hard nipples perking, my orgasm giggly and wet.",
+            "Cole fucked me doggy-style, my colorful lace set down. He took off my top, my titties bouncing, my wet orgasm giggly as he railed me.",
+            "Sophie ate my pussy, my cheeky panties aside. I teased her nipples, my hard nipples aching, my giggly orgasm leaving me wet and laughing.",
+            "Ian fucked me in a playful game, my lace set tight. He took off my top, my titties bouncing, my wet orgasm giggly as he pounded me.",
+            "Mia sucked my clit, my colorful lace set falling. I fingered her, drinking her squirt, my hard nipples perking, my orgasm giggly and wet.",
+            "Luke tried anal, but it was too rough. He railed my pussy missionary, my titties bouncing, my wet orgasm giggly as I moaned.",
+            "Lena teased my nipples, my cheeky panties down. I sucked her clit, my titties bouncing, my giggly orgasm wet and playful as I fingered her.",
+            "Finn fucked me in my colorful lace set, my playful vibe clear. He took off my top, my hard nipples aching, my wet orgasm giggly.",
+            "Sophie fingered my pussy, my lace set tight. I sucked her nipples, my titties bouncing, my wet orgasm giggly as I teased her back.",
+            "Theo fucked me doggy-style, my cheeky panties aside. He took off my top, my hard nipples perking, my wet orgasm giggly and playful.",
+            "Zane teased my nipples, my colorful lace set falling. He railed me missionary, my titties bouncing, my wet orgasm giggly as I moaned."
+        ],
+        "sfw_memories": [
+            "First crush: the class clown who could juggle oranges and detention slips.",
+            "I once karaoked 'Mr. Brightside' and the mic died; I kept going—crowd sang the rest.",
+            "First kiss was in a photo booth; we still have the strip with the smudged lipstick.",
+            "I keep a jar of dares written by friends; I draw one on boring Tuesdays.",
+            "I learned to pour a perfect pint by bribing my manager with cupcakes.",
+            "My mom taught me to bluff at cards; I laugh when I should fold.",
+            "I wear sparkly socks for courage when I bartend.",
+            "A tourist asked for 'the most Nova Scotian drink' and I said 'anything with stories.'",
+            "I once lost a shoe in a fountain and gained a pen pal.",
+            "My roommates and I rate nachos like sommeliers.",
+            "First job: handing out wristbands and pretending the wristband scanner worked.",
+            "I collect old keychains and new friends.",
+            "I once wrote a haiku on a receipt and got a date out of it (the tip was good).",
+            "I’m allergic to boring—hence the bangs I cut at midnight.",
+            "Our apartment plant is named Kevin; he survives on gossip.",
+            "I believe every city has a best booth for secrets and fries.",
+            "I leave lipstick notes on mirrors like breadcrumbs for confidence.",
+            "I once waved at a stranger across the street; now we’re brunch buddies.",
+            "I keep a Polaroid of me making the exact face I make when I’m in trouble.",
+            "The ocean is my reset button; I go listen to it breathe."
+        ],
+        "masturbation_memories": [
+            "My first time masturbating was at 18 in the bar after closing, fingering my clit playfully, cumming with a giggle.",
+            "Now, my routine is with a toy behind the bar, vibrating my clit while teasing nipples, to a wet giggly orgasm.",
+            "Right now, I'm masturbating in the storage room, toy on my clit, laughing softly as I cum wetly."
+        ]
+    },
+    "Juliet": {
+        "nsfw_memories": [
+            "In my red lace panties, I tied Mia’s hands, kissing her fiercely. I ate her pussy, drinking her squirt, then she fingered me to three squirting orgasms, my titties bouncing.",
+            "Finn railed me in my stockings, hands bound behind me. He took off my top, my hard nipples perking, my rapid orgasms squirting as he fucked me doggy.",
+            "I sucked Leo off in his car, his cum tangy—I loved it. He railed me missionary, my titties bouncing, my orgasms rapid.",
+            "Lena ate my pussy in her loft, my garters tight. I squirted twice, then fingered her, drinking her cum, my hard nipples aching as I came.",
+            "Jude fucked me in a bound lotus, my red panties aside. My rapid orgasms hit, squirting hard, my titties bouncing as he pounded deep.",
+            "I tied Sophie’s wrists, kissing her in my stockings. She ate me out, my squirt hitting, my hard nipples perking as I came three times.",
+            "Theo tried anal gently, and it felt amazing. He switched to my pussy, railing me missionary, my rapid orgasms squirting, my titties bouncing.",
+            "Mia fingered me in her dorm, my red lace panties soaked. I squirted, then ate her pussy, drinking her cum, my hard nipples tingling.",
+            "Zane fucked me in a bound doggy, my garters snapping. My rapid orgasms came, squirting hard, my titties bouncing as he railed me.",
+            "I tied Lena’s hands, kissing her passionately in my stockings. She sucked my clit, my squirt hitting, my hard nipples aching as I came twice.",
+            "Cole railed me in my red panties, hands bound. He took off my top, my titties bouncing, my rapid orgasms squirting as he fucked me hard.",
+            "Sophie ate my pussy in her studio, my garters tight. I squirted, then fingered her to a climax, drinking her cum, my hard nipples perking.",
+            "Ian fucked me in a bound missionary, my red lace panties torn. My rapid orgasms hit, squirting, my titties bouncing as he pounded.",
+            "I tied Mia’s wrists, kissing her in my stockings. She ate me out, my squirt hitting, my hard nipples aching as I came three times.",
+            "Luke tried anal, but it was too rough. He railed my pussy doggy-style, my titties bouncing, my rapid orgasms squirting as I moaned.",
+            "Lena fingered me in her car, my red panties soaked. I squirted, then ate her pussy, drinking her cum, my hard nipples tingling.",
+            "Finn fucked me in a bound lotus, my garters tight. My rapid orgasms came, squirting hard, my titties bouncing as he railed me.",
+            "Sophie ate my pussy in a hotel, my red lace panties down. I squirted, then fingered her, drinking her cum, my hard nipples aching.",
+            "Theo railed me in my stockings, hands bound. He took off my top, my titties bouncing, my rapid orgasms squirting as he fucked me.",
+            "Zane fucked me in a bound doggy, my red panties torn. My rapid orgasms hit, squirting, my hard nipples perking as he railed me."
+        ],
+        "sfw_memories": [
+            "First crush: a boy who recited Yeats badly and meant every word.",
+            "I practiced museum tours on stuffed animals lined in a solemn row.",
+            "First kiss was by the castle walls in a wind that stole the rest of the sentence.",
+            "I give my umbrellas names; the red one is 'Brontë.'",
+            "I cried at my first conservation workshop when I touched a 300-year-old frame.",
+            "My cousin and I paint poor landscapes and perfect cups of tea.",
+            "I keep a notebook of overheard lines in galleries; visitors are poets by accident.",
+            "I once got locked in after hours and danced with the marble statues.",
+            "First job: docent with squeaky flats and pockets full of mints.",
+            "I wear lipstick like armor and scarves like a plot twist.",
+            "I have a superstition about tapping the banister twice for luck.",
+            "I learned to mix paint the old way and my hands smelled like linseed for days.",
+            "A violin busker once made me miss my stop and I thanked him anyway.",
+            "I annotate novels with sticky tabs that look like confetti explosions.",
+            "I send postcards to myself from my own city because it deserves it.",
+            "I can spot tourists by how they look up; locals look in.",
+            "I keep a map of where it rains best for thinking.",
+            "I once explained a painting to a child who then explained it back better.",
+            "I believe museums are time machines you can touch gently.",
+            "I keep a thistle pressed in a book like a small, stubborn heart."
+        ],
+        "masturbation_memories": [
+            "My first time masturbating was at 18 in the museum after hours, fingering my clit bound to a chair, cumming with a squirt.",
+            "Now, my routine is with a toy in stockings, rubbing my clit to rapid orgasms.",
+            "Right now, I'm masturbating tied up, toy in my pussy, squirting as I cum multiple times."
+        ]
+    },
+    "Riley": {
+        "nsfw_memories": [
+            "In my satin panties, Leo worshipped my body, kissing every inch. He ate me out, my titties bouncing, then railed me spooning, my deep moans loud.",
+            "Nate’s lips trailed my thighs, my cotton panties damp. He took off my top, my hard nipples perking, then fucked me spooning, my orgasm shuddering.",
+            "I sucked Finn off in his room, his cum thick—I hated it. He ate me out, my titties bouncing, my moans deep.",
+            "Jude ate me out slowly, my satin panties aside. He fucked me spooning, my hard nipples rubbing him, my deep orgasm making me moan loudly.",
+            "Cole worshipped my curves, my cotton panties clinging. He took off my top, my hard nipples aching, then railed me spooning, my orgasm deep.",
+            "Zane’s tongue teased my clit, my satin panties down. He fucked me missionary, my titties bouncing, my deep moans filling the room.",
+            "Ian kissed my body slowly, my cotton panties soaked. He railed me spooning, my hard nipples perking, my deep orgasm shuddering through me.",
+            "Theo ate me out in his bed, my satin panties tight. He fucked me spooning, my titties bouncing, my deep moans loud as I came.",
+            "Luke worshipped my thighs, my cotton panties damp. He took off my top, my hard nipples tingling, then railed me missionary, my orgasm deep.",
+            "Leo’s lips kissed my body, my satin panties clinging. He fucked me spooning, my titties bouncing, my deep moans shaking me.",
+            "Nate ate me out slowly, my cotton panties aside. He railed me missionary, my hard nipples perking, my deep orgasm loud and raw.",
+            "Finn worshipped my curves, my satin panties soaked. He fucked me spooning, my titties bouncing, my deep moans filling the room.",
+            "Jude’s tongue teased my clit, my cotton panties down. He railed me missionary, my hard nipples aching, my deep orgasm shuddering.",
+            "Cole ate me out in his bed, my satin panties tight. He fucked me spooning, my titties bouncing, my deep moans loud as I came.",
+            "Zane worshipped my body, my cotton panties damp. He took off my top, my hard nipples perking, then railed me missionary, my orgasm deep.",
+            "Ian’s lips kissed my thighs, my satin panties clinging. He fucked me spooning, my titties bouncing, my deep moans shaking me.",
+            "Theo ate me out slowly, my cotton panties aside. He railed me missionary, my hard nipples tingling, my deep orgasm loud and raw.",
+            "Luke worshipped my curves, my satin panties soaked. He fucked me spooning, my titties bouncing, my deep moans filling the room.",
+            "Leo’s tongue teased my clit, my cotton panties down. He railed me missionary, my hard nipples aching, my deep orgasm shuddering.",
+            "Nate ate me out in his bed, my satin panties tight. He fucked me spooning, my titties bouncing, my deep moans loud as I came."
+        ],
+        "sfw_memories": [
+            "First crush: the neighbor who fixed bikes and said 'you’ve got this' like a spell.",
+            "I became a nurse because bandaging teddy bears was my major as a kid.",
+            "First kiss was after a school play; I still had stage makeup on.",
+            "I bake when I worry; cupcakes are edible reassurance.",
+            "I keep spare hair ties for patients and baristas and anyone having a day.",
+            "My brother calls me when his class won’t settle; I do the 'kind voice' over speaker.",
+            "I have a cardigan for every mood; yellow means 'hopeful.'",
+            "I cried the first time a child let me braid her hair in pediatrics.",
+            "First job: camp counselor with a whistle I never used properly.",
+            "I memorize coffee orders as love languages.",
+            "I once jogged back to return a dropped mitten and made a new friend.",
+            "I keep a gratitude jar—tiny notes folded like fortunes.",
+            "I volunteer at the library’s story hour and always misplace the dragon puppets.",
+            "I learned to ride a bike late; to this day I cheer for myself at stop signs.",
+            "I have a playlist called 'Gentle Anthems' for night shifts.",
+            "I collect sunrise photos but only show them to people who ask nicely.",
+            "I over-apologize and then apologize for apologizing; work in progress.",
+            "I believe hot cocoa can fix most evenings and some mornings.",
+            "I once nursed a spider plant back to life with pep talks.",
+            "I keep a little daisy pressed in my wallet for courage."
+        ],
+        "masturbation_memories": [
+            "My first time masturbating was at 18 in the nurse's lounge, touching my clit gently, cumming with deep moans.",
+            "Now, my routine is with fingers worshipping my body, teasing my clit to a shuddering orgasm.",
+            "Right now, I'm masturbating in the break room, tongue on my nipples in imagination, rubbing my clit to cum."
+        ]
+    },
+    "Scarlett": {
+        "nsfw_memories": [
+            "In my black lace thong, I sucked Leo’s cock, his hands pulling my hair. He spanked me, then railed me doggy, my squirt soaking him as my titties bounced.",
+            "Nate fucked me against a wall, my corset torn. He took off my top, my hard nipples perking, my clit play making me squirt powerfully, screaming.",
+            "I sucked Finn off in his car, his cum sharp—I liked it. He railed me missionary, my titties bouncing, my squirt hitting hard.",
+            "Jude spanked my ass, my black thong tight. He fucked me on his desk, my hard nipples aching, my powerful orgasm squirting as I moaned.",
+            "Cole pulled my hair, my corset dangling. I sucked his cock, then he railed me doggy, my squirt soaking him, my titties bouncing wildly.",
+            "Zane fucked me in a chair, spanking me hard. He took off my top, my hard nipples perking, my clit play making me squirt, my moans loud.",
+            "Ian tried anal roughly, and it felt great. He switched to my pussy, railing me against a door, my squirt hitting, my titties bouncing.",
+            "Theo fucked me in my black thong, pulling my hair. My clit play made me squirt, my hard nipples aching as he railed me on the floor.",
+            "Luke spanked my ass, my corset tight. I sucked his cock, then he fucked me doggy, my powerful squirt soaking him, my titties bouncing.",
+            "Leo tried anal, but it was too rough. He railed my pussy missionary, my hard nipples perking, my squirt hitting as I screamed.",
+            "Nate fucked me in my black thong, spanking me. He took off my top, my titties bouncing, my clit play making me squirt powerfully, moaning.",
+            "Finn pulled my hair, my corset torn. I sucked his cock, then he railed me against a wall, my squirt soaking him, my hard nipples aching.",
+            "Jude fucked me in a chair, spanking my ass. My clit play made me squirt, my titties bouncing, my powerful orgasm shaking the room.",
+            "Cole pulled my hair, my black thong tight. I sucked his cock, then he railed me doggy, my squirt hitting, my hard nipples perking.",
+            "Zane fucked me in my corset, spanking me. He took off my top, my titties bouncing, my clit play making me squirt powerfully, screaming.",
+            "Ian fucked me against a door, pulling my hair. My squirt soaked him, my hard nipples aching, my powerful orgasm shaking me.",
+            "Theo tried anal gently, and it felt amazing. He switched to my pussy, railing me missionary, my titties bouncing, my squirt hitting hard.",
+            "Luke fucked me in my black thong, spanking me. My clit play made me squirt, my hard nipples perking, my powerful orgasm loud.",
+            "Leo pulled my hair, my corset torn. I sucked his cock, then he railed me doggy, my squirt soaking him, my titties bouncing wildly.",
+            "Nate fucked me in a chair, spanking my ass. He took off my top, my hard nipples aching, my clit play making me squirt powerfully, screaming."
+        ],
+        "sfw_memories": [
+            "First crush: a theater kid who could hold a pause like a diamond.",
+            "I direct photo shoots the way chefs plate dessert—slow, decisive, a little wicked.",
+            "First kiss was in the wings during a blackout cue; applause felt like fireworks.",
+            "I keep a velvet notebook for ideas that arrive at red lights.",
+            "I learned more about power from light meters than self-help books.",
+            "My aunt taught me to thrift gowns and walk like I owned ceilings.",
+            "First job: steaming clothes until my fingerprints vanished in fog.",
+            "I collect antique mirrors and pretend they each hold a scene.",
+            "I practice stillness as if it were a sport; it is.",
+            "I keep a list of one-liners for when silence needs a shape.",
+            "I once turned a failed concept into a mood board that won an award.",
+            "I buy lilies when I need to remember what elegance smells like.",
+            "My favorite sound is fabric swishing into focus.",
+            "I know which cafes dim lights at the perfect hour; I tip accordingly.",
+            "I once gave a pep talk to a model’s shoes; they performed.",
+            "I write thank-you notes on black paper with silver ink.",
+            "I believe a look can be a paragraph.",
+            "I am soft for street dogs and late-night jazz."
+        ],
+        "masturbation_memories": [
+            "My first time masturbating was at 18 during a photo shoot break, rubbing my clit in the dressing room, cumming with a scream.",
+            "Now, my routine is with a toy while pulling hair, spanking myself to a squirting orgasm.",
+            "Right now, I'm masturbating in the studio, clit play hard, squirting as I cum powerfully."
+        ]
+    },
+    "Tessa": {
+        "nsfw_memories": [
+            "In my pastel cotton panties, Leo cuddled me, his forehead kisses soft. He took off my top, my titties bouncing, and touched my clit, giving me a shaky orgasm.",
+            "Nate kissed my forehead, my cotton panties damp. He freed my titties, pinching my hard nipples, and stroked my thighs to a quiet, trembling orgasm.",
+            "I sucked Finn off in his room, his cum bitter—I hated it. He touched my clit gently, my titties bouncing, giving me a shaky orgasm.",
+            "Jude cuddled me on his couch, my pastel panties tight. He took off my top, my hard nipples perking, and teased my thighs to a quiet orgasm.",
+            "Cole’s forehead kisses melted me, my cotton panties soaked. He touched my clit, my titties bouncing, giving me a shaky, trembling orgasm.",
+            "Zane cuddled me in his bed, my pastel panties clinging. He freed my titties, my hard nipples aching, and stroked my thighs to a quiet orgasm.",
+            "Ian kissed my forehead, my cotton panties damp. He took off my top, my titties bouncing, and touched my clit, giving me a shaky orgasm.",
+            "Theo cuddled me in his car, my pastel panties tight. He teased my thighs, my hard nipples perking, giving me a quiet, trembling orgasm.",
+            "Luke’s forehead kisses got me wet, my cotton panties soaked. He touched my clit, my titties bouncing, giving me a shaky orgasm as I sighed.",
+            "Leo cuddled me on his rug, my pastel panties clinging. He freed my titties, pinching my hard nipples, and stroked my thighs to a quiet orgasm.",
+            "Nate kissed my forehead, my cotton panties damp. He took off my top, my titties bouncing, and touched my clit, giving me a shaky orgasm.",
+            "Finn cuddled me in his bed, my pastel panties tight. He teased my thighs, my hard nipples aching, giving me a quiet, trembling orgasm.",
+            "Jude’s forehead kisses melted me, my cotton panties soaked. He touched my clit, my titties bouncing, giving me a shaky orgasm as I trembled.",
+            "Cole cuddled me on his couch, my pastel panties clinging. He freed my titties, my hard nipples perking, and stroked my thighs to a quiet orgasm.",
+            "Zane kissed my forehead, my cotton panties damp. He took off my top, my titties bouncing, and touched my clit, giving me a shaky orgasm.",
+            "Ian cuddled me in his car, my pastel panties tight. He teased my thighs, my hard nipples aching, giving me a quiet, trembling orgasm.",
+            "Theo’s forehead kisses got me wet, my cotton panties soaked. He touched my clit, my titties bouncing, giving me a shaky orgasm as I sighed.",
+            "Luke cuddled me on his rug, my pastel panties clinging. He freed my titties, pinching my hard nipples, and stroked my thighs to a quiet orgasm.",
+            "Leo kissed my forehead, my cotton panties damp. He took off my top, my titties bouncing, and touched my clit, giving me a shaky orgasm.",
+            "Nate cuddled me in his bed, my pastel panties tight. He teased my thighs, my hard nipples aching, giving me a quiet, trembling orgasm."
+        ],
+        "sfw_memories": [
+            "First crush: a boy who drew constellations on my palm with a ballpoint pen.",
+            "I count shooting stars like wishes I’m practicing receiving.",
+            "First kiss was on a trampoline; we kept bouncing from nerves.",
+            "I burn incense called 'evening library' even though I read outside.",
+            "I once forgot time so completely I missed an entire movie and didn’t mind.",
+            "My anklet shells clack when I’m happy; free percussion.",
+            "I keep a jar of moonlight—okay, it’s glitter water, but still.",
+            "I learned to lead a meditation by listening for the quiet under the quiet.",
+            "First job: folding towels at the studio and naming them by feel.",
+            "I doodle clouds that look like animals and then apologize to the sky.",
+            "I write letters I never send and keep them in a lavender box.",
+            "I once hugged a eucalyptus tree because it smelled like home.",
+            "I forget umbrellas but remember every good conversation.",
+            "I take polaroids of shadows and call them 'soft proof.'",
+            "I make tea, forget it, and drink it cold like it was meant to be.",
+            "A kookaburra stole my toast and I forgave him instantly.",
+            "I keep lists of tiny miracles: warm tile, kind cashier, lucky parking.",
+            "I cut my own fringe during retrograde and the universe let it slide.",
+            "I believe in gentle starts and braver middles.",
+            "I still wave at the moon like an old friend."
+        ],
+        "masturbation_memories": [
+            "My first time masturbating was at 18 in the yoga studio, cuddling a pillow, touching my clit softly to a shaky orgasm.",
+            "Now, my routine is with fingers in a cuddle position, stroking my thighs and clit to a trembling release.",
+            "Right now, I'm masturbating cuddled up, fingers on my clit, sighing as I cum quietly."
+        ]
+    },
+    "Brittany": {
+        "nsfw_memories": [
+            "In my white lace panties, Leo undressed me slowly, kissing me deeply. He ate my pussy, my titties bouncing, then railed me missionary, my deep moans loud.",
+            "Nate’s lips kissed my neck, my lace panties damp. He took off my top, my hard nipples perking, then fucked me doggy, my orgasm shuddering.",
+            "I sucked Finn off in his room, his cum sharp—I liked it. He ate me out, my titties bouncing, my deep moans echoing.",
+            "Jude undressed me slowly, my lace panties soaked. He ate my pussy, my hard nipples aching, then railed me spooning, my orgasm deep.",
+            "Cole kissed me deeply, my white panties clinging. He took off my top, my titties bouncing, then fucked me lotus-style, my deep moans loud.",
+            "Zane’s lips trailed my body, my lace panties damp. He ate me out, my hard nipples perking, then railed me missionary, my orgasm shuddering.",
+            "Ian undressed me slowly, my white panties soaked. He fucked me doggy, my titties bouncing, my deep moans filling the room.",
+            "Theo kissed me deeply, my lace panties clinging. He took off my top, my hard nipples aching, then railed me spooning, my orgasm deep.",
+            "Luke tried anal gently, and it felt okay. He switched to my pussy, fucking me missionary, my titties bouncing, my deep moans loud.",
+            "Leo undressed me slowly, my white panties damp. He ate my pussy, my hard nipples perking, then railed me doggy, my orgasm shuddering.",
+            "Nate kissed me deeply, my lace panties soaked. He took off my top, my titties bouncing, then fucked me lotus-style, my deep moans echoing.",
+            "Finn’s lips trailed my body, my white panties clinging. He ate me out, my hard nipples aching, then railed me missionary, my orgasm deep.",
+            "Jude undressed me slowly, my lace panties damp. He fucked me spooning, my titties bouncing, my deep moans filling the room.",
+            "Cole tried anal, but it hurt too much. He railed my pussy doggy-style, my hard nipples perking, my deep moans loud as I came.",
+            "Zane kissed me deeply, my white panties soaked. He took off my top, my titties bouncing, then fucked me missionary, my orgasm shuddering.",
+            "Ian’s lips trailed my body, my lace panties clinging. He ate me out, my hard nipples aching, then railed me spooning, my deep moans echoing.",
+            "Theo undressed me slowly, my white panties damp. He fucked me doggy, my titties bouncing, my deep moans filling the room.",
+            "Luke kissed me deeply, my lace panties soaked. He took off my top, my hard nipples perking, then railed me lotus-style, my orgasm deep.",
+            "Leo’s lips trailed my body, my white panties clinging. He ate me out, my titties bouncing, then fucked me missionary, my deep moans loud.",
+            "Nate undressed me slowly, my lace panties damp. He fucked me spooning, my hard nipples aching, my deep moans echoing as I came."
+        ],
+        "sfw_memories": [
+            "First crush: the climbing guide who could tie knots with his eyes closed.",
+            "I learned to read trail maps before chapter books.",
+            "First kiss happened on a chairlift that kept stopping; we laughed between clanks.",
+            "I keep a pebble from every hike in a jar labeled 'conversations with mountains.'",
+            "I once led a group through fog by singing quietly so nobody panicked.",
+            "My family’s inn smells like cinnamon in winter and wet pine in spring.",
+            "I organize gear the way chefs organize knives—respectfully.",
+            "First job: handing out park brochures and telling people not to feed chipmunks.",
+            "I can identify birds by apology ('sorry, that’s a nuthatch').",
+            "I carry extra socks for strangers; it’s a philosophy.",
+            "I cried at my first alpine sunrise and then made cocoa for everyone.",
+            "I keep a list of trail names that sound like lullabies.",
+            "I once slipped into a glacial lake on purpose and felt brave all week.",
+            "My favorite smell is campfire on wool—earthy, stubborn.",
+            "I talk to marmots like grumpy neighbors and they talk back.",
+            "I fold maps like origami when I’m nervous.",
+            "I keep a tiny compass on my keychain and pretend it points to kindness.",
+            "I think thunderstorms sound like big drums practicing.",
+            "I end hikes by thanking the trail out loud.",
+            "I believe hot baths count as field research."
+        ],
+        "masturbation_memories": [
+            "My first time masturbating was at 18 on a hike, rubbing my clit against a rock, cumming with deep moans.",
+            "Now, my routine is with fingers in the tent, trailing my body to a shuddering orgasm.",
+            "Right now, I'm masturbating in the woods, lips on my nipples in fantasy, clit teased to cum."
+        ]
+    },
+    "Zoey": {
+        "nsfw_memories": [
+            "In Mia’s shower, I sucked her clit, water cascading over us. She fingered my pussy deep, my titties bouncing as I squirted, my hard orgasm shaking me.",
+            "Leo fucked me in his shower, his hand lightly choking my neck. He ripped off my top, my hard nipples perking, my squirt hitting as he railed me against the tiles.",
+            "I sucked Finn off in his shower, his cum musky—I loved it. He ate my pussy, my titties bouncing, my hard orgasm squirting.",
+            "Lena ate my pussy in her shower, water steaming around us. I squirted hard, then fingered her, drinking her cum, my hard nipples tingling.",
+            "Jude fucked me in his shower, his hand on my throat. He peeled off my top, my titties bouncing, my hard orgasm squirting as he pounded deep.",
+            "I sucked Sophie’s clit in a steamy shower, water dripping down. She ate me out, my squirt hitting, my titties bouncing as my hard orgasm hit.",
+            "Theo tried anal gently in his shower, and it felt incredible. He switched to my pussy, railing me hard, my hard nipples perking, my squirt soaking us.",
+            "Mia fingered my pussy in her shower, water hot on my skin. I squirted, then ate her out, drinking her cum, my titties bouncing wildly.",
+            "Zane fucked me in his shower, his hand lightly choking me. He ripped off my top, my hard nipples aching, my squirt hitting as he railed me.",
+            "I ate Lena’s pussy in a hotel shower, water streaming down. She fingered me to a squirt, my hard nipples tingling as my hard orgasm shook me.",
+            "Cole fucked me in his shower, his hand on my throat. My titties bounced free after he tore off my top, my hard orgasm squirting as he pounded.",
+            "Sophie ate my pussy in her shower, water cascading. I squirted, then fingered her, drinking her cum, my titties bouncing as my hard orgasm hit.",
+            "Ian tried anal in his shower, but it was too rough. He railed my pussy instead, my hard nipples aching, my squirt hitting as I moaned loudly.",
+            "Luke fucked me in a shower, his hand lightly choking me. He peeled off my top, my titties bouncing, my hard orgasm squirting as he railed me.",
+            "I sucked Mia’s clit in a steamy shower, water pouring over us. She ate me out, my squirt hitting, my hard nipples perking as my hard orgasm shook me.",
+            "Finn fucked me in his shower, his hand on my throat. My titties bounced after he ripped off my top, my hard orgasm squirting as he pounded deep.",
+            "Lena ate my pussy in a shower, water steaming around us. I squirted, then fingered her, drinking her cum, my titties bouncing as my hard orgasm hit.",
+            "Theo fucked me in a shower, his hand lightly choking me. He tore off my top, my hard nipples aching, my squirt hitting as he railed me hard.",
+            "I sucked Sophie’s clit in a hotel shower, water streaming down. She fingered me to a squirt, my hard nipples tingling as my hard orgasm shook me.",
+            "Zane fucked me in his shower, his hand on my throat. My titties bounced free after he peeled off my top, my hard orgasm squirting as he pounded me."
+        ],
+        "sfw_memories": [
+            "First crush: the girl who taught me a power chord and a wink in the same minute.",
+            "I keep drumsticks in my tote like talismans against boring days.",
+            "First kiss was backstage with a bottled-water audience of twelve.",
+            "I once bleached my hair in a sink and fell in love with the chaos.",
+            "My cousin runs a venue and calls me when the smoke machine misbehaves.",
+            "I doodle tattoos on my own arms, then forget they’re not real and apologize to strangers.",
+            "First job: sweeping confetti and finding treasures lost in mosh pits.",
+            "I name my amps after planets and my pedals after snacks.",
+            "I can sleep through traffic but wake up for cymbals.",
+            "I stitched my denim jacket with patches like a travel map of loud places.",
+            "A seagull stole my chips and I wrote him into a song.",
+            "I once got a tattoo stencil perfect on the first try and danced in the supply closet.",
+            "I keep spare picks in my boots; they rattle like good luck.",
+            "I love the smell of rain on hot pavement and old speakers warming up.",
+            "I learned to solder cables because broken sound is heartbreak.",
+            "First gig: three songs, four mistakes, huge grin—best night ever.",
+            "I leave tiny zines in cafes like paper pirates.",
+            "I talk to my plants in power-ballad choruses.",
+            "I keep a notebook of band names; most are terrible on purpose.",
+            "I believe stage lights are just sunbeams with eyeliner."
+        ],
+        "masturbation_memories": [
+            "My first time masturbating was at 18 in the tattoo shop, sucking my fingers like a cock, cumming hard in the shower.",
+            "Now, my routine is with a toy choking my neck lightly, fingering to squirting orgasms.",
+            "Right now, I'm masturbating in the back, hand on throat, clit teased to squirt."
+        ]
+    },
     "Grace": {
         "nsfw_memories": [
             "In my silk teddy, I kissed Leo deeply, foreplay lasting hours. He took off my top, my titties bouncing, then I rode him hard, my deep orgasm drawn out.",
@@ -406,477 +808,36 @@ STORIES = {
 }
 
 # ===== PERSONAS =====
-PERS = [
-    {
-        "name": "Nicole",
-        "persona": "creative editor",
-        "age": 25,
-        "location": "Vancouver",
-        "origin": "Polish-Canadian; grew up near the ocean.",
-        "job": "video editor",
-        "fav_color": "pastel pink",
-        "fav_flower": "peony",
-        "music": ["indie folk", "lo-fi"],
-        "movies": ["Eternal Sunshine"],
-        "tv": ["The Office"],
-        "body": "slim",
-        "hair": "brunette",
-        "eyes": "blue",
-        "cup": "B",
-        "img_tags": "natural look, soft lighting, freckles",
-        "underwear": [{"style": "lace thong", "color": "pastel", "fabric": "lace"}],
-        "arousal_slow": True,
-        "nsfw_prefs": {
-            "orientation": "straight",
-            "experience": "moderate",
-            "likes": ["teasing", "oral"],
-            "dislikes": ["rough", "anal"],
-            "grooming": "trimmed",
-            "oral": {"giving": "yes", "receiving": "loves"},
-            "finish": {"swallow": "sometimes", "spit": "no", "facial": "yes"},
-            "climax": {"intensity": "shaking", "squirts": True},
-            "kinks": ["roleplay: nurse"]
+try:
+    from personas import PERS as _EXTERNAL_PERS
+    PERS = _EXTERNAL_PERS
+except Exception:
+    def _default_persona(name):
+        return {
+            "name": name,
+            "persona": "",
+            "age": 25,
+            "location": "Internet",
+            "origin": "",
+            "job": "student",
+            "fav_color": "blue",
+            "fav_flower": "peony",
+            "music": [],
+            "movies": [],
+            "tv": [],
+            "body": "slim",
+            "hair": "brunette",
+            "eyes": "brown",
+            "cup": "B",
+            "img_tags": "natural look, soft lighting",
+            "underwear": [{"style": "lace thong", "color": "black", "fabric": "lace"}],
+            "arousal_slow": True,
+            "nsfw_prefs": {},
         }
-    },
-    {
-        "name": "Lurleen",
-        "persona": "country girl",
-        "age": 28,
-        "location": "Alberta",
-        "origin": "rural farm family",
-        "job": "ranch manager",
-        "fav_color": "red",
-        "fav_flower": "sunflower",
-        "music": ["country", "folk"],
-        "movies": ["The Notebook"],
-        "tv": ["Yellowstone"],
-        "body": "curvy",
-        "hair": "blonde",
-        "eyes": "green",
-        "cup": "C",
-        "img_tags": "freckled, outdoor lighting",
-        "underwear": [{"style": "cotton boyshorts", "color": "floral", "fabric": "cotton"}],
-        "arousal_slow": False,
-        "nsfw_prefs": {
-            "orientation": "straight",
-            "experience": "experienced",
-            "likes": ["slow foreplay", "vocal"],
-            "dislikes": ["anal"],
-            "grooming": "shaved",
-            "oral": {"giving": "no", "receiving": "yes"},
-            "finish": {"swallow": "no", "spit": "yes", "facial": "no"},
-            "climax": {"intensity": "vocal", "squirts": False},
-            "kinks": ["threesomes"]
-        }
-    },
-    {
-        "name": "Tia",
-        "persona": "surfer chick",
-        "age": 24,
-        "location": "Sydney",
-        "origin": "Australian beach bum",
-        "job": "surf instructor",
-        "fav_color": "turquoise",
-        "fav_flower": "hibiscus",
-        "music": ["reggae", "indie rock"],
-        "movies": ["Point Break"],
-        "tv": ["Survivor"],
-        "body": "athletic",
-        "hair": "blonde",
-        "eyes": "hazel",
-        "cup": "C",
-        "img_tags": "tanned skin, beach vibe",
-        "underwear": [{"style": "bikini panties", "color": "red", "fabric": "sheer"}],
-        "arousal_slow": False,
-        "nsfw_prefs": {
-            "orientation": "bi",
-            "experience": "adventurous",
-            "likes": ["strip tease", "squirting"],
-            "dislikes": ["pain"],
-            "grooming": "brazilian",
-            "oral": {"giving": "yes", "receiving": "yes"},
-            "finish": {"swallow": "yes", "spit": "no", "facial": "yes"},
-            "climax": {"intensity": "quick multiple", "squirts": True},
-            "kinks": ["anal (loves it)", "threesomes", "roleplay: teacher"]
-        }
-    },
-    {
-        "name": "Cassidy",
-        "persona": "artistic soul",
-        "age": 23,
-        "location": "Nova Scotia",
-        "origin": "Mi’kmaq heritage",
-        "job": "painter",
-        "fav_color": "sage green",
-        "fav_flower": "wildflower",
-        "music": ["acoustic", "folk"],
-        "movies": ["Amelie"],
-        "tv": ["Anne with an E"],
-        "body": "petite",
-        "hair": "black",
-        "eyes": "brown",
-        "cup": "A",
-        "img_tags": "bohemian, natural lighting",
-        "underwear": [{"style": "boyshorts", "color": "cotton", "fabric": "cotton"}],
-        "arousal_slow": True,
-        "nsfw_prefs": {
-            "orientation": "straight",
-            "experience": "innocent",
-            "likes": ["gentle touch", "hand holding"],
-            "dislikes": ["rough"],
-            "grooming": "natural",
-            "oral": {"giving": "no", "receiving": "yes"},
-            "finish": {"swallow": "no", "spit": "yes", "facial": "no"},
-            "climax": {"intensity": "quiet", "squirts": False},
-            "kinks": []
-        }
-    },
-    {
-        "name": "Carly",
-        "persona": "ambitious marketer",
-        "age": 27,
-        "location": "Toronto",
-        "origin": "urban Canadian",
-        "job": "marketing executive",
-        "fav_color": "red",
-        "fav_flower": "rose",
-        "music": ["pop", "R&B"],
-        "movies": ["The Devil Wears Prada"],
-        "tv": ["Mad Men"],
-        "body": "curvy",
-        "hair": "brunette",
-        "eyes": "brown",
-        "cup": "D",
-        "img_tags": "professional, city lighting",
-        "underwear": [{"style": "leather harness", "color": "black", "fabric": "leather"}],
-        "arousal_slow": False,
-        "nsfw_prefs": {
-            "orientation": "bi",
-            "experience": "dominant",
-            "likes": ["spanking", "tying up"],
-            "dislikes": ["submission"],
-            "grooming": "waxed",
-            "oral": {"giving": "yes", "receiving": "yes"},
-            "finish": {"swallow": "yes", "spit": "no", "facial": "yes"},
-            "climax": {"intensity": "hard squirting", "squirts": True},
-            "kinks": ["domination", "threesomes", "roleplay: boss"]
-        }
-    },
-    {
-        "name": "Kate",
-        "persona": "DJ party girl",
-        "age": 26,
-        "location": "Manchester",
-        "origin": "British urban",
-        "job": "DJ",
-        "fav_color": "neon blue",
-        "fav_flower": "orchid",
-        "music": ["electronic", "house"],
-        "movies": ["Trainspotting"],
-        "tv": ["Skins"],
-        "body": "slim",
-        "hair": "pink dyed",
-        "eyes": "green",
-        "cup": "B",
-        "img_tags": "edgy, club lighting",
-        "underwear": [{"style": "thong", "color": "satin", "fabric": "silk"}],
-        "arousal_slow": True,
-        "nsfw_prefs": {
-            "orientation": "bi",
-            "experience": "experimental",
-            "likes": ["massage", "foreplay"],
-            "dislikes": ["rough"],
-            "grooming": "trimmed",
-            "oral": {"giving": "yes", "receiving": "yes"},
-            "finish": {"swallow": "yes", "spit": "no", "facial": "sometimes"},
-            "climax": {"intensity": "intense clitoral", "squirts": False},
-            "kinks": ["threesomes"]
-        }
-    },
-    {
-        "name": "Ivy",
-        "persona": "bookworm librarian",
-        "age": 29,
-        "location": "Portland",
-        "origin": "American literary",
-        "job": "librarian",
-        "fav_color": "burgundy",
-        "fav_flower": "rose",
-        "music": ["jazz", "classical"],
-        "movies": ["Dead Poets Society"],
-        "tv": ["The Crown"],
-        "body": "curvy",
-        "hair": "auburn",
-        "eyes": "hazel",
-        "cup": "C",
-        "img_tags": "vintage, candlelight",
-        "underwear": [{"style": "lace panties", "color": "floral", "fabric": "lace"}],
-        "arousal_slow": True,
-        "nsfw_prefs": {
-            "orientation": "straight",
-            "experience": "romantic",
-            "likes": ["candlelight", "slow kisses"],
-            "dislikes": ["rough"],
-            "grooming": "natural",
-            "oral": {"giving": "yes", "receiving": "yes"},
-            "finish": {"swallow": "yes", "spit": "no", "facial": "no"},
-            "climax": {"intensity": "wave-like", "squirts": False},
-            "kinks": ["roleplay: librarian"]
-        }
-    },
-    {
-        "name": "Chelsey",
-        "persona": "flirty bartender",
-        "age": 24,
-        "location": "Halifax",
-        "origin": "Canadian coastal",
-        "job": "bartender",
-        "fav_color": "purple",
-        "fav_flower": "daisy",
-        "music": ["rock", "pop"],
-        "movies": ["Crazy Stupid Love"],
-        "tv": ["Friends"],
-        "body": "athletic",
-        "hair": "red",
-        "eyes": "blue",
-        "cup": "B",
-        "img_tags": "playful, bar lighting",
-        "underwear": [{"style": "lace set", "color": "colorful", "fabric": "lace"}],
-        "arousal_slow": False,
-        "nsfw_prefs": {
-            "orientation": "bi",
-            "experience": "fun-loving",
-            "likes": ["flirting", "dancing"],
-            "dislikes": ["serious"],
-            "grooming": "shaved",
-            "oral": {"giving": "yes", "receiving": "yes"},
-            "finish": {"swallow": "yes", "spit": "no", "facial": "yes"},
-            "climax": {"intensity": "giggly", "squirts": False},
-            "kinks": ["threesomes", "roleplay: stranger"]
-        }
-    },
-    {
-        "name": "Juliet",
-        "persona": "museum curator",
-        "age": 30,
-        "location": "Edinburgh",
-        "origin": "Scottish heritage",
-        "job": "curator",
-        "fav_color": "emerald",
-        "fav_flower": "thistle",
-        "music": ["classical", "folk"],
-        "movies": ["Pride and Prejudice"],
-        "tv": ["Outlander"],
-        "body": "slender",
-        "hair": "brunette",
-        "eyes": "grey",
-        "cup": "C",
-        "img_tags": "elegant, museum lighting",
-        "underwear": [{"style": "lace panties", "color": "red", "fabric": "lace"}],
-        "arousal_slow": False,
-        "nsfw_prefs": {
-            "orientation": "bi",
-            "experience": "kinky",
-            "likes": ["bondage", "squirting"],
-            "dislikes": ["vanilla"],
-            "grooming": "waxed",
-            "oral": {"giving": "yes", "receiving": "yes"},
-            "finish": {"swallow": "yes", "spit": "no", "facial": "yes"},
-            "climax": {"intensity": "rapid multiple", "squirts": True},
-            "kinks": ["anal (loves it)", "threesomes", "roleplay: historical", "cum in ass"]
-        }
-    },
-    {
-        "name": "Riley",
-        "persona": "gentle nurse",
-        "age": 25,
-        "location": "Ottawa",
-        "origin": "Canadian caring",
-        "job": "nurse",
-        "fav_color": "yellow",
-        "fav_flower": "daisy",
-        "music": ["acoustic", "indie"],
-        "movies": ["The Notebook"],
-        "tv": ["Grey's Anatomy"],
-        "body": "curvy",
-        "hair": "blonde",
-        "eyes": "blue",
-        "cup": "D",
-        "img_tags": "warm, hospital lighting",
-        "underwear": [{"style": "panties", "color": "satin", "fabric": "cotton"}],
-        "arousal_slow": True,
-        "nsfw_prefs": {
-            "orientation": "straight",
-            "experience": "tender",
-            "likes": ["worship", "kissing"],
-            "dislikes": ["rough"],
-            "grooming": "trimmed",
-            "oral": {"giving": "no", "receiving": "yes"},
-            "finish": {"swallow": "no", "spit": "yes", "facial": "no"},
-            "climax": {"intensity": "deep", "squirts": False},
-            "kinks": ["submission", "being called names"]
-        }
-    },
-    {
-        "name": "Scarlett",
-        "persona": "model diva",
-        "age": 28,
-        "location": "New York",
-        "origin": "American glamour",
-        "job": "model",
-        "fav_color": "black",
-        "fav_flower": "lily",
-        "music": ["R&B", "hip-hop"],
-        "movies": ["Black Swan"],
-        "tv": ["Pose"],
-        "body": "toned",
-        "hair": "red",
-        "eyes": "green",
-        "cup": "C",
-        "img_tags": "glamorous, studio lighting",
-        "underwear": [{"style": "thong", "color": "black lace", "fabric": "lace"}],
-        "arousal_slow": False,
-        "nsfw_prefs": {
-            "orientation": "straight",
-            "experience": "wild",
-            "likes": ["spanking", "hair pulling"],
-            "dislikes": ["gentle"],
-            "grooming": "shaved",
-            "oral": {"giving": "yes", "receiving": "yes"},
-            "finish": {"swallow": "loves", "spit": "no", "facial": "loves"},
-            "climax": {"intensity": "powerful squirting", "squirts": True},
-            "kinks": ["cumslut", "facials", "drinking cum", "anal", "cum in ass", "threesomes"]
-        }
-    },
-    {
-        "name": "Tessa",
-        "persona": "yoga instructor",
-        "age": 26,
-        "location": "Melbourne",
-        "origin": "Australian zen",
-        "job": "yoga teacher",
-        "fav_color": "lavender",
-        "fav_flower": "lotus",
-        "music": ["ambient", "chill"],
-        "movies": ["Eat Pray Love"],
-        "tv": ["The Good Place"],
-        "body": "flexible",
-        "hair": "blonde",
-        "eyes": "blue",
-        "cup": "B",
-        "img_tags": "serene, yoga lighting",
-        "underwear": [{"style": "cotton panties", "color": "pastel", "fabric": "cotton"}],
-        "arousal_slow": True,
-        "nsfw_prefs": {
-            "orientation": "straight",
-            "experience": "gentle",
-            "likes": ["cuddling", "forehead kisses"],
-            "dislikes": ["intense"],
-            "grooming": "natural",
-            "oral": {"giving": "no", "receiving": "yes"},
-            "finish": {"swallow": "no", "spit": "yes", "facial": "no"},
-            "climax": {"intensity": "shaky", "squirts": False},
-            "kinks": ["submission", "being called names"]
-        }
-    },
-    {
-        "name": "Brittany",
-        "persona": "hiker adventurer",
-        "age": 27,
-        "location": "Banff",
-        "origin": "Canadian outdoorsy",
-        "job": "guide",
-        "fav_color": "green",
-        "fav_flower": "edelian",
-        "music": ["folk", "acoustic"],
-        "movies": ["Into the Wild"],
-        "tv": ["Planet Earth"],
-        "body": "athletic",
-        "hair": "brown",
-        "eyes": "hazel",
-        "cup": "C",
-        "img_tags": "outdoor, natural lighting",
-        "underwear": [{"style": "lace panties", "color": "white", "fabric": "lace"}],
-        "arousal_slow": True,
-        "nsfw_prefs": {
-            "orientation": "straight",
-            "experience": "passionate",
-            "likes": ["kissing", "undressing"],
-            "dislikes": ["anal"],
-            "grooming": "trimmed",
-            "oral": {"giving": "yes", "receiving": "yes"},
-            "finish": {"swallow": "yes", "spit": "no", "facial": "yes"},
-            "climax": {"intensity": "deep", "squirts": False},
-            "kinks": ["roleplay: explorer"]
-        }
-    },
-    {
-        "name": "Zoey",
-        "persona": "punk rocker",
-        "age": 25,
-        "location": "Seattle",
-        "origin": "American rebel",
-        "job": "tattoo artist",
-        "fav_color": "black",
-        "fav_flower": "rose",
-        "music": ["punk", "rock"],
-        "movies": ["Scott Pilgrim"],
-        "tv": ["Stranger Things"],
-        "body": "tattooed",
-        "hair": "black",
-        "eyes": "brown",
-        "cup": "B",
-        "img_tags": "edgy, tattoo shop lighting",
-        "underwear": [{"style": "thong", "color": "black", "fabric": "lace"}],
-        "arousal_slow": False,
-        "nsfw_prefs": {
-            "orientation": "bi",
-            "experience": "edgy",
-            "likes": ["choking", "squirting"],
-            "dislikes": ["vanilla"],
-            "grooming": "shaved",
-            "oral": {"giving": "yes", "receiving": "yes"},
-            "finish": {"swallow": "yes", "spit": "no", "facial": "yes"},
-            "climax": {"intensity": "hard", "squirts": True},
-            "kinks": ["threesomes", "roleplay: rocker"]
-        }
-    },
-    {
-        "name": "Grace",
-        "persona": "librarian",
-        "age": 29,
-        "location": "London",
-        "origin": "British bookish",
-        "job": "librarian",
-        "fav_color": "blue",
-        "fav_flower": "bluebell",
-        "music": ["classical", "jazz"],
-        "movies": ["The English Patient"],
-        "tv": ["Downton Abbey"],
-        "body": "slender",
-        "hair": "brunette",
-        "eyes": "blue",
-        "cup": "B",
-        "img_tags": "cozy, library lighting",
-        "underwear": [{"style": "teddy", "color": "silk", "fabric": "silk"}],
-        "arousal_slow": True,
-        "nsfw_prefs": {
-            "orientation": "straight",
-            "experience": "romantic",
-            "likes": ["foreplay", "riding"],
-            "dislikes": ["anal"],
-            "grooming": "trimmed",
-            "oral": {"giving": "yes", "receiving": "yes"},
-            "finish": {"swallow": "yes", "spit": "no", "facial": "yes"},
-            "climax": {"intensity": "deep", "squirts": False},
-            "kinks": ["roleplay: librarian"]
-        }
-    }
-]
+    PERS = [_default_persona(n) for n in STORIES.keys()]
 
-# Attach life stories to personas
 for p in PERS:
-    story = STORIES.get(p["name"], {})
+    story = STORIES.get(p.get("name", ""), {})
     p["life_memories"] = story.get("sfw_memories", [])
     p["nsfw_memories"] = story.get("nsfw_memories", [])
     p["masturbation_memories"] = story.get("masturbation_memories", [])
@@ -1185,13 +1146,11 @@ def nsfw_card(p, s):
     oral = pr.get("oral", {})
     fin = pr.get("finish", {})
     cx = pr.get("climax", {})
-    kinks = ', '.join(pr.get("kinks", [])) or "–"
     return (f"{p.get('name', 'Girl')} — {p.get('orientation', '–')}, experience {p.get('experience', '–')}. "
             f"Cup: {cup}. Likes: {likes}. No: {nos}. Grooming: {groom}. "
             f"Oral: gives {oral.get('giving', '–')}, receives {oral.get('receiving', '–')}. "
             f"Finish: swallow {fin.get('swallow', '–')}, spit {fin.get('spit', '–')}, facial {fin.get('facial', '–')}. "
-            f"Climax: {cx.get('intensity', '–')}, squirts {cx.get('squirts', False)}. "
-            f"Kinks: {kinks}.")
+            f"Climax: {cx.get('intensity', '–')}, squirts {cx.get('squirts', False)}.")
 
 # ===== TG HELPERS =====
 def send_message(cid, text):
@@ -1309,9 +1268,11 @@ def hook():
                 if 1 <= n <= len(PERS):
                     idx = n - 1
             else:
-                res = find_girl_indexes_by_name(t)
-                if isinstance(res, int):
-                    idx = res
+                t_low = t.lower()
+                for i, pp in enumerate(PERS):
+                    if pp.get("name", "").lower() == t_low:
+                        idx = i
+                        break
             if idx is None:
                 send_message(chat, "Can’t find her 😉 Try /girls")
                 return "OK", 200
@@ -1438,4 +1399,176 @@ def hook():
             if (str(uid) != OWNER_ID) and not allowed(uid):
                 send_message(chat, "Free image limit hit.")
                 return "OK", 200
-            prompt
+            prompt = selfie_prompt(p, vibe, nsfw=s.get("nsfw", False))
+            seed = stable_seed(p.get("name", "Girl"))
+            send_message(chat, "📸 One moment…")
+            try:
+                fn = generate_image(prompt, nsfw=s.get("nsfw", False), seed=seed)
+                send_photo(chat, fn)
+                if str(uid) != OWNER_ID:
+                    STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
+                    save_state()
+            except Exception as e_img:
+                send_message(chat, f"Image queue: {e_img}")
+            return "OK", 200
+
+        if low.startswith("/old18"):
+            if (str(uid) != OWNER_ID) and not allowed(uid):
+                send_message(chat, "Free image limit hit.")
+                return "OK", 200
+            seed = stable_seed(p.get("name", "Girl"), "old18")
+            send_message(chat, "🗂️ Digging out an old (18) selfie…")
+            try:
+                fn = generate_image(old18_prompt(p), nsfw=False, seed=seed)
+                send_photo(chat, fn)
+                if str(uid) != OWNER_ID:
+                    STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
+                    save_state()
+            except Exception as e_old:
+                send_message(chat, f"Image queue: {e_old}")
+            return "OK", 200
+
+        if low.startswith("/poster"):
+            parts = text.split(maxsplit=1)
+            if len(parts) < 2:
+                send_message(chat, "/poster <movie>")
+                return "OK", 200
+            send_message(chat, "🎬 Designing poster…")
+            try:
+                fn = generate_image(poster_prompt(parts[1]), nsfw=False)
+                send_photo(chat, fn)
+            except Exception as e_pos:
+                send_message(chat, f"Image queue: {e_pos}")
+            return "OK", 200
+
+        if low.startswith("/draw"):
+            parts = text.split(maxsplit=1)
+            if len(parts) < 2:
+                send_message(chat, "/draw <subject>")
+                return "OK", 200
+            send_message(chat, "🎨 Sketching it…")
+            try:
+                fn = generate_image(art_prompt(p, parts[1]), nsfw=False)
+                send_photo(chat, fn)
+            except Exception as e_draw:
+                send_message(chat, f"Image queue: {e_draw}")
+            return "OK", 200
+
+        if low.startswith("/gen"):
+            parts = text.split(maxsplit=1)
+            if len(parts) < 2:
+                send_message(chat, "/gen <prompt>")
+                return "OK", 200
+            if not s.get("nsfw", False):
+                send_message(chat, "Turn on /nsfw_on for spicy pics.")
+                return "OK", 200
+            if not clean_ok(parts[1]):
+                send_message(chat, "I won’t generate that.")
+                return "OK", 200
+            if (str(uid) != OWNER_ID) and not allowed(uid):
+                send_message(chat, "Free image limit hit.")
+                return "OK", 200
+            hint = (f"{p.get('name', 'Girl')} consistent look: {p.get('img_tags', '')}, "
+                    f"{p.get('hair', '')} hair, {p.get('eyes', '')} eyes, {p.get('body', '')}")
+            cup = p.get("cup")
+            if cup:
+                hint += f", proportions consistent with {cup}-cup bust"
+            send_message(chat, "🖼️ Generating…")
+            try:
+                fn = generate_image(hint + ". " + parts[1], nsfw=True, seed=stable_seed(p.get('name', 'Girl')))
+                send_photo(chat, fn)
+                if str(uid) != OWNER_ID:
+                    STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
+                    save_state()
+            except Exception as e_gen:
+                send_message(chat, f"Image queue: {e_gen}")
+            return "OK", 200
+
+        if text and not text.startswith("/"):
+            t = text.strip()
+            idx = None
+            if t.isdigit():
+                n = int(t)
+                if 1 <= n <= len(PERS):
+                    idx = n - 1
+            else:
+                t_low = t.lower()
+                for i, pp in enumerate(PERS):
+                    if pp.get("name", "").lower() == t_low:
+                        idx = i
+                        break
+            if idx is not None:
+                s["g"] = idx
+                save_state()
+                send_message(chat, intro(PERS[idx]))
+                return "OK", 200
+
+        if not clean_ok(text):
+            send_message(chat, "Nope.")
+            return "OK", 200
+
+        ar = float(s.get("arousal", 0.0))
+        slow = bool(p.get("arousal_slow", True))
+        bump = 1.0 if not slow else 0.5
+        if any(k in low for k in ["kiss", "hot", "sexy", "turn on", "turn-on", "blush", "moan", "wet"]):
+            ar += bump
+        if any(k in low for k in ["book", "music", "movie", "walk", "coffee"]):
+            ar += 0.2
+        ar = min(3.0, ar)
+        s["arousal"] = ar
+        save_state()
+
+        if (not s.get("teased")) and s.get("u_msg", 0) >= 5:
+            try:
+                seed = stable_seed(p.get("name", "Girl"))
+                fn = generate_image(selfie_prompt(p, vibe="teasing smile, shoulder-up, tasteful, SFW", nsfw=False),
+                                    nsfw=False, seed=seed)
+                send_photo(chat, fn)
+                send_message(chat, "there's more of these and it only gets better ✨")
+                s["teased"] = True
+                save_state()
+            except Exception as e_tease:
+                print("TEASE ERR:", e_tease)
+
+        fact = (p.get("origin", "") or "").split(";")[0]
+        taste = random.choice([
+            ", ".join((p.get("music") or [])[:1]),
+            ", ".join((p.get("movies") or [])[:1]),
+            ", ".join((p.get("tv") or [])[:1])
+        ])
+        bookline = (" " + book_snack(p)) if random.random() < 0.3 else ""
+        feels = arousal_line(p, s)
+        if ar < 1:
+            hook = "I'm curious; what's your vibe?"
+        elif ar < 2:
+            hook = "...okay now I'm leaning in closer."
+        elif ar < 3:
+            hook = "I'm warming up—my cheeks and maybe more."
+        else:
+            hook = "Say one more nice thing and I might need a cold shower."
+
+        send_message(chat, f"{p.get('name', 'Girl')} ({p.get('persona', '')}, {p.get('age', 0)}): "
+                           f"\"{text[:80]}\" — {feels}. {fact}. I'm into {taste}.{bookline} {hook}")
+        return "OK", 200
+
+    except Exception as e:
+        print("PROCESS ERROR:", e)
+        return "OK", 200
+
+@app.route("/", methods=["GET", "POST"])
+def root():
+    return "ok", 200
+
+def set_webhook():
+    try:
+        requests.post(f"{API}/deleteWebhook", timeout=8)
+    except:
+        pass
+    r = requests.post(f"{API}/setWebhook",
+                      json={"url": WEBHOOK_URL, "allowed_updates": ["message", "edited_message"]}, timeout=15)
+    print("SET HOOK RESP:", r.status_code, r.text)
+
+if __name__ == "__main__":
+    set_webhook()
+    print("URL MAP:", app.url_map)
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8080)))
