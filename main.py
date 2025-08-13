@@ -1,6 +1,11 @@
 import os, time, json, base64, threading, requests
 from flask import Flask, render_template_string, request
 from telebot import TeleBot, types
+def safe_reply(chat_id, text):
+    try:
+        bot.send_message(chat_id, text)
+    except Exception as e:
+        print("SEND ERROR:", e)
 
 # ===== ENV (Railway → Variables) =====
 TG_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
