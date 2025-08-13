@@ -1302,7 +1302,7 @@ def hook():
             elif isinstance(res, list) and res:
                 opts = ", ".join(PERS[i].get("name","Girl") for i in res[:6])
                 send_message(chat, f"Did you mean: {opts}? (try the full name or number)")
-                return "OK", 200p
+                return "OK", 200
 
         if low.startswith("/pick"):
             parts=text.split(maxsplit=1)
