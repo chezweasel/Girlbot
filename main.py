@@ -2,12 +2,12 @@ import os, time, json, base64, threading, requests
 from flask import Flask, render_template_string, request
 from telebot import TeleBot, types
 
-# ===== ENV =====
-TG_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
-OWNER_ID = os.environ["OWNER_ID"]              # numeric as string
-PUBLIC_URL = os.environ["PUBLIC_URL"]          # https://flirtpixel.up.railway.app
-WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"]  # letters/numbers only
-HORDE_KEY = os.getenv("HORDE_API_KEY","0000000000")
+# ===== ENV (strip whitespace to avoid 404s) =====
+TG_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"].strip()
+OWNER_ID = os.environ["OWNER_ID"].strip()
+PUBLIC_URL = os.environ["PUBLIC_URL"].strip()
+WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"].strip()
+HORDE_KEY = os.getenv("HORDE_API_KEY","0000000000").strip()
 TOKEN_CODES = set(x.strip() for x in os.getenv("TOKEN_CODES","").split(",") if x.strip())
 API_BASE = f"https://api.telegram.org/bot{TG_TOKEN}"
 
@@ -49,18 +49,16 @@ def vibe(uid):
     s=gu(uid); i=s["g"]%len(PERS); n,d=PERS[i]
     return n,d,f"{n} vibe {d}. supportive, flirty, AI fantasy"
 
-# ===== RAW TELEGRAM SEND (for reliability) =====
+# ===== RAW TELEGRAM SEND (reliable + logs) =====
 def api_send(cid, text):
     try:
-        r=requests.post(f"{API_BASE}/sendMessage",
-                        json={"chat_id":cid,"text":text}, timeout=15)
+        r=requests.post(f"{API_BASE}/sendMessage", json={"chat_id":int(cid),"text":text}, timeout=15)
         print("API_SEND RESP:", r.status_code, r.text[:200])
-        if r.status_code==200:
-            return True
+        if r.status_code==200: return True
     except Exception as e:
         print("API_SEND EXC:", e)
     try:
-        bot.send_message(cid, text)
+        bot.send_message(int(cid), text)
         return True
     except Exception as e:
         print("BOT SEND ERROR:", e)
@@ -178,19 +176,17 @@ def gen(m):
     try:
         fn=horde_generate(f"{v}. {p}")
         try:
-            # raw sendPhoto
             with open(fn,"rb") as f:
                 r=requests.post(f"{API_BASE}/sendPhoto", files={"photo":f},
-                                data={"chat_id":m.chat.id}, timeout=60)
+                                data={"chat_id":int(m.chat.id)}, timeout=60)
                 print("API_PHOTO RESP:", r.status_code, r.text[:200])
-                if r.status_code!=200: bot.send_photo(m.chat.id, open(fn,"rb"))
+                if r.status_code!=200: bot.send_photo(int(m.chat.id), open(fn,"rb"))
         except Exception as e:
-            print("API_PHOTO EXC:", e); bot.send_photo(m.chat.id, open(fn,"rb"))
+            print("API_PHOTO EXC:", e); bot.send_photo(int(m.chat.id), open(fn,"rb"))
         mark(u)
     except Exception as e:
         api_send(m.chat.id, f"Queue/busy: {e}")
 
-# Fallback: always reply so you see something
 @bot.message_handler(func=lambda m: True)
 def fallback(m):
     print("HANDLER fallback:", getattr(m,"text",None))
