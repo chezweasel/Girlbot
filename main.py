@@ -776,3 +776,39 @@ def root(): return "ok",200
 if __name__=="__main__":
     set_webhook()
     app.run(host="0.0.0.0",port=int(os.getenv("PORT",8080)))
+        # --- bottom of file (use only ONE app instance) ---
+# Make sure app was created once near the top:
+# app = Flask(__name__)
+
+@app.route("/telegram/pix3lhook", methods=["GET", "POST"])
+def hook():
+    if request.method == "GET":
+        return "hook ok", 200
+    up = request.get_json(force=True, silent=True) or {}
+    print("TG UPDATE RAW:", str(up)[:500])
+    try:
+        # ... leave all your existing handler logic here ...
+        return "OK", 200
+    except Exception as e:
+        print("PROCESS ERROR:", e)
+        return "OK", 200
+
+@app.route("/")
+def root():
+    return "ok", 200
+
+def set_webhook():
+    try:
+        requests.post(f"{API}/deleteWebhook", timeout=8)
+    except:
+        pass
+    r = requests.post(
+        f"{API}/setWebhook",
+        json={"url": WEBHOOK_URL, "allowed_updates": ["message", "edited_message"]},
+        timeout=15
+    )
+    print("SET HOOK RESP:", r.status_code, r.text)
+
+if __name__ == "__main__":
+    set_webhook()
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8080)))
