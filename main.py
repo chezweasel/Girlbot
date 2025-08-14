@@ -1825,7 +1825,6 @@ if low.startswith("/gen"):
     seed = stable_seed(p.get("name", "Girl"))
     send_message(chat, "🎨 One moment…")
     try:
-        # Keep within anon Horde/HF safe limits; adjust if your backend allows bigger
         _spawn_image_job(chat, full_prompt, w=576, h=704, seed=seed, nsfw=True)
         if str(uid) != str(OWNER_ID):
             STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
@@ -1834,6 +1833,7 @@ if low.startswith("/gen"):
         send_message(chat, f"Image queue: {e_img}")
 
     return "OK", 200
+# ===== END /gen =====
 # ===== END /gen =====
 
 # ===== HELP TEXT =====
