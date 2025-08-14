@@ -1798,7 +1798,7 @@ def send_tease_or_allow_nsfw(p, s, uid, chat) -> bool:
 if low.startswith("/gen"):
     vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else ""
     if not send_tease_or_allow_nsfw(p, s, uid, chat):
-        return "OK", 200  # Block for non-owners
+    return "OK", 200  # Block for non-owners
 
     # Generate NSFW image for owner
     prompt = vibe.strip() or "tasteful nude portrait"
