@@ -1793,51 +1793,48 @@ def send_tease_or_allow_nsfw(p, s, uid, chat) -> bool:
     send_message(chat, f"{p.get('name', 'Girl')}: {TEASE_LINES[i]}")
     return False
 
+# ===== /gen COMMAND HANDLER =====
+if low.startswith("/gen"):
+    parts = text.split(maxsplit=1)
+    if len(parts) < 2:
+        send_message(chat, "/gen <prompt>")
+        return "OK", 200
 
-        # ===== /gen COMMAND HANDLER =====
-        if low.startswith("/gen"):
-            parts = text.split(maxsplit=1)
-            if len(parts) < 2:
-                send_message(chat, "/gen <prompt>")
-                return "OK", 200
+    user_prompt = parts[1].strip()
 
-            user_prompt = parts[1].strip()
+    # Hard safety: absolutely no under-18 / young-looking content
+    if _contains_minor_terms(user_prompt):
+        send_message(chat, "I can’t do anything under-18 or young-looking.")
+        return "OK", 200
 
-            # Hard safety: absolutely no under-18 / young-looking content
-            if _contains_minor_terms(user_prompt):
-                send_message(chat, "I can’t do anything under-18 or young-looking.")
-                return "OK", 200
+    # Non-owners get a rotating tease instead of NSFW generation
+    if not send_tease_or_allow_nsfw(p, s, uid, chat):
+        return "OK", 200  # Block for non-owners (we already teased)
 
-            # Non-owners get a rotating tease instead of NSFW generation
-            if not send_tease_or_allow_nsfw(p, s, uid, chat):
-                return "OK", 200  # Block for non-owners (we already teased)
+    # Build a consistent-look hint for the persona
+    hint = (
+        f"{p.get('name','Girl')} consistent look: {p.get('img_tags','')}, "
+        f"{p.get('hair','')} hair, {p.get('eyes','')} eyes, {p.get('body','')}"
+    )
+    cup = p.get("cup")
+    if cup:
+        hint += f", proportions consistent with {cup}-cup bust"
 
-            # Build a consistent-look hint for the persona
-            hint = (
-                f"{p.get('name','Girl')} consistent look: {p.get('img_tags','')}, "
-                f"{p.get('hair','')} hair, {p.get('eyes','')} eyes, {p.get('body','')}"
-            )
-            cup = p.get("cup")
-            if cup:
-                hint += f", proportions consistent with {cup}-cup bust"
+    full_prompt = hint + ". " + (user_prompt or "tasteful nude portrait")
 
-            full_prompt = hint + ". " + (user_prompt or "tasteful nude portrait")
+    seed = stable_seed(p.get("name", "Girl"))
+    send_message(chat, "🎨 One moment…")
+    try:
+        # Keep within anon Horde/HF safe limits; adjust if your backend allows bigger
+        _spawn_image_job(chat, full_prompt, w=576, h=704, seed=seed, nsfw=True)
+        if str(uid) != str(OWNER_ID):
+            STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
+            save_state()
+    except Exception as e_img:
+        send_message(chat, f"Image queue: {e_img}")
 
-            seed = stable_seed(p.get("name", "Girl"))
-            send_message(chat, "🎨 One moment…")
-            try:
-                # Keep within anon Horde/HF safe limits; adjust if your backend allows bigger
-                _spawn_image_job(chat, full_prompt, w=576, h=704, seed=seed, nsfw=True)
-                if str(uid) != str(OWNER_ID):
-                    STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
-                    save_state()
-            except Exception as e_img:
-                send_message(chat, f"Image queue: {e_img}")
-
-            return "OK", 200
-        # ===== END /gen =====
-
-
+    return "OK", 200
+# ===== END /gen =====
 
 # ===== HELP TEXT =====
 HELP = (
