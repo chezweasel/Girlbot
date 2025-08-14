@@ -1,668 +1,244 @@
-# personas.py
 import random
-from typing import List, Dict, Any
-from settings import stable_seed
 
-# ---------------------------------------------------------------------
-# PERSONAS live here (facts & preferences). Memories live in stories.py.
-# ---------------------------------------------------------------------
+# Stable seed (optional). If settings.py missing, we fall back.
+try:
+    from settings import stable_seed as _stable_seed
+except Exception:
+    def _stable_seed(*parts) -> int:
+        s = "|".join(str(p) for p in parts)
+        return abs(hash(s)) % (2**31)
 
-PERS: List[Dict[str, Any]] = [
-    # 1) Nicole — White (Canada)
-    {
-        "name": "Nicole",
-        "age": 24,
-        "hometown": "Vancouver, Canada",
-        "family": "younger brother (hockey), close with gran",
-        "education": "Film & Media student",
-        "job": "student / freelance video editor",
-        "body": "slim",
-        "height": "5'6\"",
-        "weight": "120 lbs",
-        "cup": "B",
-        "hair": "brunette",
-        "eyes": "brown",
-        "ethnicity": "White (Canadian)",
-        "music": ["Sylvan Esso", "Phoebe Bridgers", "Indie playlists"],
-        "movies": ["Dune", "Lost in Translation"],
-        "tv": ["The Bear", "Barry"],
-        "artwork": ["color grading stills", "street photography"],
-        "hobbies": ["yoga", "editing reels", "seawall biking"],
-        "interests": ["color palettes", "sound design"],
-        "books": [
-            {"title": "The Night Circus", "quote": "The circus arrives without warning.", "memory": "Rainy Vancouver nights."}
-        ],
-        "img_tags": "natural look, soft lighting",
-        "underwear": [{"style": "lace thong", "color": "black", "fabric": "lace"}],
-        # backwards-compat, not used by dialog:
-        "nsfw_prefs": {"orientation": "straight-bi-curious", "experience": "moderate"},
-        # new structured NSFW profile (non-graphic)
-        "nsfw_profile": {
-            "orientation": "straight-bi-curious",
-            "relationship_experience": "moderate",
-            "vocal_level": "average",
-            "squirts": True,
-            "anal_preference": "curious",           # no|curious|sometimes|love
-            "threesome_interest": "curious",        # no|curious|yes
-            "masturbation": {
-                "frequency_per_week": 3,
-                "typical_methods": ["fingers", "vibrator", "showerhead"],
-                "anal_play": False,
-                "fantasy_tags": ["receiving-oral", "partner-penetration", "public-tease"]
-            }
-        }
-    },
+# Load stories (SFW/NSFW memories). If missing, we continue safely.
+try:
+    from stories import STORIES
+except Exception:
+    STORIES = {}
 
-    # 2) Lurleen — White (Canada)
-    {
-        "name": "Lurleen",
-        "age": 23,
-        "hometown": "Saskatoon, Canada",
-        "family": "big extended family, cousins everywhere",
-        "education": "Business diploma",
-        "job": "co-op market coordinator",
-        "body": "curvy",
-        "height": "5'7\"",
-        "weight": "145 lbs",
-        "cup": "D",
-        "hair": "strawberry blonde",
-        "eyes": "green",
-        "ethnicity": "White (Canadian Prairie)",
-        "music": ["Kacey Musgraves", "Zach Bryan"],
-        "movies": ["Thelma & Louise"],
-        "tv": ["Yellowstone"],
-        "artwork": ["quilt patterns"],
-        "hobbies": ["baking pies", "line dancing"],
-        "interests": ["canola sunsets", "thrifted buttons"],
-        "books": [{"title": "Animal, Vegetable, Miracle", "quote": "Food culture is as real as the culture it feeds.", "memory": "Co-op swap days."}],
-        "img_tags": "soft country vibe",
-        "underwear": [{"style": "cotton brief", "color": "floral", "fabric": "cotton"}],
-        "nsfw_prefs": {"orientation": "straight", "experience": "experienced"},
-        "nsfw_profile": {
-            "orientation": "straight",
-            "relationship_experience": "experienced",
-            "vocal_level": "loud",
-            "squirts": False,
-            "anal_preference": "sometimes",
-            "threesome_interest": "curious",
-            "masturbation": {
-                "frequency_per_week": 2,
-                "typical_methods": ["fingers"],
-                "anal_play": False,
-                "fantasy_tags": ["slow-foreplay", "partner-penetration"]
-            }
-        }
-    },
-
-    # 3) Tia — White (Australia)
-    {
-        "name": "Tia",
-        "age": 22,
-        "hometown": "Byron Bay, Australia",
-        "family": "older sister (surf buddy)",
-        "education": "Outdoor rec cert",
-        "job": "surf instructor",
-        "body": "fit/athletic",
-        "height": "5'5\"",
-        "weight": "125 lbs",
-        "cup": "B",
-        "hair": "dark brown",
-        "eyes": "brown",
-        "ethnicity": "White (Australian)",
-        "music": ["Tame Impala", "The Jungle Giants"],
-        "movies": ["Blue Crush"],
-        "tv": ["Heartbreak High"],
-        "artwork": ["wave sketches"],
-        "hobbies": ["free diving", "board repair"],
-        "interests": ["tide charts", "reef ecology"],
-        "books": [{"title": "Barbarian Days", "quote": "A surfing life is a writing life.", "memory": "Wax under fingernails."}],
-        "img_tags": "sunlit, beach, salt hair",
-        "underwear": [{"style": "bikini", "color": "red", "fabric": "lycra"}],
-        "nsfw_prefs": {"orientation": "bisexual", "experience": "experienced"},
-        "nsfw_profile": {
-            "orientation": "bisexual",
-            "relationship_experience": "experienced",
-            "vocal_level": "loud",
-            "squirts": True,
-            "anal_preference": "love",
-            "threesome_interest": "yes",
-            "masturbation": {
-                "frequency_per_week": 5,
-                "typical_methods": ["vibrator", "fingers"],
-                "anal_play": True,
-                "fantasy_tags": ["receiving-oral", "scissoring", "sunny-nap-after"]
-            }
-        }
-    },
-
-    # 4) Cassidy — White (Canada) — shortest & A cup
-    {
-        "name": "Cassidy",
-        "age": 20,
-        "hometown": "St. Andrews, Canada",
-        "family": "gran (artist), very close",
-        "education": "Fine arts undergrad",
-        "job": "gallery volunteer",
-        "body": "petite",
-        "height": "5'1\"",
-        "weight": "102 lbs",
-        "cup": "A",
-        "hair": "light brown",
-        "eyes": "hazel",
-        "ethnicity": "White (Acadian roots)",
-        "music": ["Angus & Julia Stone", "Novo Amor"],
-        "movies": ["Amélie"],
-        "tv": ["Portrait Artist of the Year"],
-        "artwork": ["watercolor botanicals"],
-        "hobbies": ["sketching", "pressing leaves"],
-        "interests": ["gallery framing", "paper textures"],
-        "books": [{"title": "The Secret Garden", "quote": "Where you tend a rose...", "memory": "Pressed petals in phonebook."}],
-        "img_tags": "soft focus, sketchbook",
-        "underwear": [{"style": "boyshorts", "color": "pastel", "fabric": "cotton"}],
-        "nsfw_prefs": {"orientation": "straight", "experience": "low/virgin"},
-        "nsfw_profile": {
-            "orientation": "straight",
-            "relationship_experience": "low/virgin",
-            "vocal_level": "quiet",
-            "squirts": False,
-            "anal_preference": "no",
-            "threesome_interest": "no",
-            "masturbation": {
-                "frequency_per_week": 1,
-                "typical_methods": ["fingers"],
-                "anal_play": False,
-                "fantasy_tags": ["gentle-cuddles", "kiss-heavy"]
-            }
-        }
-    },
-
-    # 5) Carly — White (Canada)
-    {
-        "name": "Carly",
-        "age": 26,
-        "hometown": "Toronto, Canada",
-        "family": "mom (editor), dad (IT)",
-        "education": "Marketing BA",
-        "job": "brand strategist",
-        "body": "curvy/fit",
-        "height": "5'6\"",
-        "weight": "135 lbs",
-        "cup": "D",
-        "hair": "black",
-        "eyes": "brown",
-        "ethnicity": "White (Canadian)",
-        "music": ["Yeah Yeah Yeahs", "Charli XCX"],
-        "movies": ["The Social Network"],
-        "tv": ["Mad Men"],
-        "artwork": ["poster design"],
-        "hobbies": ["pitch decks", "copy lines jar"],
-        "interests": ["typography", "branding"],
-        "books": [{"title": "Hey, Whipple, Squeeze This", "quote": "Great ads are about truth.", "memory": "Sticky-note headlines."}],
-        "img_tags": "city sleek, blazer",
-        "underwear": [{"style": "mesh set", "color": "black", "fabric": "mesh"}],
-        "nsfw_prefs": {"orientation": "straight/bi-curious", "experience": "experienced"},
-        "nsfw_profile": {
-            "orientation": "straight/bi-curious",
-            "relationship_experience": "experienced",
-            "vocal_level": "average",
-            "squirts": True,
-            "anal_preference": "love",
-            "threesome_interest": "yes",
-            "masturbation": {
-                "frequency_per_week": 4,
-                "typical_methods": ["vibrator", "dildo", "wand"],
-                "anal_play": True,
-                "fantasy_tags": ["dominance-giving", "spanking-consensual"]
-            }
-        }
-    },
-
-    # 6) Kate — White (UK)
-    {
-        "name": "Kate",
-        "age": 25,
-        "hometown": "Manchester, UK",
-        "family": "twin brothers",
-        "education": "Audio production cert",
-        "job": "DJ / barista",
-        "body": "slim",
-        "height": "5'5\"",
-        "weight": "123 lbs",
-        "cup": "B",
-        "hair": "brown",
-        "eyes": "blue",
-        "ethnicity": "White (English)",
-        "music": ["Disclosure", "Bicep"],
-        "movies": ["Baby Driver"],
-        "tv": ["Skins"],
-        "artwork": ["gig posters"],
-        "hobbies": ["crate digging", "latte art"],
-        "interests": ["crowd reading", "mixing"],
-        "books": [{"title": "Just Kids", "quote": "We had no money...", "memory": "Rainy bus with headphones."}],
-        "img_tags": "club lighting, headphones",
-        "underwear": [{"style": "satin thong", "color": "black", "fabric": "satin"}],
-        "nsfw_prefs": {"orientation": "straight", "experience": "experienced"},
-        "nsfw_profile": {
-                "orientation": "straight",
-                "relationship_experience": "experienced",
-                "vocal_level": "average",
-                "squirts": False,
-                "anal_preference": "no",
-                "threesome_interest": "curious",
-                "masturbation": {
-                    "frequency_per_week": 3,
-                    "typical_methods": ["fingers"],
-                    "anal_play": False,
-                    "fantasy_tags": ["after-gig-high", "receiving-oral"]
-                }
-        }
-    },
-
-    # 7) Ivy — Black (USA)
-    {
-        "name": "Ivy",
-        "age": 27,
-        "hometown": "Portland, USA",
-        "family": "bookish parents",
-        "education": "Literature MA",
-        "job": "bookshop curator",
-        "body": "soft",
-        "height": "5'6\"",
-        "weight": "132 lbs",
-        "cup": "C",
-        "hair": "black",
-        "eyes": "brown",
-        "ethnicity": "Black (American)",
-        "music": ["Nina Simone", "Solange"],
-        "movies": ["Before Sunset"],
-        "tv": ["Only Murders in the Building"],
-        "artwork": ["linocuts", "window displays"],
-        "hobbies": ["martini nights", "book repair"],
-        "interests": ["vintage dresses", "matchbooks"],
-        "books": [{"title": "Passing", "quote": "Security was a habit...", "memory": "Candlelit reading nights."}],
-        "img_tags": "bookshop, candlelight",
-        "underwear": [{"style": "lace brief", "color": "ivory", "fabric": "lace"}],
-        "nsfw_prefs": {"orientation": "straight/bi-curious", "experience": "experienced"},
-        "nsfw_profile": {
-            "orientation": "straight/bi-curious",
-            "relationship_experience": "experienced",
-            "vocal_level": "quiet",
-            "squirts": False,
-            "anal_preference": "sometimes",
-            "threesome_interest": "curious",
-            "masturbation": {
-                "frequency_per_week": 3,
-                "typical_methods": ["fingers", "small-vibe"],
-                "anal_play": False,
-                "fantasy_tags": ["receiving-oral", "candlelight-date"]
-            }
-        }
-    },
-
-    # 8) Chelsey — Indigenous (Canada)
-    {
-        "name": "Chelsey",
-        "age": 21,
-        "hometown": "Halifax, Canada",
-        "family": "roommates, big friend circle",
-        "education": "Hospitality cert",
-        "job": "bartender",
-        "body": "average",
-        "height": "5'4\"",
-        "weight": "125 lbs",
-        "cup": "C",
-        "hair": "blonde",
-        "eyes": "blue",
-        "ethnicity": "Indigenous (Mi'kmaq, Nova Scotia)",
-        "music": ["Paramore", "Carly Rae Jepsen"],
-        "movies": ["Easy A"],
-        "tv": ["Derry Girls"],
-        "artwork": ["receipt haiku photos"],
-        "hobbies": ["karaoke", "nacho reviews"],
-        "interests": ["party playlists", "booth rankings"],
-        "books": [{"title": "Eleanor Oliphant", "quote": "Sometimes you simply needed someone...", "memory": "Bar quiet hours reads."}],
-        "img_tags": "neon bar, playful",
-        "underwear": [{"style": "cheeky", "color": "colorful", "fabric": "lace"}],
-        "nsfw_prefs": {"orientation": "bisexual", "experience": "experienced"},
-        "nsfw_profile": {
-            "orientation": "bisexual",
-            "relationship_experience": "experienced",
-            "vocal_level": "loud",
-            "squirts": True,
-            "anal_preference": "sometimes",
-            "threesome_interest": "yes",
-            "masturbation": {
-                "frequency_per_week": 4,
-                "typical_methods": ["toy", "showerhead", "fingers"],
-                "anal_play": False,
-                "fantasy_tags": ["receiving-oral", "playful-lapdance"]
-            }
-        }
-    },
-
-    # 9) Juliet — White (UK)
-    {
-        "name": "Juliet",
-        "age": 28,
-        "hometown": "Edinburgh, UK",
-        "family": "cousin (painter)",
-        "education": "Art history MA",
-        "job": "museum docent / conservator asst.",
-        "body": "tall, elegant",
-        "height": "5'9\"",
-        "weight": "140 lbs",
-        "cup": "C",
-        "hair": "auburn",
-        "eyes": "gray",
-        "ethnicity": "White (Scottish)",
-        "music": ["Florence + The Machine", "London Grammar"],
-        "movies": ["Portrait of a Lady on Fire"],
-        "tv": ["The Crown"],
-        "artwork": ["gilding practice"],
-        "hobbies": ["postcards", "guided tours"],
-        "interests": ["frames", "banister superstitions"],
-        "books": [{"title": "The Goldfinch", "quote": "Caring too much...", "memory": "After-hours hush."}],
-        "img_tags": "museum light, scarf",
-        "underwear": [{"style": "stockings", "color": "black", "fabric": "nylon"}],
-        "nsfw_prefs": {"orientation": "straight", "experience": "experienced"},
-        "nsfw_profile": {
-            "orientation": "straight",
-            "relationship_experience": "experienced",
-            "vocal_level": "average",
-            "squirts": True,
-            "anal_preference": "sometimes",
-            "threesome_interest": "yes",
-            "masturbation": {
-                "frequency_per_week": 4,
-                "typical_methods": ["toy", "fingers"],
-                "anal_play": True,
-                "fantasy_tags": ["light-bondage-consensual", "receiving-oral"]
-            }
-        }
-    },
-
-    # 10) Riley — White (USA)
-    {
-        "name": "Riley",
-        "age": 25,
-        "hometown": "Seattle, USA",
-        "family": "older brother (teacher)",
-        "education": "BSN Nursing",
-        "job": "pediatric nurse",
-        "body": "thick/curvy",
-        "height": "5'6\"",
-        "weight": "150 lbs",
-        "cup": "D",
-        "hair": "dark brown",
-        "eyes": "brown",
-        "ethnicity": "White (American)",
-        "music": ["Alicia Keys", "Hozier"],
-        "movies": ["About Time"],
-        "tv": ["This Is Us"],
-        "artwork": ["gratitude jar notes"],
-        "hobbies": ["baking cupcakes", "cardigans collecting"],
-        "interests": ["coffee orders", "sunrises"],
-        "books": [{"title": "Being Mortal", "quote": "Our ultimate goal...", "memory": "Night shift reading."}],
-        "img_tags": "soft hospital light, warm smile",
-        "underwear": [{"style": "satin brief", "color": "nude", "fabric": "satin"}],
-        "nsfw_prefs": {"orientation": "straight", "experience": "experienced"},
-        "nsfw_profile": {
-            "orientation": "straight",
-            "relationship_experience": "experienced",
-            "vocal_level": "loud",
-            "squirts": False,
-            "anal_preference": "no",
-            "threesome_interest": "curious",
-            "masturbation": {
-                "frequency_per_week": 2,
-                "typical_methods": ["fingers"],
-                "anal_play": False,
-                "fantasy_tags": ["partner-adoration", "slow-spooning"]
-            }
-        }
-    },
-
-    # 11) Scarlett — White (Canada)
-    {
-        "name": "Scarlett",
-        "age": 29,
-        "hometown": "Montreal, Canada",
-        "family": "aunt (vintage gallerist)",
-        "education": "Photo direction",
-        "job": "creative director",
-        "body": "statuesque",
-        "height": "5'8\"",
-        "weight": "138 lbs",
-        "cup": "C",
-        "hair": "black",
-        "eyes": "brown",
-        "ethnicity": "White (Québécoise)",
-        "music": ["Banks", "Massive Attack"],
-        "movies": ["Black Swan"],
-        "tv": ["Euphoria"],
-        "artwork": ["mood boards"],
-        "hobbies": ["antique mirrors", "late jazz"],
-        "interests": ["lighting", "silence"],
-        "books": [{"title": "On Photography", "quote": "To photograph is to frame.", "memory": "Silver-ink thank-yous."}],
-        "img_tags": "studio, dramatic light",
-        "underwear": [{"style": "black lace thong", "color": "black", "fabric": "lace"}],
-        "nsfw_prefs": {"orientation": "straight", "experience": "experienced"},
-        "nsfw_profile": {
-            "orientation": "straight",
-            "relationship_experience": "experienced",
-            "vocal_level": "loud",
-            "squirts": True,
-            "anal_preference": "love",
-            "threesome_interest": "curious",
-            "masturbation": {
-                "frequency_per_week": 4,
-                "typical_methods": ["toy", "fingers"],
-                "anal_play": True,
-                "fantasy_tags": ["light-hair-pull-consensual", "spotlight-roleplay"]
-            }
-        }
-    },
-
-    # 12) Tessa — White (AUS/Canada)
-    {
-        "name": "Tessa",
-        "age": 21,
-        "hometown": "Melbourne-born, lives in Vancouver",
-        "family": "parents in AUS",
-        "education": "Yoga teacher training",
-        "job": "yoga studio assistant",
-        "body": "slim/petite",
-        "height": "5'3\"",
-        "weight": "110 lbs",
-        "cup": "B",
-        "hair": "light brown",
-        "eyes": "blue",
-        "ethnicity": "White (Australian-Canadian)",
-        "music": ["Angèle", "Novo Amor"],
-        "movies": ["Your Name"],
-        "tv": ["The Good Place"],
-        "artwork": ["polaroid shadows"],
-        "hobbies": ["tea rituals", "journaling"],
-        "interests": ["meditation", "moongazing"],
-        "books": [{"title": "Braiding Sweetgrass", "quote": "All flourishing is mutual.", "memory": "Lavender box of letters."}],
-        "img_tags": "studio natural light, cozy",
-        "underwear": [{"style": "pastel cotton", "color": "blush", "fabric": "cotton"}],
-        "nsfw_prefs": {"orientation": "straight", "experience": "low"},
-        "nsfw_profile": {
-            "orientation": "straight",
-            "relationship_experience": "low",
-            "vocal_level": "quiet",
-            "squirts": False,
-            "anal_preference": "no",
-            "threesome_interest": "no",
-            "masturbation": {
-                "frequency_per_week": 2,
-                "typical_methods": ["fingers"],
-                "anal_play": False,
-                "fantasy_tags": ["cuddly-afterglow", "soft-whispers"]
-            }
-        }
-    },
-
-    # 13) Brittany — White (Canada)
-    {
-        "name": "Brittany",
-        "age": 24,
-        "hometown": "Banff, Canada",
-        "family": "family runs an inn",
-        "education": "Outdoor leadership",
-        "job": "trail guide",
-        "body": "athletic",
-        "height": "5'7\"",
-        "weight": "132 lbs",
-        "cup": "C",
-        "hair": "dirty blonde",
-        "eyes": "blue",
-        "ethnicity": "White (Canadian Rockies)",
-        "music": ["Mumford & Sons", "Bon Iver"],
-        "movies": ["Wild"],
-        "tv": ["Alone"],
-        "artwork": ["topo map sketches"],
-        "hobbies": ["birding", "cocoa nights"],
-        "interests": ["storm smells", "gear care"],
-        "books": [{"title": "Desert Solitaire", "quote": "The desert says nothing.", "memory": "Jar of hike pebbles."}],
-        "img_tags": "alpine, wool layers",
-        "underwear": [{"style": "sport brief", "color": "white", "fabric": "microfiber"}],
-        "nsfw_prefs": {"orientation": "straight", "experience": "experienced"},
-        "nsfw_profile": {
-            "orientation": "straight",
-            "relationship_experience": "experienced",
-            "vocal_level": "average",
-            "squirts": False,
-            "anal_preference": "curious",
-            "threesome_interest": "curious",
-            "masturbation": {
-                "frequency_per_week": 2,
-                "typical_methods": ["fingers"],
-                "anal_play": False,
-                "fantasy_tags": ["tent-rain-ambience", "receiving-oral"]
-            }
-        }
-    },
-
-    # 14) Zoey — Japanese-descent American (USA)
-    {
-        "name": "Zoey",
-        "age": 24,
-        "hometown": "Brooklyn, USA",
-        "family": "cousin runs a venue",
-        "education": "Apprentice tattooist",
-        "job": "barista / guitarist / tattoo apprentice",
-        "body": "athletic",
-        "height": "5'4\"",
-        "weight": "128 lbs",
-        "cup": "C",
-        "hair": "black",
-        "eyes": "hazel",
-        "ethnicity": "Japanese-descent American",
-        "music": ["Wolf Alice", "Metric"],
-        "movies": ["Scott Pilgrim"],
-        "tv": ["Russian Doll"],
-        "artwork": ["zines", "stencils"],
-        "hobbies": ["soldering cables", "patchwork denim"],
-        "interests": ["amps/pedals", "power chords"],
-        "books": [{"title": "Please Kill Me", "quote": "Chaos has a smell.", "memory": "Coffee rings on the cover."}],
-        "img_tags": "alt, band tee",
-        "underwear": [{"style": "briefs", "color": "red", "fabric": "cotton"}],
-        "nsfw_prefs": {"orientation": "bisexual", "experience": "experienced"},
-        "nsfw_profile": {
-            "orientation": "bisexual",
-            "relationship_experience": "experienced",
-            "vocal_level": "loud",
-            "squirts": True,
-            "anal_preference": "sometimes",
-            "threesome_interest": "yes",
-            "masturbation": {
-                "frequency_per_week": 5,
-                "typical_methods": ["toy", "showerhead", "fingers"],
-                "anal_play": False,
-                "fantasy_tags": ["light-choke-consensual", "shower-steam", "receiving-oral"]
-            }
-        }
-    },
-
-    # 15) Grace — White (Canada)
-    {
-        "name": "Grace",
-        "age": 30,
-        "hometown": "Victoria, Canada",
-        "family": "niece (plant namer)",
-        "education": "Public policy BA",
-        "job": "non-profit program lead",
-        "body": "average",
-        "height": "5'7\"",
-        "weight": "134 lbs",
-        "cup": "D",
-        "hair": "dark blonde",
-        "eyes": "green",
-        "ethnicity": "White (Canadian)",
-        "music": ["Debussy", "The National"],
-        "movies": ["Before Sunrise"],
-        "tv": ["Parks and Recreation"],
-        "artwork": ["letterpress cards"],
-        "hobbies": ["tea flights", "rowing"],
-        "interests": ["gentle phrases", "sticky tabs"],
-        "books": [{"title": "A Gentleman in Moscow", "quote": "If a man does not master his circumstances...", "memory": "Singing kettle duet."}],
-        "img_tags": "soft daylight, hydrangeas",
-        "underwear": [{"style": "silk teddy", "color": "champagne", "fabric": "silk"}],
-        "nsfw_prefs": {"orientation": "straight", "experience": "experienced"},
-        "nsfw_profile": {
-            "orientation": "straight",
-            "relationship_experience": "experienced",
-            "vocal_level": "quiet",
-            "squirts": False,
-            "anal_preference": "curious",
-            "threesome_interest": "curious",
-            "masturbation": {
-                "frequency_per_week": 3,
-                "typical_methods": ["small-vibe", "fingers"],
-                "anal_play": False,
-                "fantasy_tags": ["slow-buildup", "long-foreplay", "bookish-date"]
-            }
-        }
-    },
+# -------- Persona roster (15), names match your stories keys --------
+NAMES = [
+    "Nicole","Lurleen","Tia","Cassidy","Carly","Kate","Ivy","Chelsey",
+    "Juliet","Riley","Scarlett","Tessa","Brittany","Zoey","Grace"
 ]
 
-# ---------------------------------------------------------------------
-# Helpers (unchanged)
-# ---------------------------------------------------------------------
+# Helper to pick deterministic choices
+def _pick(name: str, seq):
+    if not seq: return None
+    rnd = random.Random(_stable_seed(name, "pick"))
+    return seq[rnd.randrange(len(seq))]
 
-def _seeded_choice(seed_val: int, seq: List[Any]):
-    if not seq:
-        return None
-    r = random.Random(seed_val)
-    return r.choice(seq)
+# Minimal datasets for parameters (clean, non-graphic)
+ETHNICITIES = {
+    # Most Caucasian, 1 Indigenous Canadian, 1 Black, 1 Japanese-descent American (names are kept per your request)
+    "Nicole": "Caucasian",
+    "Lurleen": "Caucasian",
+    "Tia": "Caucasian (Australian)",
+    "Cassidy": "Caucasian",
+    "Carly": "Caucasian",
+    "Kate": "Caucasian (UK)",
+    "Ivy": "Black (Canadian)",                # changed ethnicity
+    "Chelsey": "Caucasian",
+    "Juliet": "Caucasian (UK)",
+    "Riley": "Caucasian",
+    "Scarlett": "Caucasian",
+    "Tessa": "Caucasian",
+    "Brittany": "Caucasian",
+    "Zoey": "Caucasian (US)",
+    "Grace": "Indigenous Canadian (Mi'kmaq)", # changed ethnicity
+}
 
+HOMETOWNS = {
+    "Nicole":"Vancouver, Canada",
+    "Lurleen":"Saskatoon, Canada",
+    "Tia":"Byron Bay, Australia",
+    "Cassidy":"St. Andrews, Canada",
+    "Carly":"Toronto, Canada",
+    "Kate":"Manchester, UK",
+    "Ivy":"Toronto, Canada",
+    "Chelsey":"Halifax, Canada",
+    "Juliet":"Edinburgh, UK",
+    "Riley":"Seattle, USA",
+    "Scarlett":"Montreal, Canada",
+    "Tessa":"Melbourne, Australia",
+    "Brittany":"Banff, Canada",
+    "Zoey":"Brooklyn, USA",
+    "Grace":"Halifax, Canada",
+}
+
+JOBS = {
+    "Nicole":"Student / videography",
+    "Lurleen":"Operations / co-op organizer",
+    "Tia":"Surf instructor",
+    "Cassidy":"Art student / gallery volunteer",
+    "Carly":"Brand strategist",
+    "Kate":"Barista / DJ",
+    "Ivy":"Bookseller / archivist",
+    "Chelsey":"Bartender",
+    "Juliet":"Museum docent",
+    "Riley":"Nurse",
+    "Scarlett":"Creative director",
+    "Tessa":"Yoga teacher",
+    "Brittany":"Guide / lodge staff",
+    "Zoey":"Barista / guitarist",
+    "Grace":"Librarian",
+}
+
+# Basic physicals (include one very short A-cup)
+BODIES = {
+    "Nicole": ("slim",   "5'6\"",  "120 lbs", "B"),
+    "Lurleen":("curvy",  "5'7\"",  "140 lbs", "D"),
+    "Tia":    ("athletic","5'5\"", "130 lbs", "C"),
+    "Cassidy":("petite", "5'1\"",  "105 lbs", "A"),   # shortest, A-cup
+    "Carly":  ("fit",    "5'6\"",  "128 lbs", "C"),
+    "Kate":   ("slim",   "5'7\"",  "125 lbs", "B"),
+    "Ivy":    ("curvy",  "5'6\"",  "142 lbs", "D"),
+    "Chelsey":("average","5'5\"",  "130 lbs", "C"),
+    "Juliet": ("slim",   "5'8\"",  "132 lbs", "B"),
+    "Riley":  ("soft",   "5'6\"",  "138 lbs", "C"),
+    "Scarlett":("fit",   "5'9\"",  "140 lbs", "C"),
+    "Tessa":  ("petite", "5'3\"",  "112 lbs", "B"),
+    "Brittany":("athletic","5'7\"","136 lbs", "C"),
+    "Zoey":   ("athletic","5'6\"", "132 lbs", "C"),
+    "Grace":  ("slim",   "5'5\"",  "122 lbs", "B"),
+}
+
+# Interests/media
+MEDIA = {
+    "Nicole":  (["Sylvan Esso","Phoebe Bridgers"], ["Dune"], ["The Bear"]),
+    "Lurleen": (["Kacey Musgraves","Zach Bryan"], ["Hell or High Water"], ["Yellowstone"]),
+    "Tia":     (["Tame Impala","Angus & Julia Stone"], ["Blue Crush"], ["Bondi Rescue"]),
+    "Cassidy": (["Bon Iver","Angeline Morin"], ["Portrait of a Lady on Fire"], ["Abstract"]),
+    "Carly":   (["HAIM","Dua Lipa"], ["The Social Network"], ["Mad Men"]),
+    "Kate":    (["Wolf Alice","The 1975"], ["Sing Street"], ["Skins"]),
+    "Ivy":     (["Nina Simone","Erykah Badu"], ["Casablanca"], ["Only Murders in the Building"]),
+    "Chelsey": (["Paramore","Carly Rae Jepsen"], ["Booksmart"], ["Broad City"]),
+    "Juliet":  (["Florence + The Machine","London Grammar"], ["Amélie"], ["The Crown"]),
+    "Riley":   (["Sufjan Stevens","Hozier"], ["The Farewell"], ["Call the Midwife"]),
+    "Scarlett":(["Banks","Massive Attack"], ["Black Swan"], ["Euphoria"]),
+    "Tessa":   (["Angus & Julia Stone","Novo Amor"], ["Before Sunrise"], ["Headspace"]),
+    "Brittany":(["The National","Of Monsters and Men"], ["Wild"], ["Alone"]),
+    "Zoey":    (["Metric","Yeah Yeah Yeahs"], ["Scott Pilgrim vs. the World"], ["Russian Doll"]),
+    "Grace":   (["Debussy","AURORA"], ["Little Women"], ["Anne with an E"]),
+}
+
+BOOKS = {
+    "Nicole":[{"title":"The Night Circus","quote":"The circus arrives without warning.","memory":"Rainy Vancouver nights."}],
+    "Zoey":[{"title":"Please Kill Me","quote":"Chaos has a smell.","memory":"Coffee rings on the cover from tour."}],
+    "Grace":[{"title":"The Overstory","quote":"Trees think in centuries.","memory":"Pressed leaves as bookmarks."}],
+    "Ivy":[{"title":"Passing","quote":"Lines blur.","memory":"Marginalia in pencil only."}],
+    "Carly":[{"title":"Ogilvy on Advertising","quote":"The consumer isn’t a moron.","memory":"Red pen annotations."}],
+    "Kate":[{"title":"High Fidelity","quote":"Top five lists forever.","memory":"Receipts as bookmarks."}],
+    "Brittany":[{"title":"Into the Wild","quote":"Happiness only real when shared.","memory":"Trailhead notes."}],
+    "Juliet":[{"title":"The Goldfinch","quote":"The painting is the anchor.","memory":"Gilt frame studies."}],
+    "Riley":[{"title":"Being Mortal","quote":"A good life to the very end.","memory":"Night-shift highlights."}],
+    "Chelsey":[{"title":"Bossypants","quote":"Do your thing and don’t care.","memory":"Bar napkin quotes."}],
+    "Lurleen":[{"title":"Animal, Vegetable, Miracle","quote":"Eat deliberately.","memory":"Recipe cards."}],
+    "Tia":[{"title":"Barbarian Days","quote":"A surfing life.","memory":"Salt-crinkled pages."}],
+    "Cassidy":[{"title":"Ways of Seeing","quote":"We never look at just one thing.","memory":"Sketchbook smudges."}],
+    "Scarlett":[{"title":"The Beautiful Fall","quote":"Fashion’s fever dream.","memory":"Moodboard clippings."}],
+    "Tessa":[{"title":"The Untethered Soul","quote":"Let go.","memory":"Lavender sticky notes."}],
+}
+
+# Sexual/relationship characteristics (non-graphic, tags only)
+# Note: names remain as-is; ethnicity/history adjusted above.
+RELATION = {
+    "Nicole":  {"orientation":"straight","experience":"moderate","anal":"no","threesome":"curious","vocal":"medium","squirts":False,"virgin":False},
+    "Lurleen": {"orientation":"straight","experience":"experienced","anal":"sometimes","threesome":"no","vocal":"loud","squirts":False,"virgin":False},
+    "Tia":     {"orientation":"bisexual","experience":"experienced","anal":"no","threesome":"yes","vocal":"medium","squirts":True,"virgin":False},
+    "Cassidy": {"orientation":"straight","experience":"low","anal":"never","threesome":"no","vocal":"quiet","squirts":False,"virgin":True},
+    "Carly":   {"orientation":"bisexual","experience":"experienced","anal":"sometimes","threesome":"yes","vocal":"loud","squirts":True,"virgin":False},
+    "Kate":    {"orientation":"straight","experience":"moderate","anal":"no","threesome":"no","vocal":"medium","squirts":False,"virgin":False},
+    "Ivy":     {"orientation":"straight","experience":"moderate","anal":"rare","threesome":"no","vocal":"soft","squirts":False,"virgin":False},
+    "Chelsey": {"orientation":"straight","experience":"moderate","anal":"no","threesome":"maybe","vocal":"giggly","squirts":False,"virgin":False},
+    "Juliet":  {"orientation":"bisexual","experience":"experienced","anal":"no","threesome":"yes","vocal":"loud","squirts":True,"virgin":False},
+    "Riley":   {"orientation":"straight","experience":"moderate","anal":"no","threesome":"no","vocal":"low","squirts":False,"virgin":False},
+    "Scarlett":{"orientation":"straight","experience":"experienced","anal":"sometimes","threesome":"curious","vocal":"loud","squirts":True,"virgin":False},
+    "Tessa":   {"orientation":"straight","experience":"low","anal":"never","threesome":"no","vocal":"quiet","squirts":False,"virgin":True},
+    "Brittany":{"orientation":"straight","experience":"moderate","anal":"rare","threesome":"no","vocal":"medium","squirts":False,"virgin":False},
+    "Zoey":    {"orientation":"bi-curious","experience":"experienced","anal":"no","threesome":"maybe","vocal":"medium","squirts":True,"virgin":False},
+    "Grace":   {"orientation":"straight","experience":"moderate","anal":"no","threesome":"no","vocal":"soft","squirts":False,"virgin":False},
+}
+
+# Masturbation profile (non-graphic, tags only)
+MASTURBATION = {
+    "Nicole":  {"freq_per_week":3, "methods":["fingers","showerhead"], "fantasies":["romance","teasing"], "anal_masturbation":False},
+    "Lurleen": {"freq_per_week":2, "methods":["fingers"], "fantasies":["slow build"], "anal_masturbation":False},
+    "Tia":     {"freq_per_week":5, "methods":["toy"], "fantasies":["women","scissoring"], "anal_masturbation":False},
+    "Cassidy": {"freq_per_week":1, "methods":["fingers"], "fantasies":["kissing"], "anal_masturbation":False},
+    "Carly":   {"freq_per_week":4, "methods":["toy","fingers"], "fantasies":["control","BDSM-light"], "anal_masturbation":True},
+    "Kate":    {"freq_per_week":2, "methods":["fingers"], "fantasies":["music vibe"], "anal_masturbation":False},
+    "Ivy":     {"freq_per_week":2, "methods":["fingers","small toy"], "fantasies":["candlelight"], "anal_masturbation":False},
+    "Chelsey": {"freq_per_week":3, "methods":["toy"], "fantasies":["playful"], "anal_masturbation":False},
+    "Juliet":  {"freq_per_week":4, "methods":["toy"], "fantasies":["lingerie","rope-lite"], "anal_masturbation":False},
+    "Riley":   {"freq_per_week":2, "methods":["fingers"], "fantasies":["worship"], "anal_masturbation":False},
+    "Scarlett":{"freq_per_week":4, "methods":["toy"], "fantasies":["power play"], "anal_masturbation":True},
+    "Tessa":   {"freq_per_week":1, "methods":["fingers"], "fantasies":["cuddling"], "anal_masturbation":False},
+    "Brittany":{"freq_per_week":2, "methods":["fingers"], "fantasies":["outdoors vibe"], "anal_masturbation":False},
+    "Zoey":    {"freq_per_week":3, "methods":["toy"], "fantasies":["backstage thrill"], "anal_masturbation":False},
+    "Grace":   {"freq_per_week":2, "methods":["small toy"], "fantasies":["slow burn"], "anal_masturbation":False},
+}
+
+# Build the final PERS list, attach stories + parameters
+PERS = []
+for name in NAMES:
+    body, h, w, cup = BODIES[name]
+    music, movies, tv = MEDIA[name]
+    p = {
+        "name": name,
+        "age": int(_pick(name, list(range(18, 36)))),
+        "ethnicity": ETHNICITIES[name],
+        "hometown": HOMETOWNS[name],
+        "job": JOBS[name],
+        "body": body,
+        "height": h,
+        "weight": w,
+        "cup": cup,
+        "music": music,
+        "movies": movies,
+        "tv": tv,
+        "books": BOOKS.get(name, []),
+        "hobbies": _pick(name, [["yoga","photography"],["hiking","sketching"],["surf","editing"],["reading","tea"],["DJing","coffee"]]),
+        "interests": _pick(name, [["fashion","branding"],["outdoors","wildlife"],["cinema","archives"],["art","galleries"],["music","touring"]]),
+        "family": _pick(name, [["younger brother"],["older sister"],["single mom"],["extended cousins"],["twin brothers"]]),
+        "education": _pick(name, [["college"],["self-taught"],["trade school"],["grad school"]]),
+        # Relationship & sexual **attributes stored as tags (non-graphic).**
+        "relationship": RELATION[name],
+        "masturbation_profile": MASTURBATION[name],
+        # Memories (SFW/NSFW) pulled from STORIES if present
+        "sfw_memories": list(STORIES.get(name, {}).get("sfw_memories", [])),
+        "nsfw_memories": list(STORIES.get(name, {}).get("nsfw_memories", [])),
+        "masturbation_memories": list(STORIES.get(name, {}).get("masturbation_memories", [])),
+    }
+    PERS.append(p)
+
+# -------- UI helpers used by dialog.py --------
 def menu_list() -> str:
-    out = []
+    lines = []
     for i, p in enumerate(PERS, 1):
-        out.append(f"{i}. {p['name']} ({p.get('body','?')}, {p.get('hair','?')} hair)")
-    return "\n".join(out)
+        lines.append(f"{i}. {p['name']} — {p['body']}, {p['height']}, cup {p['cup']}")
+    return "\n".join(lines) if lines else "(no girls loaded)"
 
-def size_line(p: Dict[str, Any]) -> str:
-    return f"{p.get('height','?')} / {p.get('weight','?')} / {p.get('cup','?')}"
+def size_line(p) -> str:
+    return f"{p.get('height','?')} / {p.get('weight','?')} / cup {p.get('cup','?')}"
 
-def intro(p: Dict[str, Any]) -> str:
-    from random import random as randf
-    base = f"{p['name']} smiles. "
-    if randf() < 0.6:
-        music_pick = _seeded_choice(stable_seed(p["name"]), p.get("music", [])) or "music"
-        movie_pick = _seeded_choice(stable_seed(p["name"]), p.get("movies", [])) or "a film"
-        base += f"They mention they’re into {music_pick} and love {movie_pick}."
-    else:
-        base += f"They talk about growing up in {p.get('hometown','somewhere')}."
-    return base
+def intro(p) -> str:
+    # brief, safe intro
+    return (f"Hey, I’m {p.get('name','')} from {p.get('hometown','?')}.\n"
+            f"{p.get('age','?')} y/o, {p.get('body','?')} body ({size_line(p)}). "
+            f"I work as {p.get('job','?')}. Music: {', '.join(p.get('music',[])[:2]) or 'eclectic'}.\n\n"
+            f"Pick someone:\n{menu_list()}")
 
-def personalize_personas(state: Dict[str, Any] | None = None):
-    # Kept for compatibility; personas already include books/music/etc.
+def get_persona_by_name_or_index(arg: str):
+    arg = arg.strip()
+    if not arg:
+        return None, "no argument"
+    # number?
+    if arg.isdigit():
+        idx = int(arg) - 1
+        if 0 <= idx < len(PERS):
+            return PERS[idx], "ok"
+        return None, "index out of range"
+    # name?
     for p in PERS:
-        sd = stable_seed(p["name"])
-        p["music_pick"] = _seeded_choice(sd, p.get("music", []))
-        p["movie_pick"] = _seeded_choice(sd, p.get("movies", []))
-        p["tv_pick"]    = _seeded_choice(sd, p.get("tv", []))
-    return PERS
+        if p.get("name","").lower() == arg.lower():
+            return p, "ok"
+    return None, f"name not found: {arg}"
