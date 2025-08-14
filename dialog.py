@@ -4,9 +4,8 @@ import random
 from typing import Dict, Tuple
 
 # Pull persona data + helpers
-from personas import PERS, intro, menu_list, size_line, BOOKS
-# Your big STORIES dict lives in stories.py (you already pasted it there)
-from stories import STORIES
+from personas import PERS, intro, menu_list, size_line
+from stories import STORIES, BOOKS
 
 # ---------------- State helpers ----------------
 def _default_state() -> Dict:
