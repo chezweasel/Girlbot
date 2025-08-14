@@ -2067,42 +2067,58 @@ def hook():
 
             send_message(chat, "\n".join(lines))
     return "OK", 200
-    if low.startswith("/selfie"):
-        vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "teasing, SFW"
-        if (str(uid) != OWNER_ID) and not allowed(uid):
-            send_message(chat, "Free image limit hit.")
+                       # === Image commands (paste starts here) ===
+
+        if low.startswith("/selfie"):
+            vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "teasing, SFW"
+            if (str(uid) != OWNER_ID) and not allowed(uid):
+                send_message(chat, "Free image limit hit.")
+                return "OK", 200
+            _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=s.get("nsfw", False)), nsfw=s.get("nsfw", False))
             return "OK", 200
-        _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=False), nsfw=False)
 
-    if low.startswith("/old18"):
-        vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "nostalgic"
-        if (str(uid) != OWNER_ID) and not allowed(uid):
-            send_message(chat, "Free image limit hit.")
+        if low.startswith("/old18"):
+            # SFW throwback at age 18 (adult)
+            if (str(uid) != OWNER_ID) and not allowed(uid):
+                send_message(chat, "Free image limit hit.")
+                return "OK", 200
+            _spawn_image_job(chat, old18_prompt(p), nsfw=False)
             return "OK", 200
-        _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=True), nsfw=True)
 
-    if low.startswith("/nude18"):
-        vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "posing nude"
-        if (str(uid) != OWNER_ID) and not allowed(uid):
-            send_message(chat, "Free image limit hit.")
+        if low.startswith("/nude18"):
+            # NSFW “18+ posing” variant (only if nsfw is on)
+            if not s.get("nsfw", False):
+                send_message(chat, "Turn on /nsfw_on for spicy pics.")
+                return "OK", 200
+            if (str(uid) != OWNER_ID) and not allowed(uid):
+                send_message(chat, "Free image limit hit.")
+                return "OK", 200
+            vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "posing nude"
+            _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=True), nsfw=True)
             return "OK", 200
-        _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=True), nsfw=True)
 
-    if low.startswith("/costume"):
-        vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "cosplay outfit"
-        if (str(uid) != OWNER_ID) and not allowed(uid):
-            send_message(chat, "Free image limit hit.")
+        if low.startswith("/costume"):
+            # Fun cosplay / outfit — SFW
+            vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "cosplay outfit"
+            if (str(uid) != OWNER_ID) and not allowed(uid):
+                send_message(chat, "Free image limit hit.")
+                return "OK", 200
+            _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=False), nsfw=False)
             return "OK", 200
-        _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=False), nsfw=False)
 
-    if low.startswith("/artistic"):
-        vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "artistic nude, tasteful lighting"
-        if (str(uid) != OWNER_ID) and not allowed(uid):
-            send_message(chat, "Free image limit hit.")
+        if low.startswith("/artistic"):
+            # Tasteful nude with artsy lighting — NSFW
+            if not s.get("nsfw", False):
+                send_message(chat, "Turn on /nsfw_on for spicy pics.")
+                return "OK", 200
+            vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "artistic nude, tasteful lighting"
+            if (str(uid) != OWNER_ID) and not allowed(uid):
+                send_message(chat, "Free image limit hit.")
+                return "OK", 200
+            _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=True), nsfw=True)
             return "OK", 200
-        _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=True), nsfw=True)
-
-
+        # === Image commands (paste ends here) ===
+            
         if text and not text.startswith("/"):
             t = text.strip()
             idx = None
