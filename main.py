@@ -1695,35 +1695,7 @@ def persona_reply(p, s, user_text:str) -> str:
             "what do you want to feel more of this week?"
         ])
         return f"{_pick(openers)} {('also: ' + quirk) if quirk else ''} {feels}. {ask}"
-
-# ===== COMMAND HELP TEXT =====
-HELP = (
-    "Commands:\n"
-    "/start - Begin chatting with the bot\n"
-    "/selfie [vibe] - Generate a selfie with optional vibe\n"
-    "/nsfw_on - Enable NSFW mode (owner only)\n"
-    "/nsfw_off - Disable NSFW mode\n"
-    "/help - Show this help message\n"
-)
-    
-# ===== /gen COMMAND HANDLER =====
-
-    # Build a consistent-look hint for the persona
-    hint = (
-        f"{p.get('name','Girl')} consistent look: {p.get('img_tags','')}, "
-        f"{p.get('hair','')} hair, {p.get('eyes','')} eyes, {p.get('body','')}"
-    )
-    cup = p.get("cup")
-    if cup:
-        hint += f", proportions consistent with {cup}-cup bust"
-
-    full_prompt = hint + ". " + (user_prompt or "tasteful nude portrait")
-
-    seed = stable_seed(p.get("name", "Girl"))
-    send_message(chat, "🎨 One moment…")
-
-    return "OK", 200
-# ===== END /gen =====
+        
 HELP = (
     "Commands:\n"
     "hi — menu\n"
