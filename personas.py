@@ -768,6 +768,8 @@ STORIES = {
         ]
     }
 }
+# Optional: books per persona (dialog.py imports this).
+BOOKS = {}
 # === END STORIES PASTE ======================================================
 
 # ===== PERSONAS =====
@@ -801,8 +803,7 @@ PERS = [
         "img_tags": "soft lighting, ocean in background",
     }
 ]
-# Optional: books per persona (dialog.py imports this).
-BOOKS = {}
+
 # ===== HELPERS =====
 def _seeded_choice(seed_val, seq):
     if not seq:
