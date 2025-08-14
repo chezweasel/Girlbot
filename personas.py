@@ -1,7 +1,6 @@
 # personas.py
 import random
-from settings import stable_seed
-from stories import STORIES, BOOKS as STORY_BOOKS  # stories.py already has your pasted memories
+
 
 # -- Expose BOOKS here too so older imports like `from personas import BOOKS` still work
 BOOKS = {
