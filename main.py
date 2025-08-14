@@ -3,6 +3,9 @@ import logging
 import threading
 from typing import Final
 from flask import Flask
+from nsfw_chat import (
+    cmd_spicy_on, cmd_spicy_off, cmd_spicy_status, cmd_spicy_set, cmd_spicy
+)
 
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
