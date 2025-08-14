@@ -1588,23 +1588,67 @@ def _prep_for_telegram(path: str) -> str:
         print("PREP ERR:", e)
         return path
 
-def send_photo(cid, path):
-    with open(path, "rb") as f:
-        r = requests.post(f"{API}/sendPhoto", data={"chat_id": int(cid)}, files={"photo": f}, timeout=120)
-    if r.status_code != 200:
-        print("PHOTO ERR:", r.text[:200])
-# Helper: safe image spawn with defaults that match Horde anon limits
-def _spawn_image_job(chat, prompt, w=512, h=512, seed=None, nsfw=False):
-    # Clamp to Horde's anonymous limits (max 576 x 576)
-    w = min(int(w), 576)
-    h = min(int(h), 576)
+# Convert images to Telegram-friendly JPEG (no alpha) before uploading
+def _prep_for_telegram(path: str) -> str:
     try:
-        fn = generate_image(prompt, w=w, h=h, seed=seed, nsfw=nsfw)
-        send_photo(chat, fn)
-    except Exception as e_img:
-        # Surface the real reason back to Telegram for easy debugging
-        send_message(chat, f"Image queue: {e_img}")
+        from PIL import Image
+        import os
 
+        im = Image.open(path)
+        im.load()  # force read to catch corrupts
+
+        # Remove alpha & normalize mode
+        if im.mode in ("RGBA", "LA", "P"):
+            im = im.convert("RGB")
+        elif im.mode != "RGB":
+            im = im.convert("RGB")
+
+        base, _ = os.path.splitext(path)
+        out = f"{base}_tg.jpg"
+        im.save(out, "JPEG", quality=92, optimize=True)
+
+        if os.path.exists(out) and os.path.getsize(out) > 0:
+            return out
+        return path
+    except Exception as e:
+        print("PREP ERR:", e)
+        return path
+
+def send_photo(cid, path):
+    try:
+        import os
+        safe_path = _prep_for_telegram(path)
+
+        # Try as photo first
+        with open(safe_path, "rb") as f:
+            r = requests.post(
+                f"{API}/sendPhoto",
+                data={"chat_id": int(cid)},
+                files={"photo": f},
+                timeout=120
+            )
+        if r.status_code == 200:
+            return
+
+        # Fallback: try as document
+        print("PHOTO ERR (photo):", r.text[:200])
+        with open(safe_path, "rb") as f:
+            r2 = requests.post(
+                f"{API}/sendDocument",
+                data={"chat_id": int(cid)},
+                files={"document": f},
+                timeout=120
+            )
+        if r2.status_code != 200:
+            print("PHOTO ERR (document):", r2.text[:200])
+            try:
+                desc = r.json().get("description", "unknown")
+            except Exception:
+                desc = "unknown"
+            send_message(cid, f"Image upload failed: {desc}")
+    except Exception as e:
+        print("PHOTO SEND EXC:", e)
+        send_message(cid, f"Image upload error: {e}")
 # ===== UI =====
 def menu_list():
     out, seen = [], set()
