@@ -1174,7 +1174,122 @@ def _prep_for_telegram(path: str) -> str:
     except Exception as e:
         print("PREP ERR:", e)
         return path
+# === Selfie style helpers (top-level) ========================================
 
+# Keywords that indicate minor/underage content (strictly disallowed)
+_MINOR_WORDS = {
+    "child","children"
+    "underage","young-looking",
+}
+
+def _contains_minor_terms(s: str) -> bool:
+    low = (s or "").lower()
+    return any(w in low for w in _MINOR_WORDS)
+
+def _parse_style_flags(arg: str):
+    """
+    Turn '/selfie emo goth cosplay:catwoman beach cozy' into structured flags.
+    We also allow a free-text 'vibe: ...' (e.g. 'vibe: moody backlight').
+    Returns (flags_dict, error_msg_or_None)
+    """
+    if not arg:
+        return ({"modes": set(), "vibe": "teasing, SFW", "nsfw": False}, None)
+
+    # Hard safety: reject anything that hints at minors
+    if _contains_minor_terms(arg):
+        return (None, "I can’t do under-18 or young-looking content. Please pick an adult style.")
+
+    modes = set()
+    vibe = None
+    cosplay = None
+    nsfw = False
+
+    tokens = [t.strip() for t in arg.split() if t.strip()]
+    for t in tokens:
+        tl = t.lower()
+
+        if tl.startswith("vibe:"):
+            vibe = t.split(":",1)[1].strip() or vibe
+            continue
+        if tl.startswith("cosplay:"):
+            cosplay = t.split(":",1)[1].strip()
+            if cosplay:
+                modes.add("cosplay")
+            continue
+
+        # simple flags
+        if tl in {"nsfw","spicy"}:
+            nsfw = True
+        elif tl in {"sfw"}:
+            nsfw = False
+        elif tl in {"emo","goth","scene","punk","alt"}:
+            modes.add(tl)
+        elif tl in {"cozy","studio","glam","moody","backlit","street","beach"}:
+            modes.add(tl)
+        elif tl in {"lingerie"}:  # note: still tasteful, adult only
+            modes.add("lingerie")
+            nsfw = True
+        # ignore unknown words; selfie_prompt already supplies defaults
+
+    return ({"modes": modes, "vibe": (vibe or "teasing, SFW"), "cosplay": cosplay, "nsfw": nsfw}, None)
+
+def _style_suffix_from_flags(p, flags, nsfw: bool) -> str:
+    """
+    Build a descriptive suffix appended to selfie_prompt(...) to steer the style.
+    Keeps tasteful wording (no explicit anatomy), never minors.
+    """
+    modes = flags.get("modes", set())
+    cosplay = flags.get("cosplay")
+    bits = []
+
+    # Emo / goth / scene / punk / alt looks (SFW by default; NSFW only if nsfw=True)
+    if "emo" in modes:
+        bits.append("emo phase styling: dyed bangs, band tee, soft eyeliner, candid vibe")
+    if "goth" in modes:
+        bits.append("goth styling: dark palette, mesh accents, velvet, dramatic eye makeup")
+    if "scene" in modes:
+        bits.append("scene styling: bright streaked hair, playful accessories, chunky jewelry")
+    if "punk" in modes or "alt" in modes:
+        bits.append("alt/punk styling: studs, fishnet tights (non-explicit), leather jacket")
+
+    # Other ambient modes
+    if "cozy" in modes:
+        bits.append("cozy sweater, soft window light, warm candid moment")
+    if "studio" in modes:
+        bits.append("studio portrait lighting, seamless background")
+    if "glam" in modes:
+        bits.append("glam makeup, glossy highlights, editorial portrait")
+    if "moody" in modes or "backlit" in modes:
+        bits.append("moody backlight, cinematic shadows")
+    if "street" in modes:
+        bits.append("street fashion, urban backdrop, candid walking pose")
+    if "beach" in modes:
+        bits.append("breezy seaside portrait, wind in hair, golden hour (no minors)")
+
+    # Cosplay
+    if "cosplay" in modes and cosplay:
+        bits.append(f"subtle cosplay homage to {cosplay} (non-explicit)")
+
+    # Lingerie (adult only, tasteful)
+    if "lingerie" in modes:
+        bits.append("tasteful lingerie look (adult), no explicit anatomy")
+
+    # If NSFW is off, make sure we nudge to SFW tease
+    if not nsfw:
+        bits.append("SFW tease only, no nudity, playful vibe")
+
+    return ", ".join([b for b in bits if b])
+
+def build_selfie_prompt_with_style(p, base_vibe: str, flags, nsfw: bool):
+    """
+    Wrap existing selfie_prompt(...) with our style suffix.
+    """
+    suffix = _style_suffix_from_flags(p, flags, nsfw)
+    vibe = base_vibe
+    if suffix:
+        vibe = f"{base_vibe}; {suffix}"
+    return selfie_prompt(p, vibe=vibe, nsfw=nsfw)
+# === End selfie style helpers ================================================
 def send_photo(cid, path):
     """
     Safer send: try as photo after normalizing to JPEG RGB.
@@ -2042,102 +2157,93 @@ def hook():
             
             send_message(chat, "\n".join(lines))
             return "OK", 200
-        # === IMAGE COMMANDS (pack) ===
+        
+        # === IMAGE COMMANDS (styles + tease gate; paste after /diag return) ===
 
-        # /selfie  -> current look selfie (SFW or NSFW depending on /nsfw_on)
+        # /selfie [styles...]  e.g. /selfie emo goth vibe: soft window light
         if low.startswith("/selfie"):
-            # Optional vibe after the command: "/selfie cozy lighting"
-            vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "teasing, SFW"
+            # daily limit for non-owners
             if (str(uid) != OWNER_ID) and not allowed(uid):
                 send_message(chat, "Free image limit hit.")
                 return "OK", 200
+
+            # parse user args into style flags (safe, rejects minors)
+            arg = text.split(maxsplit=1)[1] if len(text.split()) > 1 else ""
+            flags, err = _parse_style_flags(arg)
+            if err:
+                send_message(chat, err)
+                return "OK", 200
+
+            # NSFW only if user toggled /nsfw_on AND not blocked by tease gate
+            nsfw_req = bool(s.get("nsfw", False)) or bool(flags.get("nsfw", False))
+            nsfw = False
+            if nsfw_req:
+                # Tease-gate for non-owners
+                if not send_tease_or_allow_nsfw(p, s, uid, chat):
+                    return "OK", 200
+                nsfw = True
+
+            # build prompt with styles on top of the consistent selfie prompt
+            vibe = flags.get("vibe") or ("teasing" if not nsfw else "lingerie editorial")
+            prompt = build_selfie_prompt_with_style(p, vibe, flags, nsfw)
+
+            # stable seed per persona
             seed = stable_seed(p.get("name", "Girl"))
-            prompt = selfie_prompt(p, vibe=vibe, nsfw=s.get("nsfw", False))
+
             send_message(chat, "📸 One moment…")
-            _spawn_image_job(chat, prompt, w=576, h=704, seed=seed, nsfw=s.get("nsfw", False))
+            try:
+                # use your safe helper (respects 576px anon limit)
+                _spawn_image_job(chat, prompt, w=576, h=704, seed=seed, nsfw=nsfw)
+                if str(uid) != OWNER_ID:
+                    STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
+                    save_state()
+            except Exception as e_img:
+                send_message(chat, f"Image queue: {e_img}")
             return "OK", 200
 
-        # /gothphase -> emo/scene throwback aesthetic, still the same adult person
-        if low.startswith("/gothphase"):
-            # Optional vibe: "/gothphase mall photo, 2008 flash"
-            vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "emo/scene throwback, colored hair streaks, band tee, layered bracelets, dark eyeliner, playful pose"
-            if (str(uid) != OWNER_ID) and not allowed(uid):
-                send_message(chat, "Free image limit hit.")
-                return "OK", 200
-            seed = stable_seed(p.get("name", "Girl"), "goth")
-            # Reuse selfie prompt but push the styling
-            base = selfie_prompt(p, vibe=vibe + ", nostalgic mall photo lighting, phone camera flash, stickers", nsfw=False)
-            send_message(chat, "🖤 Channeling my emo era…")
-            _spawn_image_job(chat, base, w=576, h=704, seed=seed, nsfw=False)
-            return "OK", 200
-
-        # /cosplay <theme> -> SFW cosplay (character/theme supplied by user)
-        if low.startswith("/cosplay"):
+        # /gen <custom prompt> — NSFW allowed only for owner (or tease for others)
+        if low.startswith("/gen"):
             parts = text.split(maxsplit=1)
-            theme = parts[1].strip() if len(parts) > 1 else "fantasy adventurer with cape"
-            if (str(uid) != OWNER_ID) and not allowed(uid):
-                send_message(chat, "Free image limit hit.")
+            if len(parts) < 2:
+                send_message(chat, "/gen <prompt>")
                 return "OK", 200
-            seed = stable_seed(p.get("name", "Girl"), "cosplay")
-            # Keep it SFW by default; if NSFW is on we still stay tasteful (no explicit anatomy)
-            vibe = f"cosplay: {theme}, con-floor photo vibe, tasteful makeup, confident pose, detailed costume, SFW"
-            prompt = selfie_prompt(p, vibe=vibe, nsfw=False)
-            send_message(chat, f"🧵 Crafting a {theme} look…")
-            _spawn_image_job(chat, prompt, w=576, h=704, seed=seed, nsfw=False)
-            return "OK", 200
 
-        # /kidbeach -> strictly SFW, appropriate, younger-self/family beach vibe
-        # NOTE: This is **non-sexual**, modest clothing only, family photo composition.
-        if low.startswith("/kidbeach"):
-            if (str(uid) != OWNER_ID) and not allowed(uid):
-                send_message(chat, "Free image limit hit.")
+            user_prompt = parts[1].strip()
+
+            # Safety: reject any minor/underage terms in custom prompt
+            if _contains_minor_terms(user_prompt):
+                send_message(chat, "I can’t do anything under-18 or young-looking.")
                 return "OK", 200
-            seed = stable_seed(p.get("name", "Girl"), "kidbeach")
-            kid_vibe = (
-                "nostalgic family beach photo, sunny day, natural smile, "
-                "modest summer outfit (t-shirt with shorts or knee-length skirt), "
-                "playing in sand, holding beach ball, candid parent-taken snapshot, "
-                "no makeup, no suggestive posing, SFW, wholesome"
+
+            # must be NSFW toggled + tease allowed for non-owner if the content is spicy
+            spicy = bool(s.get("nsfw", False))
+            if spicy and (str(uid) != OWNER_ID):
+                if not send_tease_or_allow_nsfw(p, s, uid, chat):
+                    return "OK", 200  # teased instead of generating
+
+            # Add consistent-look hint
+            hint = (
+                f"{p.get('name','Girl')} consistent look: {p.get('img_tags','')}, "
+                f"{p.get('hair','')} hair, {p.get('eyes','')} eyes, {p.get('body','')}"
             )
-            # Important: do NOT imply minors sexually or put them in revealing contexts.
-            # We frame it as an old family photo memory, fully appropriate clothing, SFW.
-            prompt = selfie_prompt(p, vibe=kid_vibe, nsfw=False)
-            send_message(chat, "🏖️ Flipping the family album…")
-            _spawn_image_job(chat, prompt, w=512, h=512, seed=seed, nsfw=False)
-            return "OK", 200
+            cup = p.get("cup")
+            if cup:
+                hint += f", proportions consistent with {cup}-cup bust"
 
-        # /poster <title> -> movie poster
-        if low.startswith("/poster"):
-            parts = text.split(maxsplit=1)
-            if len(parts) < 2:
-                send_message(chat, "/poster <movie>")
-                return "OK", 200
-            title = parts[1]
-            send_message(chat, "🎬 Designing poster…")
+            full = hint + ". " + user_prompt
+            seed = stable_seed(p.get("name","Girl"))
+            send_message(chat, "🖼️ Generating…")
             try:
-                seed = stable_seed(p.get("name", "Girl"), "poster")
-                prompt = poster_prompt(title)
-                _spawn_image_job(chat, prompt, w=576, h=704, seed=seed, nsfw=False)
-            except Exception as e_pos:
-                send_message(chat, f"Image queue: {e_pos}")
+                _spawn_image_job(chat, full, w=576, h=704, seed=seed, nsfw=spicy)
+                if str(uid) != OWNER_ID:
+                    STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
+                    save_state()
+            except Exception as e_gen:
+                send_message(chat, f"Image queue: {e_gen}")
             return "OK", 200
+        # === END IMAGE COMMANDS ===============================================
 
-        # /draw <subject> -> art style piece
-        if low.startswith("/draw"):
-            parts = text.split(maxsplit=1)
-            if len(parts) < 2:
-                send_message(chat, "/draw <subject>")
-                return "OK", 200
-            subject = parts[1]
-            send_message(chat, "🎨 Sketching it…")
-            try:
-                seed = stable_seed(p.get("name", "Girl"), "art")
-                prompt = art_prompt(p, subject)
-                _spawn_image_job(chat, prompt, w=576, h=704, seed=seed, nsfw=False)
-            except Exception as e_draw:
-                send_message(chat, f"Image queue: {e_draw}")
-            return "OK", 200
-        # === END IMAGE COMMANDS (pack) ===
+
 
         # === END IMAGE COMMANDS BLOCK ===
             
