@@ -1485,11 +1485,11 @@ def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
 
 def generate_image(prompt, w=640, h=896, seed=None, nsfw=True):
     """
-    Smart failover:
-      1) FAL (if key present)
-      2) Replicate (if token + version present)
-      3) Horde (if key present)
-    Aggregates errors so you see *why* it failed.
+    Try backends in order:
+      1) FAL (if configured)
+      2) Replicate (if configured)
+      3) Hugging Face Inference API (if HUGGINGFACE_TOKEN set)
+      4) Stable Horde (always last; good for consistent seeds, but queues happen)
     """
     errors = []
     tried = []
@@ -1499,52 +1499,33 @@ def generate_image(prompt, w=640, h=896, seed=None, nsfw=True):
         try:
             return fn()
         except Exception as e:
-            errors.append(f"{label}: {e}")
+            errors.append(f"{label}: {str(e)[:200]}")
             return None
+
+    # Keep dimensions sensible per backend (HF <= ~768 is safer; Horde anon <= 576)
+    w_int, h_int = int(w), int(h)
 
     # 1) FAL
     if FAL_KEY:
-        out = _try("FAL", lambda: gen_fal(prompt, w, h, seed))
+        out = _try("FAL", lambda: gen_fal(prompt, w_int, h_int, seed))
         if out:
             return out
 
     # 2) Replicate
     if REPLICATE and os.getenv("REPLICATE_VERSION", "").strip():
-        out = _try("Replicate", lambda: gen_replicate(prompt, w, h, seed))
+        out = _try("Replicate", lambda: gen_replicate(prompt, w_int, h_int, seed))
         if out:
             return out
 
-    # 3) Horde
-    if HORDE:
-        out = _try("Horde", lambda: gen_horde(prompt, w, h, seed, nsfw))
+    # 3) Hugging Face
+    if HUGGINGFACE_TOKEN:
+        # keep <= 768 to avoid 413/oom on some hosted models
+        out = _try("HuggingFace", lambda: gen_huggingface(prompt, min(w_int, 768), min(h_int, 768), seed, nsfw))
         if out:
             return out
 
-    # Nothing worked
-    if not tried:
-        raise RuntimeError("No image backends configured (FAL/Replicate/Horde keys missing).")
-    raise RuntimeError(f"All backends failed ({', '.join(tried)}): " + " | ".join(errors[:3]))
-
-    def _try(fn, label):
-        nonlocal errors, tried
-        tried.append(label)
-        try:
-            return fn()
-        except Exception as e:
-            errors.append(f"{label}: {e}")
-            return None
-
-    if FAL_KEY:
-        out = _try(lambda: gen_fal(prompt, w, h, seed), "FAL")
-        if out:
-            return out
-
-    if REPLICATE and os.getenv("REPLICATE_VERSION", "").strip():
-        out = _try(lambda: gen_replicate(prompt, w, h, seed), "Replicate")
-        if out:
-            return out
-
-    out = _try(lambda: gen_horde(prompt, w, h, seed, nsfw), "Horde")
+    # 4) Horde (anon limits: ~576x576; our _spawn_image_job already clamps)
+    out = _try("Horde", lambda: gen_horde(prompt, w_int, h_int, seed, nsfw))
     if out:
         return out
 
