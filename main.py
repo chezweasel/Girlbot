@@ -1063,9 +1063,10 @@ def now():
 
 def get_user(uid):
     u = str(uid)
-    if u not in STATE:
-        STATE[u] = {"g": 0, "t": now(), "used": 0, "nsfw": False, "likes": [],
-                    "last_msg_id": None, "u_msg": 0, "teased": False, "arousal": 0.0}
+  if u not in STATE:
+    STATE[u]={"g":0,"t":now(),"used":0,"nsfw":False,"likes":[],
+              "last_msg_id":None,"u_msg":0,"teased":False,"arousal":0.0,
+              "tease_count":0}
         save_state()
     if now() - STATE[u]["t"] > 86400:
         STATE[u]["t"] = now()
