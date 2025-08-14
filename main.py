@@ -1193,7 +1193,55 @@ def gen_replicate(prompt, w=640, h=896, seed=None):
         "seed": seed,
         "prompt": prompt,
     }
+def gen_huggingface(prompt, w=512, h=512, seed=None, nsfw=True):
+    """
+    Simple text->image via Hugging Face Inference API.
+    Not all community models honor seed; we keep it in the prompt for any that do.
+    Image bytes -> file on disk -> return filepath.
+    """
+    if not HUGGINGFACE_TOKEN:
+        raise RuntimeError("HF: missing HUGGINGFACE_TOKEN")
 
+    # Keep payload small; many HF models are happier <= 768.
+    w = int(min(max(w, 256), 768))
+    h = int(min(max(h, 256), 768))
+
+    # Many public pipelines ignore seed; include in prompt for those that parse it.
+    full_prompt = prompt if seed is None else f"{prompt} [seed:{int(seed)}]"
+
+    headers = {
+        "Authorization": f"Bearer {HUGGINGFACE_TOKEN}",
+        "Accept": "image/png",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "inputs": full_prompt,
+        "options": {
+            "wait_for_model": True,   # spin up the space if it’s cold
+            "use_cache": True
+        },
+        # Some endpoints accept parameters here; we keep width/height in top-level too:
+        "parameters": {
+            "width": w,
+            "height": h,
+            # You can add negative_prompt here if you like:
+            # "negative_prompt": "nsfw minors, underage, child, disfigured, extra fingers"
+        },
+    }
+    url = f"https://api-inference.huggingface.co/models/{HF_MODEL}"
+
+    r = requests.post(url, headers=headers, json=payload, timeout=120)
+    if r.status_code != 200:
+        # Return server message for easier debugging in Telegram
+        raise RuntimeError(f"HF HTTP {r.status_code}: {r.text[:200]}")
+
+    img_bytes = r.content
+    if not img_bytes or len(img_bytes) < 1000:
+        raise RuntimeError("HF: empty/too-small image")
+
+    fn = f"out_{int(time.time())}_hf.png"
+    open(fn, "wb").write(img_bytes)
+    return fn
     url = "https://stablehorde.net/api/v2/generate/async"
     r = requests.post(url, json=params, headers=headers, timeout=30)
     if r.status_code != 200:
