@@ -1243,35 +1243,85 @@ def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
     }
 import threading
 
-def gen_with_fallback(prompt, w=640, h=896, nsfw=True):
-    result = {}
-    done = threading.Event()
+# ---- keep Horde requests within anonymous limits + clearer errors ----
+def _safe_dims(w, h):
+    # Horde anonymous requires both sides <= 576
+    w = int(w)
+    h = int(h)
+    if w > 576: w = 576
+    if h > 576: h = 576
+    return w, h
 
-    # Try Horde first
-    def try_horde():
-        try:
-            img = gen_horde(prompt, w, h, nsfw=nsfw)
-            if img:
-                result["img"] = img
-                done.set()
-        except Exception as e:
-            print("Horde error:", e)
+def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
+    if not HORDE:
+        raise RuntimeError("Horde: missing HORDE_API_KEY")
 
-    t = threading.Thread(target=try_horde)
-    t.start()
+    w, h = _safe_dims(w, h)
 
-    # Wait 15 seconds for Horde
-    if not done.wait(timeout=15):
-        print("Horde too slow, using fallback...")
-        try:
-            img = gen_fal(prompt, w, h, nsfw=nsfw)  # <-- Your FAL.ai function
-            if img:
-                result["img"] = img
-                done.set()
-        except Exception as e:
-            print("FAL fallback error:", e)
+    headers = {"apikey": HORDE, "Client-Agent": "flirtpixel/3.2"}
+    params = {
+        "steps": 28,                 # keep under 50 for anon usage
+        "width": w,
+        "height": h,
+        "n": 1,
+        "nsfw": bool(nsfw),
+        "sampler_name": "k_euler",   # safe/default sampler
+        "cfg_scale": 6.5,
+    }
+    if seed is not None:
+        params["seed"] = str(int(seed))  # Horde expects a string
 
-    return result.get("img")
+    job = {
+        "prompt": prompt,
+        "params": params,
+        # keep things broad so any worker can pick it up:
+        # (you can add "models": ["stable_diffusion"] later if you wish)
+        "r2": True,
+        "censor_nsfw": False,
+        "replacement_filter": True,
+    }
+
+    r = requests.post("https://stablehorde.net/api/v2/generate/async",
+                      json=job, headers=headers, timeout=45)
+    if r.status_code not in (200, 202):
+        raise RuntimeError(f"Horde HTTP {r.status_code}: {r.text[:200]}")
+    data = r.json()
+    rid = data.get("id")
+    if not rid:
+        raise RuntimeError(f"Horde queue error: {r.text[:200]}")
+
+    # poll
+    waited = 0
+    max_wait = int(os.getenv("HORDE_MAX_WAIT", "180"))  # 3 min
+    while True:
+        chk = requests.get(
+            f"https://stablehorde.net/api/v2/generate/check/{rid}", timeout=30
+        )
+        if chk.status_code != 200:
+            raise RuntimeError(f"Horde check HTTP {chk.status_code}: {chk.text[:160]}")
+        s = chk.json()
+        if s.get("faulted"):
+            raise RuntimeError("Horde: job faulted")
+        if s.get("done"):
+            break
+        time.sleep(2)
+        waited += 2
+        if waited > max_wait:
+            raise RuntimeError("Horde: queue timeout (try smaller dims/steps)")
+
+    st = requests.get(
+        f"https://stablehorde.net/api/v2/generate/status/{rid}", timeout=45
+    )
+    if st.status_code != 200:
+        raise RuntimeError(f"Horde status HTTP {st.status_code}: {st.text[:160]}")
+    js = st.json()
+    gens = js.get("generations", [])
+    if not gens:
+        raise RuntimeError(f"Horde empty result: {str(js)[:200]}")
+
+    fn = f"out_{int(time.time())}.png"
+    open(fn, "wb").write(base64.b64decode(gens[0]["img"]))
+    return fn
     # --- Respect Horde free/low-kudos size limits (longest side <= 576 by default) ---
     max_side = int(os.getenv("HORDE_MAX_SIDE", "576"))
     W, H = int(w), int(h)
