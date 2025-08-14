@@ -1653,6 +1653,7 @@ HELP = (
     "/nsfw_off - Disable NSFW mode\n"
     "/help - Show this help message\n"
 )
+    
     # ===== NSFW TEASES FOR NON-OWNER =====
 TEASE_LINES = [
     "mm, not yet… tease me back first. What’s the last song that gave you goosebumps?",
@@ -1676,6 +1677,8 @@ def send_tease_or_allow_nsfw(p, s, uid, chat) -> bool:
     save_state()
     send_message(chat, f"{p.get('name','Girl')}: {line}")
     return False
+
+    
         "hi — menu\n/girls — list\n/pick # or name — choose\n/who — current\n/bio — backstory\n/style — tastes & quirks\n/books — favorites\n"
         "/likes coffee, films — steer convo\n/selfie [vibe] — consistent portrait\n/old18 — SFW throwback at 18 (adult)\n/poster <movie>\n/draw <subject>\n"
         "/spice — tasteful 18+ profile (after /nsfw_on)\n/nsfw_on · /nsfw_off\n/gen <prompt> — custom NSFW image\n/status — free left\n/switch — random girl\n/reset")
