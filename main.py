@@ -1629,7 +1629,17 @@ def send_photo(cid, path):
             )
         if r.status_code == 200:
             return
+# Helper that makes images and sends them to Telegram
+def _spawn_image_job(chat, prompt, w=512, h=512, seed=None, nsfw=False):
+    # Make sure it’s not too big for Horde’s free limit
+    w = min(int(w), 576)
+    h = min(int(h), 576)
 
+    try:
+        fn = generate_image(prompt, w=w, h=h, seed=seed, nsfw=nsfw)
+        send_photo(chat, fn)
+    except Exception as e_img:
+        send_message(chat, f"Image queue: {e_img}")
         # Fallback: try as document
         print("PHOTO ERR (photo):", r.text[:200])
         with open(safe_path, "rb") as f:
