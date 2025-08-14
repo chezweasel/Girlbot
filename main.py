@@ -1899,6 +1899,7 @@ def hook():
 
             lines.append(
                 "Keys -> "
+                f"HF:{'set' if HF_TOKEN else '—'} | "
                 f"FAL:{'set' if FAL_KEY else '—'} | "
                 f"Replicate:{'set' if REPLICATE else '—'} | "
                 f"Horde:{'set' if HORDE else '—'}"
