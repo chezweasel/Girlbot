@@ -62,7 +62,13 @@ async def cmd_pick(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Usage: /pick <#|name>")
         return
     await update.message.reply_text(pick_girl(arg, user_id))
+async def cmd_nsfw_on(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Placeholder: toggling is just acknowledged. You can add real state later.
+    await update.message.reply_text("NSFW mode acknowledged (placeholder).")
 
+async def cmd_selfie(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Placeholder: you can generate/attach images later
+    await update.message.reply_text("Selfie feature coming soon. (No image generator wired yet.)")
 async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message:
         return
@@ -85,7 +91,8 @@ def run_bot():
     app_.add_handler(MessageHandler(filters.ChatType.PRIVATE & filters.TEXT & ~filters.COMMAND, on_text))
     log.info("Starting Telegram polling…")
     app_.run_polling(allowed_updates=Update.ALL_TYPES, close_loop=False)
-
+    app_.add_handler(CommandHandler("nsfw_on", cmd_nsfw_on))
+    app_.add_handler(CommandHandler("selfie", cmd_selfie))
 if __name__ == "__main__":
     threading.Thread(target=run_flask, daemon=True).start()
     run_bot()
