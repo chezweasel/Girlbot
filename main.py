@@ -2066,7 +2066,8 @@ def hook():
                 lines.append(f"generate_image(): ❌ {str(e)[:200]}")
 
             send_message(chat, "\n".join(lines))
-            return "OK",     if low.startswith("/selfie"):
+            return "OK",     
+    if low.startswith("/selfie"):
         vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "teasing, SFW"
         if (str(uid) != OWNER_ID) and not allowed(uid):
             send_message(chat, "Free image limit hit.")
