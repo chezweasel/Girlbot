@@ -1954,16 +1954,25 @@ def hook():
         # === IMAGE COMMANDS (Hugging Face) ===
         if low.startswith("/selfie"):
             vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "teasing, SFW"
+
+            # rate-limit check
             if (str(uid) != OWNER_ID) and not allowed(uid):
                 send_message(chat, "Free image limit hit.")
                 return "OK", 200
 
-            prompt = selfie_prompt(p, vibe, nsfw=s.get("nsfw", False))
+            # Is NSFW currently toggled on?
+            nsfw_requested = bool(s.get("nsfw", False))
+
+            # If NSFW was requested and user is not owner, tease and downgrade to SFW
+            if nsfw_requested and not send_tease_or_allow_nsfw(p, s, uid, chat):
+                nsfw_requested = False  # force SFW image for non-owner
+
+            prompt = selfie_prompt(p, vibe, nsfw=nsfw_requested)
             seed = stable_seed(p.get("name", "Girl"))
             send_message(chat, "📸 One moment…")
 
             try:
-                out = generate_image(prompt, w=576, h=704, seed=seed, nsfw=s.get("nsfw", False))
+                out = generate_image(prompt, w=576, h=704, seed=seed, nsfw=nsfw_requested)
                 send_photo(chat, out)
                 if str(uid) != OWNER_ID:
                     STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
@@ -1972,6 +1981,7 @@ def hook():
                 send_message(chat, f"Image queue: {e_img}")
 
             return "OK", 200
+        # === END IMAGE COMMANDS BLOCK ===
         # === END IMAGE COMMANDS BLOCK ===
             
         if text and not text.startswith("/"):
