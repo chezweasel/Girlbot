@@ -2,6 +2,35 @@
 # ENV: BOT_TOKEN, OWNER_ID, WEBHOOK_URL
 # Optional: FAL_KEY, REPLICATE_API_TOKEN, HORDE_API_KEY
 # All characters 18+. NSFW requires /nsfw_on.
+import requests
+import os
+
+HF_TOKEN = os.getenv("HUGGINGFACE_TOKEN", "")
+
+def generate_image(prompt, w=512, h=512, seed=None, nsfw=False):
+    model = "stabilityai/stable-diffusion-xl-base-1.0"  # Hugging Face model
+    api_url = f"https://api-inference.huggingface.co/models/{model}"
+    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "width": w,
+            "height": h
+        }
+    }
+
+    response = requests.post(api_url, headers=headers, json=payload)
+
+    if response.status_code != 200:
+        raise Exception(f"HuggingFace API error: {response.text}")
+
+    # Save the returned image
+    out_path = "generated_image.png"
+    with open(out_path, "wb") as f:
+        f.write(response.content)
+
+    return out_path
 
 import os
 import json
