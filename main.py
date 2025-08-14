@@ -1615,9 +1615,12 @@ def _prep_for_telegram(path: str) -> str:
         return path
 
 def send_photo(cid, path):
+    """
+    Send an image file to Telegram as a photo, with a safe JPEG fallback.
+    If photo upload fails, try sending as a document.
+    """
     try:
-        import os
-        safe_path = _prep_for_telegram(path)
+        safe_path = _prep_for_telegram(path)  # makes JPEG if needed
 
         # Try as photo first
         with open(safe_path, "rb") as f:
@@ -1627,21 +1630,17 @@ def send_photo(cid, path):
                 files={"photo": f},
                 timeout=120
             )
-        if r.status_code == 200:
-            return
-# Helper that makes images and sends them to Telegram
-def _spawn_image_job(chat, prompt, w=512, h=512, seed=None, nsfw=False):
-    # Make sure it’s not too big for Horde’s free limit
-    w = min(int(w), 576)
-    h = min(int(h), 576)
 
-    try:
-        fn = generate_image(prompt, w=w, h=h, seed=seed, nsfw=nsfw)
-        send_photo(chat, fn)
-    except Exception as e_img:
-        send_message(chat, f"Image queue: {e_img}")
-        # Fallback: try as document
-        print("PHOTO ERR (photo):", r.text[:200])
+        if r.status_code == 200:
+            return  # success as photo
+
+        # If photo failed, try as document
+        try:
+            err_desc = r.json().get("description", r.text[:200])
+        except Exception:
+            err_desc = r.text[:200]
+        print("PHOTO ERR (photo):", err_desc)
+
         with open(safe_path, "rb") as f:
             r2 = requests.post(
                 f"{API}/sendDocument",
@@ -1649,16 +1648,34 @@ def _spawn_image_job(chat, prompt, w=512, h=512, seed=None, nsfw=False):
                 files={"document": f},
                 timeout=120
             )
+
         if r2.status_code != 200:
-            print("PHOTO ERR (document):", r2.text[:200])
             try:
-                desc = r.json().get("description", "unknown")
+                err_desc2 = r2.json().get("description", r2.text[:200])
             except Exception:
-                desc = "unknown"
-            send_message(cid, f"Image upload failed: {desc}")
+                err_desc2 = r2.text[:200]
+            print("PHOTO ERR (document):", err_desc2)
+            send_message(cid, f"Image upload failed: {err_desc2}")
+
     except Exception as e:
         print("PHOTO SEND EXC:", e)
         send_message(cid, f"Image upload error: {e}")
+
+
+def _spawn_image_job(chat, prompt, w=512, h=512, seed=None, nsfw=False):
+    """
+    Small helper that generates an image (clamped to Horde anon limits)
+    and sends it. Keep it simple & synchronous.
+    """
+    try:
+        # Horde anonymous soft limit is ~576x576; clamp just in case
+        w = min(int(w), 576)
+        h = min(int(h), 576)
+
+        fn = generate_image(prompt, w=w, h=h, seed=seed, nsfw=nsfw)
+        send_photo(chat, fn)
+    except Exception as e_img:
+        send_message(chat, f"Image queue: {e_img}")
 # ===== UI =====
 def menu_list():
     out, seen = [], set()
