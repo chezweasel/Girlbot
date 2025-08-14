@@ -1040,42 +1040,79 @@ def personalize_personas():
 # Run once at startup after PERS/books are built
 personalize_personas()
 # ===== STATE =====
-STATE_FILE = "state.json"
+# ===== STATE =====
+STATE_FILE = os.getenv("STATE_FILE", "state.json")
 
 def load_state():
-    if os.path.exists(STATE_FILE):
-        try:
-            return json.load(open(STATE_FILE))
-        except:
+    """Load STATE from disk safely. If file is missing/corrupt, start fresh."""
+    try:
+        if not os.path.exists(STATE_FILE):
             return {}
-    return {}
+        with open(STATE_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data if isinstance(data, dict) else {}
+    except json.JSONDecodeError:
+        # If the file is corrupt, back it up and start clean
+        try:
+            os.rename(STATE_FILE, STATE_FILE + ".corrupt")
+        except Exception:
+            pass
+        return {}
+    except Exception as e:
+        print("STATE LOAD ERR:", e)
+        return {}
 
 STATE = load_state()
 
 def save_state():
+    """Atomically save STATE to disk to avoid partial writes."""
+    tmp = STATE_FILE + ".tmp"
     try:
-        json.dump(STATE, open(STATE_FILE, "w"))
-    except:
-        pass
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(STATE, f, ensure_ascii=False)
+        os.replace(tmp, STATE_FILE)  # atomic on most OSes
+    except Exception as e:
+        print("STATE SAVE ERR:", e)
+        try:
+            if os.path.exists(tmp):
+                os.remove(tmp)
+        except Exception:
+            pass
 
 def now():
     return time.time()
 
 def get_user(uid):
+    """Ensure a user entry exists, reset daily counters, and return the entry."""
     u = str(uid)
-  if u not in STATE:
-    STATE[u]={"g":0,"t":now(),"used":0,"nsfw":False,"likes":[],
-              "last_msg_id":None,"u_msg":0,"teased":False,"arousal":0.0,
-              "tease_count":0}
+
+    if u not in STATE:
+        STATE[u] = {
+            "g": 0,
+            "t": now(),
+            "used": 0,
+            "nsfw": False,
+            "likes": [],
+            "last_msg_id": None,
+            "u_msg": 0,
+            "teased": False,
+            "arousal": 0.0,
+            "tease_count": 0
+        }
         save_state()
+
+    # Daily reset
     if now() - STATE[u]["t"] > 86400:
         STATE[u]["t"] = now()
         STATE[u]["used"] = 0
         save_state()
+
     return STATE[u]
 
 def allowed(uid):
+    """Helper: has this user not exceeded today's free image quota?"""
     return get_user(uid)["used"] < FREE_PER_DAY
+
 
 # ===== HELPERS =====
 def _norm(s: str) -> str:
