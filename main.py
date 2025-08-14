@@ -1928,101 +1928,27 @@ def hook():
             
             send_message(chat, "\n".join(lines))
             return "OK", 200
+        # === IMAGE COMMANDS (Hugging Face) ===
+        if low.startswith("/selfie"):
+            vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "teasing, SFW"
+            if (str(uid) != OWNER_ID) and not allowed(uid):
+                send_message(chat, "Free image limit hit.")
+                return "OK", 200
 
-    
-    # === IMAGE COMMANDS (Hugging Face) ===
+            prompt = selfie_prompt(p, vibe, nsfw=s.get("nsfw", False))
+            seed = stable_seed(p.get("name", "Girl"))
+            send_message(chat, "📸 One moment…")
 
-if low.startswith("/selfie"):
-    vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "teasing, SFW"
-    if (str(uid) != OWNER_ID) and not allowed(uid):
-        send_message(chat, "Free image limit hit.")
-        return "OK", 200
-    prompt = selfie_prompt(p, vibe, nsfw=s.get("nsfw", False))
-    seed = stable_seed(p.get("name", "Girl"))
-    send_message(chat, "📸 One moment…")
-    try:
-        out = generate_image(prompt, w=576, h=704, seed=seed, nsfw=s.get("nsfw", False))
-        send_photo(chat, out)
-        if str(uid) != OWNER_ID:
-            STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
-            save_state()
-    except Exception as e_img:
-        send_message(chat, f"Image queue: {e_img}")
-    return "OK", 200
+            try:
+                out = generate_image(prompt, w=576, h=704, seed=seed, nsfw=s.get("nsfw", False))
+                send_photo(chat, out)
+                if str(uid) != OWNER_ID:
+                    STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
+                    save_state()
+            except Exception as e_img:
+                send_message(chat, f"Image queue: {e_img}")
 
-if low.startswith("/old18"):
-    if (str(uid) != OWNER_ID) and not allowed(uid):
-        send_message(chat, "Free image limit hit.")
-        return "OK", 200
-    seed = stable_seed(p.get("name", "Girl"), "old18")
-    send_message(chat, "🗂️ Digging out an old (18) selfie…")
-    try:
-        out = generate_image(old18_prompt(p), w=576, h=704, seed=seed, nsfw=False)
-        send_photo(chat, out)
-        if str(uid) != OWNER_ID:
-            STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
-            save_state()
-    except Exception as e_old:
-        send_message(chat, f"Image queue: {e_old}")
-    return "OK", 200
-
-if low.startswith("/poster"):
-    parts = text.split(maxsplit=1)
-    if len(parts) < 2:
-        send_message(chat, "/poster <movie>")
-        return "OK", 200
-    send_message(chat, "🎬 Designing poster…")
-    try:
-        out = generate_image(poster_prompt(parts[1]), w=704, h=1024, seed=None, nsfw=False)
-        send_photo(chat, out)
-    except Exception as e_pos:
-        send_message(chat, f"Image queue: {e_pos}")
-    return "OK", 200
-
-if low.startswith("/draw"):
-    parts = text.split(maxsplit=1)
-    if len(parts) < 2:
-        send_message(chat, "/draw <subject>")
-        return "OK", 200
-    send_message(chat, "🎨 Sketching it…")
-    try:
-        out = generate_image(art_prompt(p, parts[1]), w=704, h=704, seed=None, nsfw=False)
-        send_photo(chat, out)
-    except Exception as e_draw:
-        send_message(chat, f"Image queue: {e_draw}")
-    return "OK", 200
-
-if low.startswith("/gen"):
-    parts = text.split(maxsplit=1)
-    if len(parts) < 2:
-        send_message(chat, "/gen <prompt>")
-        return "OK", 200
-    if not s.get("nsfw", False):
-        send_message(chat, "Turn on /nsfw_on for spicy pics.")
-        return "OK", 200
-    if not clean_ok(parts[1]):
-        send_message(chat, "I won’t generate that.")
-        return "OK", 200
-    if (str(uid) != OWNER_ID) and not allowed(uid):
-        send_message(chat, "Free image limit hit.")
-        return "OK", 200
-
-    hint = (f"{p.get('name', 'Girl')} consistent look: {p.get('img_tags', '')}, "
-            f"{p.get('hair', '')} hair, {p.get('eyes', '')} eyes, {p.get('body', '')}")
-    cup = p.get("cup")
-    if cup:
-        hint += f", proportions consistent with {cup}-cup bust"
-
-    send_message(chat, "🖼️ Generating…")
-    try:
-        out = generate_image(hint + ". " + parts[1], w=576, h=704, seed=stable_seed(p.get('name', 'Girl')), nsfw=True)
-        send_photo(chat, out)
-        if str(uid) != OWNER_ID:
-            STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
-            save_state()
-    except Exception as e_gen:
-        send_message(chat, f"Image queue: {e_gen}")
-    return "OK", 200
+            return "OK", 200
         # === END IMAGE COMMANDS BLOCK ===
             
         if text and not text.startswith("/"):
