@@ -12,8 +12,6 @@ HF_MODEL_ID = os.getenv("HF_MODEL_ID", "stabilityai/stable-diffusion-xl-base-1.0
 from PIL import Image
 import io
 
-HF_TOKEN = os.getenv("HUGGINGFACE_TOKEN", "")
-
 def generate_image(prompt, w=512, h=512, seed=None, nsfw=False):
     model = "stabilityai/stable-diffusion-xl-base-1.0"  # Hugging Face model
     api_url = f"https://api-inference.huggingface.co/models/{model}"
