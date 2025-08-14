@@ -2212,20 +2212,20 @@ def hook():
             else:
                 lines.append("Replicate: (skipped, no REPLICATE_API_TOKEN)")
             if HORDE:
-            attempt("Horde", lambda: gen_horde(test_prompt, 96, 96, seed=1, nsfw=False))
-        else:
-            lines.append("Horde: (skipped, no HORDE_API_KEY)")
-
-        lines.append("— Failover chain (generate_image) —")
-        t0 = time.time()
-        try:
-            out_path = generate_image(test_prompt, 96, 96, seed=1, nsfw=False)
-            lines.append(f"generate_image(): ✅ {time.time() - t0:.1f}s (saved {out_path})")
-        except Exception as e:
-            lines.append(f"generate_image(): ❌ {str(e)[:200]}")
-
-        send_message(chat, "\n".join(lines))
-        return "OK", 200
+                attempt("Horde", lambda: gen_horde(test_prompt, 96, 96, seed=1, nsfw=False))
+            else:
+                lines.append("Horde: (skipped, no HORDE_API_KEY)")
+            
+            lines.append("— Failover chain (generate_image) —")
+            t0 = time.time()
+            try:
+                out_path = generate_image(test_prompt, 96, 96, seed=1, nsfw=False)
+                lines.append(f"generate_image(): ✅ {time.time() - t0:.1f}s (saved {out_path})")
+            except Exception as e:
+                lines.append(f"generate_image(): ❌ {str(e)[:200]}")
+            
+            send_message(chat, "\n".join(lines))
+            return "OK", 200
 
     # === Image commands ===
 
