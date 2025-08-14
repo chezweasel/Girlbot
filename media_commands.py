@@ -220,3 +220,13 @@ def handle_gen_command(low, text, p, s, uid, chat, send_message, save_state, sta
 
     return "OK", 200
 # ===== END /gen =====
+
+# ============================================
+# media_commands.py  —  Selfie & NSFW commands
+# ============================================
+
+# ===== Command Help Text =====
+HELP = (
+    "Commands:\n"
+    "/start - Begin chatting with the bot\n"
+    "/selfie [vibe] - Generate a
