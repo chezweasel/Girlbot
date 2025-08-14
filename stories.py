@@ -7,8 +7,6 @@
 # 2) Do NOT rename persona keys; they must match the names in personas.py.
 # 3) Keep structure: { "Name": { "nsfw_memories":[...], "sfw_memories":[...], "masturbation_memories":[...] }, ... }
 
-# === BEGIN: PASTE YOUR EXISTING STORIES DICT EXACTLY AS-IS BELOW ===
-STORIES = {
 STORIES = {
     "Nicole": {
         "nsfw_memories": [
