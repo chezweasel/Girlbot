@@ -1795,18 +1795,7 @@ def send_tease_or_allow_nsfw(p, s, uid, chat) -> bool:
 
 
 # ===== /gen COMMAND HANDLER =====
-if low.startswith("/gen"):
-    parts = text.split(maxsplit=1)
-    if len(parts) < 2:
-        send_message(chat, "/gen <prompt>")
-        return "OK", 200
 
-    user_prompt = parts[1].strip()
-
-    # Hard safety: absolutely no under-18 / young-looking content
-    if _contains_minor_terms(user_prompt):
-        send_message(chat, "I can’t do anything under-18 or young-looking.")
-        return "OK", 200
 
     # Non-owners get a rotating tease instead of NSFW generation
     if not send_tease_or_allow_nsfw(p, s, uid, chat):
@@ -2178,12 +2167,7 @@ def hook():
         
         # === IMAGE COMMANDS (styles + tease gate; paste after /diag return) ===
 
-        # /selfie [styles...]  e.g. /selfie emo goth vibe: soft window light
-        if low.startswith("/selfie"):
-            # daily limit for non-owners
-            if (str(uid) != OWNER_ID) and not allowed(uid):
-                send_message(chat, "Free image limit hit.")
-                return "OK", 200
+      
 
             # parse user args into style flags (safe, rejects minors)
             arg = text.split(maxsplit=1)[1] if len(text.split()) > 1 else ""
@@ -2219,19 +2203,11 @@ def hook():
                 send_message(chat, f"Image queue: {e_img}")
             return "OK", 200
 
-        # /gen <custom prompt> — NSFW allowed only for owner (or tease for others)
-        if low.startswith("/gen"):
-            parts = text.split(maxsplit=1)
-            if len(parts) < 2:
-                send_message(chat, "/gen <prompt>")
-                return "OK", 200
+     
 
             user_prompt = parts[1].strip()
 
-            # Safety: reject any minor/underage terms in custom prompt
-            if _contains_minor_terms(user_prompt):
-                send_message(chat, "I can’t do anything under-18 or young-looking.")
-                return "OK", 200
+
 
             # must be NSFW toggled + tease allowed for non-owner if the content is spicy
             spicy = bool(s.get("nsfw", False))
