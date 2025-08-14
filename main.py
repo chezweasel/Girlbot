@@ -1951,74 +1951,102 @@ def hook():
             
             send_message(chat, "\n".join(lines))
             return "OK", 200
-            
-        # === IMAGE COMMANDS (Hugging Face) ===
+        # === IMAGE COMMANDS (pack) ===
+
+        # /selfie  -> current look selfie (SFW or NSFW depending on /nsfw_on)
         if low.startswith("/selfie"):
+            # Optional vibe after the command: "/selfie cozy lighting"
             vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "teasing, SFW"
-            if str(uid) != OWNER_ID:
-                teasing_msgs = [
-                    "Zoey: I’m warming up... be sweet with me. Tell me a sound you secretly love.",
-                    "Zoey: Not yet... make me want to 😉",
-                    "Zoey: Patience... I’m just getting in the mood."
-                ]
-                send_message(chat, random.choice(teasing_msgs))
+            if (str(uid) != OWNER_ID) and not allowed(uid):
+                send_message(chat, "Free image limit hit.")
                 return "OK", 200
-            prompt = selfie_prompt(p, vibe, nsfw=s.get("nsfw", False))
             seed = stable_seed(p.get("name", "Girl"))
+            prompt = selfie_prompt(p, vibe=vibe, nsfw=s.get("nsfw", False))
             send_message(chat, "📸 One moment…")
-            try:
-                out = generate_image(prompt, w=576, h=704, seed=seed, nsfw=s.get("nsfw", False))
-                send_photo(chat, out)
-                STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
-                save_state()
-            except Exception as e_img:
-                send_message(chat, f"Image queue: {e_img}")
+            _spawn_image_job(chat, prompt, w=576, h=704, seed=seed, nsfw=s.get("nsfw", False))
             return "OK", 200
 
-        if low.startswith("/old18"):
-            vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "nostalgic"
-            if str(uid) != OWNER_ID:
-                teasing_msgs = [
-                    "Zoey: I’ll show you later... maybe.",
-                    "Zoey: Not yet... but keep talking to me.",
-                    "Zoey: Hmm... you’re not quite there yet."
-                ]
-                send_message(chat, random.choice(teasing_msgs))
+        # /gothphase -> emo/scene throwback aesthetic, still the same adult person
+        if low.startswith("/gothphase"):
+            # Optional vibe: "/gothphase mall photo, 2008 flash"
+            vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "emo/scene throwback, colored hair streaks, band tee, layered bracelets, dark eyeliner, playful pose"
+            if (str(uid) != OWNER_ID) and not allowed(uid):
+                send_message(chat, "Free image limit hit.")
                 return "OK", 200
-            prompt = selfie_prompt(p, vibe, nsfw=True)
-            seed = stable_seed(p.get("name", "Girl"))
-            send_message(chat, "📸 One moment…")
-            try:
-                out = generate_image(prompt, w=576, h=704, seed=seed, nsfw=True)
-                send_photo(chat, out)
-                STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
-                save_state()
-            except Exception as e_img:
-                send_message(chat, f"Image queue: {e_img}")
+            seed = stable_seed(p.get("name", "Girl"), "goth")
+            # Reuse selfie prompt but push the styling
+            base = selfie_prompt(p, vibe=vibe + ", nostalgic mall photo lighting, phone camera flash, stickers", nsfw=False)
+            send_message(chat, "🖤 Channeling my emo era…")
+            _spawn_image_job(chat, base, w=576, h=704, seed=seed, nsfw=False)
             return "OK", 200
 
-        if low.startswith("/nude18"):
-            vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "posing nude"
-            if str(uid) != OWNER_ID:
-                teasing_msgs = [
-                    "Zoey: You wish... 😉",
-                    "Zoey: Maybe later... when I’m feeling it.",
-                    "Zoey: You’re gonna have to earn that one."
-                ]
-                send_message(chat, random.choice(teasing_msgs))
+        # /cosplay <theme> -> SFW cosplay (character/theme supplied by user)
+        if low.startswith("/cosplay"):
+            parts = text.split(maxsplit=1)
+            theme = parts[1].strip() if len(parts) > 1 else "fantasy adventurer with cape"
+            if (str(uid) != OWNER_ID) and not allowed(uid):
+                send_message(chat, "Free image limit hit.")
                 return "OK", 200
-            prompt = selfie_prompt(p, vibe, nsfw=True)
-            seed = stable_seed(p.get("name", "Girl"))
-            send_message(chat, "📸 One moment…")
-            try:
-                out = generate_image(prompt, w=576, h=704, seed=seed, nsfw=True)
-                send_photo(chat, out)
-                STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
-                save_state()
-            except Exception as e_img:
-                send_message(chat, f"Image queue: {e_img}")
+            seed = stable_seed(p.get("name", "Girl"), "cosplay")
+            # Keep it SFW by default; if NSFW is on we still stay tasteful (no explicit anatomy)
+            vibe = f"cosplay: {theme}, con-floor photo vibe, tasteful makeup, confident pose, detailed costume, SFW"
+            prompt = selfie_prompt(p, vibe=vibe, nsfw=False)
+            send_message(chat, f"🧵 Crafting a {theme} look…")
+            _spawn_image_job(chat, prompt, w=576, h=704, seed=seed, nsfw=False)
             return "OK", 200
-        # === END IMAGE COMMANDS BLOCK ===
+
+        # /kidbeach -> strictly SFW, appropriate, younger-self/family beach vibe
+        # NOTE: This is **non-sexual**, modest clothing only, family photo composition.
+        if low.startswith("/kidbeach"):
+            if (str(uid) != OWNER_ID) and not allowed(uid):
+                send_message(chat, "Free image limit hit.")
+                return "OK", 200
+            seed = stable_seed(p.get("name", "Girl"), "kidbeach")
+            kid_vibe = (
+                "nostalgic family beach photo, sunny day, natural smile, "
+                "modest summer outfit (t-shirt with shorts or knee-length skirt), "
+                "playing in sand, holding beach ball, candid parent-taken snapshot, "
+                "no makeup, no suggestive posing, SFW, wholesome"
+            )
+            # Important: do NOT imply minors sexually or put them in revealing contexts.
+            # We frame it as an old family photo memory, fully appropriate clothing, SFW.
+            prompt = selfie_prompt(p, vibe=kid_vibe, nsfw=False)
+            send_message(chat, "🏖️ Flipping the family album…")
+            _spawn_image_job(chat, prompt, w=512, h=512, seed=seed, nsfw=False)
+            return "OK", 200
+
+        # /poster <title> -> movie poster
+        if low.startswith("/poster"):
+            parts = text.split(maxsplit=1)
+            if len(parts) < 2:
+                send_message(chat, "/poster <movie>")
+                return "OK", 200
+            title = parts[1]
+            send_message(chat, "🎬 Designing poster…")
+            try:
+                seed = stable_seed(p.get("name", "Girl"), "poster")
+                prompt = poster_prompt(title)
+                _spawn_image_job(chat, prompt, w=576, h=704, seed=seed, nsfw=False)
+            except Exception as e_pos:
+                send_message(chat, f"Image queue: {e_pos}")
+            return "OK", 200
+
+        # /draw <subject> -> art style piece
+        if low.startswith("/draw"):
+            parts = text.split(maxsplit=1)
+            if len(parts) < 2:
+                send_message(chat, "/draw <subject>")
+                return "OK", 200
+            subject = parts[1]
+            send_message(chat, "🎨 Sketching it…")
+            try:
+                seed = stable_seed(p.get("name", "Girl"), "art")
+                prompt = art_prompt(p, subject)
+                _spawn_image_job(chat, prompt, w=576, h=704, seed=seed, nsfw=False)
+            except Exception as e_draw:
+                send_message(chat, f"Image queue: {e_draw}")
+            return "OK", 200
+        # === END IMAGE COMMANDS (pack) ===
 
         # === END IMAGE COMMANDS BLOCK ===
             
