@@ -2099,7 +2099,7 @@ def hook():
             send_message(chat, "🖼️ Generating…")
             try:
             
-        if text and not text.startswith("/"):
+            if text and not text.startswith("/"):
             t = text.strip()
             idx = None
             if t.isdigit():
