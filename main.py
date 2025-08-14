@@ -1451,52 +1451,27 @@ def _prep_for_telegram(path: str) -> str:
         print("PREP ERR:", e)
         return path
 
-def send_photo(cid, path):
-    """
-    Send an image file to Telegram as a photo, with a safe JPEG fallback.
-    If photo upload fails, try sending as a document.
-    """
+def send_photo(chat, path, caption=None):
+    """Always send Telegram a proper JPEG file."""
     try:
-        safe_path = _prep_for_telegram(path)  # makes JPEG if needed
-
-        # Try as photo first
-        with open(safe_path, "rb") as f:
-            r = requests.post(
-                f"{API}/sendPhoto",
-                data={"chat_id": int(cid)},
-                files={"photo": f},
-                timeout=120
-            )
-
-        if r.status_code == 200:
-            return  # success as photo
-
-        # If photo failed, try as document
-        try:
-            err_desc = r.json().get("description", r.text[:200])
-        except Exception:
-            err_desc = r.text[:200]
-        print("PHOTO ERR (photo):", err_desc)
-
-        with open(safe_path, "rb") as f:
-            r2 = requests.post(
-                f"{API}/sendDocument",
-                data={"chat_id": int(cid)},
-                files={"document": f},
-                timeout=120
-            )
-
-        if r2.status_code != 200:
-            try:
-                err_desc2 = r2.json().get("description", r2.text[:200])
-            except Exception:
-                err_desc2 = r2.text[:200]
-            print("PHOTO ERR (document):", err_desc2)
-            send_message(cid, f"Image upload failed: {err_desc2}")
-
+        # Try to open with Pillow to ensure it's a real image
+        with Image.open(path) as im:
+            rgb = im.convert("RGB")  # Telegram likes RGB JPEG
+            buf = io.BytesIO()
+            rgb.save(buf, format="JPEG", quality=95)
+            buf.seek(0)
+        files = {"photo": ("image.jpg", buf, "image/jpeg")}
+        data = {"chat_id": chat}
+        if caption:
+            data["caption"] = caption
+        r = requests.post(f"{API}/sendPhoto", data=data, files=files, timeout=30)
+        if r.status_code != 200:
+            print("Telegram sendPhoto failed:", r.text)
     except Exception as e:
-        print("PHOTO SEND EXC:", e)
-        send_message(cid, f"Image upload error: {e}")
+        print("send_photo error:", e)
+
+
+    
 
 
 def _spawn_image_job(chat, prompt, w=512, h=512, seed=None, nsfw=False):
