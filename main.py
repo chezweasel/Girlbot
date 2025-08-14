@@ -2212,103 +2212,64 @@ def hook():
             else:
                 lines.append("Replicate: (skipped, no REPLICATE_API_TOKEN)")
             if HORDE:
-                attempt("Horde", lambda: gen_horde(test_prompt, 96, 96, seed=1, nsfw=False))
-            else:
-                lines.append("Horde: (skipped, no HORDE_API_KEY)")
+            attempt("Horde", lambda: gen_horde(test_prompt, 96, 96, seed=1, nsfw=False))
+        else:
+            lines.append("Horde: (skipped, no HORDE_API_KEY)")
 
-            lines.append("— Failover chain (generate_image) —")
-            t0 = time.time()
-            try:
-                out_path = generate_image(test_prompt, 96, 96, seed=1, nsfw=False)
-                lines.append(f"generate_image(): ✅ {time.time() - t0:.1f}s (saved {out_path})")
-            except Exception as e:
-                lines.append(f"generate_image(): ❌ {str(e)[:200]}")
+        lines.append("— Failover chain (generate_image) —")
+        t0 = time.time()
+        try:
+            out_path = generate_image(test_prompt, 96, 96, seed=1, nsfw=False)
+            lines.append(f"generate_image(): ✅ {time.time() - t0:.1f}s (saved {out_path})")
+        except Exception as e:
+            lines.append(f"generate_image(): ❌ {str(e)[:200]}")
 
-            send_message(chat, "\n".join(lines))
+        send_message(chat, "\n".join(lines))
+        return "OK", 200
+
+    # === Image commands ===
+
+    if low.startswith("/selfie"):
+        vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "teasing, SFW"
+        if (str(uid) != OWNER_ID) and not allowed(uid):
+            send_message(chat, "Free image limit hit.")
             return "OK", 200
+        _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=False), nsfw=False)
+        return "OK", 200
 
-        # === Image commands ===
-   
-if low.startswith("/selfie"):
-    vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "teasing, SFW"
-    if (str(uid) != OWNER_ID) and not allowed(uid):
-        send_message(chat, "Free image limit hit.")
+    if low.startswith("/old18"):
+        vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "nostalgic"
+        if (str(uid) != OWNER_ID) and not allowed(uid):
+            send_message(chat, "Free image limit hit.")
+            return "OK", 200
+        _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=True), nsfw=True)
         return "OK", 200
-    _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=False), nsfw=False)
-    return "OK", 200
 
-if low.startswith("/old18"):
-    vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "nostalgic"
-    if (str(uid) != OWNER_ID) and not allowed(uid):
-        send_message(chat, "Free image limit hit.")
+    if low.startswith("/nude18"):
+        vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "posing nude"
+        if (str(uid) != OWNER_ID) and not allowed(uid):
+            send_message(chat, "Free image limit hit.")
+            return "OK", 200
+        _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=True), nsfw=True)
         return "OK", 200
-    _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=True), nsfw=True)
-    return "OK", 200
 
-if low.startswith("/nude18"):
-    vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "posing nude"
-    if (str(uid) != OWNER_ID) and not allowed(uid):
-        send_message(chat, "Free image limit hit.")
+    if low.startswith("/costume"):
+        vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "cosplay outfit"
+        if (str(uid) != OWNER_ID) and not allowed(uid):
+            send_message(chat, "Free image limit hit.")
+            return "OK", 200
+        _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=False), nsfw=False)
         return "OK", 200
-    _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=True), nsfw=True)
-    return "OK", 200
 
-if low.startswith("/costume"):
-    vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "cosplay outfit"
-    if (str(uid) != OWNER_ID) and not allowed(uid):
-        send_message(chat, "Free image limit hit.")
+    if low.startswith("/artistic"):
+        vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "artistic nude, tasteful lighting"
+        if (str(uid) != OWNER_ID) and not allowed(uid):
+            send_message(chat, "Free image limit hit.")
+            return "OK", 200
+        _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=True), nsfw=True)
         return "OK", 200
-    _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=False), nsfw=False)
-    return "OK", 200
 
-if low.startswith("/artistic"):
-    vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "artistic nude, tasteful lighting"
-    if (str(uid) != OWNER_ID) and not allowed(uid):
-        send_message(chat, "Free image limit hit.")
-        return "OK", 200
-    _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=True), nsfw=True)
-    return "OK", 200
-            
-        # === if low.startswith("/selfie"):
-    vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "teasing, SFW"
-    if (str(uid) != OWNER_ID) and not allowed(uid):
-        send_message(chat, "Free image limit hit.")
-        return "OK", 200
-    _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=False), nsfw=False)
-    return "OK", 200
-
-if low.startswith("/old18"):
-    vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "nostalgic"
-    if (str(uid) != OWNER_ID) and not allowed(uid):
-        send_message(chat, "Free image limit hit.")
-        return "OK", 200
-    _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=True), nsfw=True)
-    return "OK", 200
-
-if low.startswith("/nude18"):
-    vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "posing nude"
-    if (str(uid) != OWNER_ID) and not allowed(uid):
-        send_message(chat, "Free image limit hit.")
-        return "OK", 200
-    _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=True), nsfw=True)
-    return "OK", 200
-
-if low.startswith("/costume"):
-    vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "cosplay outfit"
-    if (str(uid) != OWNER_ID) and not allowed(uid):
-        send_message(chat, "Free image limit hit.")
-        return "OK", 200
-    _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=False), nsfw=False)
-    return "OK", 200
-
-if low.startswith("/artistic"):
-    vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "artistic nude, tasteful lighting"
-    if (str(uid) != OWNER_ID) and not allowed(uid):
-        send_message(chat, "Free image limit hit.")
-        return "OK", 200
-    _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=True), nsfw=True)
-    return "OK", 200
-    #Image commands (paste ends here) ===
+    # Image commands (paste ends here) ===
             
         if text and not text.startswith("/"):
             t = text.strip()
