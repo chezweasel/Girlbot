@@ -2307,7 +2307,8 @@ if low.startswith("/artistic"):
         send_message(chat, "Free image limit hit.")
         return "OK", 200
     _spawn_image_job(chat, selfie_prompt(p, vibe, nsfw=True), nsfw=True)
-    return "OK", 200Image commands (paste ends here) ===
+    return "OK", 200
+    #Image commands (paste ends here) ===
             
         if text and not text.startswith("/"):
             t = text.strip()
