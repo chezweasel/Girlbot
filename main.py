@@ -7,39 +7,6 @@ import os
 from chat_ai import ai_complete_text, handle_telegram_voice_message, ENABLE_AI_CHAT
 from media_commands import handle_media_commands
 
-# === HF image gen config ===
-# === HF image gen config ===
-HF_TOKEN = (os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN") or "").strip()
-HF_MODEL_ID = os.getenv("HF_MODEL_ID", "stabilityai/stable-diffusion-xl-base-1.0").strip()
-# Pillow is used to normalize images for Telegram
-from PIL import Image
-import io
-
-def generate_image(prompt, w=512, h=512, seed=None, nsfw=False):
-    model = "stabilityai/stable-diffusion-xl-base-1.0"  # Hugging Face model
-    api_url = f"https://api-inference.huggingface.co/models/{model}"
-    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
-
-    payload = {
-        "inputs": prompt,
-        "parameters": {
-            "width": w,
-            "height": h
-        }
-    }
-
-    response = requests.post(api_url, headers=headers, json=payload)
-
-    if response.status_code != 200:
-        raise Exception(f"HuggingFace API error: {response.text}")
-
-    # Save the returned image
-    out_path = "generated_image.png"
-    with open(out_path, "wb") as f:
-        f.write(response.content)
-
-    return out_path
-
 import os
 import json
 import time
@@ -71,7 +38,7 @@ print("BACKENDS:", f"HORDE={'set' if HORDE else '—'} | FAL={'set' if FAL_KEY e
 # ===== LIMITS / SAFETY =====
 FREE_PER_DAY = 2
 FORBID = {
-    "teen", "minor", "underage", "child", "young-looking",
+    "teen", "minor", "underage", "child",
     "incest", "stepbro", "stepsis", "rape", "forced", "nonconsensual",
     "bestiality", "animal", "beast", "loli", "shota",
     "real name", "celebrity", "celeb", "revenge porn", "deepfake", "face swap"
@@ -1364,54 +1331,8 @@ def send_audio(cid, path):
 
     except Exception as e:
         print("AUDIO SEND EXC:", e)
-def gen_hf(prompt, w=512, h=512, seed=None, nsfw=False) -> str:
-    """
-    Generate an image via Hugging Face Inference API.
-    Returns a local file path to the generated image (JPEG).
-    """
-    if not HF_TOKEN:
-        raise RuntimeError("HF_TOKEN missing (set it in your environment)")
 
-    # NOTE: SDXL expects square-ish sizes; keep modest to avoid timeouts.
-    w = max(256, min(int(w), 1024))
-    h = max(256, min(int(h), 1024))
-
-    api_url = f"https://api-inference.huggingface.co/models/{HF_MODEL_ID}"
-    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
-
-    # We pass width/height via "parameters". Some models ignore them; still OK.
-    payload = {
-        "inputs": prompt,
-        "parameters": {
-            "width": w,
-            "height": h
-        }
-    }
-
-    r = requests.post(api_url, headers=headers, json=payload, timeout=300)
-
-    if r.status_code != 200:
-        # HF sometimes streams JSON {"error":"loading","estimated_time":...}
-        # Give more transparent message to user
-        raise RuntimeError(f"HF API error {r.status_code}: {r.text[:200]}")
-
-    # Save bytes -> PNG first, convert later if needed
-    tmp_path = f"out_{int(time.time())}.png"
-    with open(tmp_path, "wb") as f:
-        f.write(r.content)
-
-    # Normalize to JPEG for Telegram
-    safe_jpg = _prep_for_telegram(tmp_path)
-    return safe_jpg
-
-def generate_image(prompt, w=512, h=512, seed=None, nsfw=False):
-    """
-    Single provider (HF) to keep it simple and reliable.
-    """
-    return gen_hf(prompt, w=w, h=h, seed=seed, nsfw=nsfw)
-
-
-
+        
 # ===== BOOK HELPERS =====
 def book_snack(p):
     b = p.get("books") or []
@@ -1574,24 +1495,6 @@ def send_photo(chat, path, caption=None):
     except Exception as e:
         print("send_photo error:", e)
 
-
-    
-
-
-def _spawn_image_job(chat, prompt, w=512, h=512, seed=None, nsfw=False):
-    """
-    Small helper that generates an image (clamped to Horde anon limits)
-    and sends it. Keep it simple & synchronous.
-    """
-    try:
-        # Horde anonymous soft limit is ~576x576; clamp just in case
-        w = min(int(w), 576)
-        h = min(int(h), 576)
-
-        fn = generate_image(prompt, w=w, h=h, seed=seed, nsfw=nsfw)
-        send_photo(chat, fn)
-    except Exception as e_img:
-        send_message(chat, f"Image queue: {e_img}")
 # ===== UI =====
 def menu_list():
     out, seen = [], set()
@@ -1848,13 +1751,6 @@ def send_tease_or_allow_nsfw(p, s, uid, chat) -> bool:
 
     seed = stable_seed(p.get("name", "Girl"))
     send_message(chat, "🎨 One moment…")
-    try:
-        _spawn_image_job(chat, full_prompt, w=576, h=704, seed=seed, nsfw=True)
-        if str(uid) != str(OWNER_ID):
-            STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
-            save_state()
-    except Exception as e_img:
-        send_message(chat, f"Image queue: {e_img}")
 
     return "OK", 200
 # ===== END /gen =====
@@ -2048,19 +1944,6 @@ def hook():
 
         p = PERS[s["g"] % len(PERS)]
 
-        # ===== Centralized /selfie and /gen commands =====
-        result = handle_media_commands(
-            low, text, p, s, uid, chat,
-            send_message=send_message,
-            save_state=save_state,
-            stable_seed=stable_seed,
-            _spawn_image_job=_spawn_image_job,
-            OWNER_ID=OWNER_ID,
-            STATE=STATE,
-        )
-        if result:
-            return result
-
         # Continue with other command handlers...
         # --- GREETINGS ---
         if low in {"hi","hello","hey","/start"}:
@@ -2241,19 +2124,6 @@ def hook():
             # stable seed per persona
             seed = stable_seed(p.get("name", "Girl"))
 
-            send_message(chat, "📸 One moment…")
-            try:
-                # use your safe helper (respects 576px anon limit)
-                _spawn_image_job(chat, prompt, w=576, h=704, seed=seed, nsfw=nsfw)
-                if str(uid) != OWNER_ID:
-                    STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
-                    save_state()
-            except Exception as e_img:
-                send_message(chat, f"Image queue: {e_img}")
-            return "OK", 200
-
-     
-
             user_prompt = parts[1].strip()
 
 
@@ -2277,13 +2147,7 @@ def hook():
             seed = stable_seed(p.get("name","Girl"))
             send_message(chat, "🖼️ Generating…")
             try:
-                _spawn_image_job(chat, full, w=576, h=704, seed=seed, nsfw=spicy)
-                if str(uid) != OWNER_ID:
-                    STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
-                    save_state()
-            except Exception as e_gen:
-                send_message(chat, f"Image queue: {e_gen}")
-            return "OK", 200
+               
         # === END IMAGE COMMANDS ===============================================
 
 
@@ -2323,18 +2187,9 @@ def hook():
         ar = min(3.0, ar)
         s["arousal"] = ar
         save_state()
-        if (not s.get("teased")) and s.get("u_msg", 0) >= 5:
-            seed = stable_seed(p.get("name", "Girl"))
-            prompt = selfie_prompt(p, vibe="teasing smile, shoulder-up, tasteful, SFW", nsfw=False)
-            _spawn_image_job(chat, prompt, 512, 704, seed, nsfw=False)
-            send_message(chat, "there's more of these and it only gets better ✨")
-            s["teased"] = True
-            save_state()
         fact = (p.get("origin", "") or "").split(";")[0]
         taste = random.choice([
-            ", ".join((p.get("music") or [])[:1]),
-            ", ".join((p.get("movies") or [])[:1]),
-            ", ".join((p.get("tv") or [])[:1])
+    
         ])
         bookline = (" " + book_snack(p)) if random.random() < 0.3 else ""
         feels = arousal_line(p, s)
