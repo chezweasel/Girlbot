@@ -1578,21 +1578,6 @@ def _spawn_image_job(chat, prompt, w=512, h=512, seed=None, nsfw=False):
         # Surface the real reason back to Telegram for easy debugging
         send_message(chat, f"Image queue: {e_img}")
 
-# ===== background image job helper =====
-def _spawn_image_job(chat, prompt, w, h, seed, nsfw):
-    def job():
-        try:
-            send_message(chat, "🎨 Generating your image...")
-            out = generate_image(prompt, w, h, seed, nsfw)
-            if out:
-                send_photo(chat, out)
-            else:
-                send_message(chat, "❌ Image generation failed.")
-        except Exception as e:
-            send_message(chat, f"❌ Error: {e}")
-    Thread(target=job).start()
-
-
 # ===== UI =====
 def menu_list():
     out, seen = [], set()
