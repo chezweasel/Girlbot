@@ -58,6 +58,7 @@ REPLICATE = os.getenv("REPLICATE_API_TOKEN", "").strip()
 HORDE = "oUYuhedorKvsB6TDukI7cw"
 HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN", "").strip()
 HF_MODEL = os.getenv("HF_MODEL", "SG161222/RealVisXL_V4.0").strip()  # good general SDXL checkpoint
+print("BACKENDS:", f"HORDE={'set' if HORDE else '—'} | FAL={'set' if FAL_KEY else '—'} | REPLICATE={'set' if REPLICATE else '—'}")
 
 # ===== LIMITS / SAFETY =====
 FREE_PER_DAY = 2
