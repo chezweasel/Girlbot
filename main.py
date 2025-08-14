@@ -1,88 +1,91 @@
 import os
 import logging
+import threading
 from typing import Final
+from flask import Flask
 
 from telegram import Update
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    ContextTypes,
-    MessageHandler,
-    filters,
-)
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
-# Your dialog logic
-from dialog import generate_chat_turn
-
-# --- logging ---
 logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     level=logging.INFO,
 )
 log = logging.getLogger("bot")
 
-# --- config ---
 BOT_TOKEN: Final[str] = os.environ.get("BOT_TOKEN", "").strip()
-
 if not BOT_TOKEN:
-    # Fail fast with a clear error in Railway logs
-    raise RuntimeError("BOT_TOKEN env var is missing. Set it in Railway → Variables.")
+    raise RuntimeError("BOT_TOKEN env var missing (Railway → Variables).")
 
-# --- handlers ---
+# Try to import the dialog layer; fall back safely.
+try:
+    from dialog import generate_chat_turn, list_girls, pick_girl
+except Exception as e:
+    log.exception("dialog import failed: %s", e)
+    def generate_chat_turn(text: str, user_id: str = "unknown") -> str:
+        return f"(fallback) you said: {text}"
+    def list_girls() -> str:
+        return "(no personas loaded)"
+    def pick_girl(arg: str, user_id: str) -> str:
+        return "(picker unavailable)"
 
-async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Respond to /start."""
-    msg = (
-        "Hey! I’m alive. Try sending a message.\n"
-        "Commands: /start, /help\n"
-        "(If I don’t reply, check Railway logs for errors.)"
-    )
-    await update.message.reply_text(msg)
+# --- tiny healthcheck server (keeps Railway alive) ---
+app = Flask(__name__)
 
-async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    await update.message.reply_text("Send me a message and I’ll respond.")
+@app.get("/")
+def root(): return "ok", 200
 
-async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Route every text DM to your dialog engine."""
+@app.get("/health")
+def health(): return "healthy", 200
+
+def run_flask():
+    port = int(os.environ.get("PORT", "8080"))
+    app.run(host="0.0.0.0", port=port)
+
+# --- Telegram handlers ---
+async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Hi! I’m alive. Try /girls to see the list, /pick 1 (or name), or just say hi.")
+
+async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Commands:\n/girls\n/pick <#|name>\n/ping")
+
+async def cmd_ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("pong ✅")
+
+async def cmd_girls(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(list_girls())
+
+async def cmd_pick(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id) if update.effective_user else "unknown"
+    arg = " ".join(context.args) if context.args else ""
+    if not arg:
+        await update.message.reply_text("Usage: /pick <#|name>")
+        return
+    await update.message.reply_text(pick_girl(arg, user_id))
+
+async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message:
         return
     user_id = str(update.message.from_user.id) if update.message.from_user else "unknown"
     text = update.message.text or ""
-
     try:
-        # call your app's turn generator
-        reply = generate_chat_turn(text, user_id=user_id)
-        if not reply:
-            reply = "…I got nothing. Check server logs."
+        reply = generate_chat_turn(text, user_id=user_id) or "(empty reply)"
     except Exception as e:
-        log.exception("Error in generate_chat_turn")
+        log.exception("generate_chat_turn error")
         reply = f"Oops, something broke: {e}"
-
     await update.message.reply_text(reply)
 
-# --- bootstrap ---
-
-def main() -> None:
-    app = Application.builder().token(BOT_TOKEN).build()
-
-    # commands
-    app.add_handler(CommandHandler("start", cmd_start))
-    app.add_handler(CommandHandler("help", cmd_help))
-
-    # text messages in private chats (DMs)
-    app.add_handler(
-        MessageHandler(
-            filters.ChatType.PRIVATE & filters.TEXT & ~filters.COMMAND,
-            on_text,
-        )
-    )
-
-    log.info("Starting bot with polling…")
-    # IMPORTANT: this manages asyncio for you. Do NOT wrap in asyncio.run()
-    app.run_polling(
-        allowed_updates=Update.ALL_TYPES,
-        close_loop=False,  # safer in some hosting envs
-    )
+def run_bot():
+    app_ = Application.builder().token(BOT_TOKEN).build()
+    app_.add_handler(CommandHandler("start", cmd_start))
+    app_.add_handler(CommandHandler("help", cmd_help))
+    app_.add_handler(CommandHandler("ping", cmd_ping))
+    app_.add_handler(CommandHandler("girls", cmd_girls))
+    app_.add_handler(CommandHandler("pick", cmd_pick))
+    app_.add_handler(MessageHandler(filters.ChatType.PRIVATE & filters.TEXT & ~filters.COMMAND, on_text))
+    log.info("Starting Telegram polling…")
+    app_.run_polling(allowed_updates=Update.ALL_TYPES, close_loop=False)
 
 if __name__ == "__main__":
-    main()
+    threading.Thread(target=run_flask, daemon=True).start()
+    run_bot()
