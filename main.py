@@ -1112,385 +1112,167 @@ def size_line(p):
 def stable_seed(name, suffix=""):
     return int(hashlib.sha256((f"FLIRTX{name}{suffix}").encode()).hexdigest()[:8], 16)
 
-# ===== IMAGING: FAL → Replicate → Horde =====
+# ===== IMAGING: FAL → Replicate → Horde (+ optional HuggingFace) =====
+import base64, mimetypes
+
+FAL_KEY   = os.getenv("FAL_KEY","").strip()
+REPLICATE = os.getenv("REPLICATE_API_TOKEN","").strip()
+HORDE     = os.getenv("HORDE_API_KEY","0000000000").strip()
+
+# Optional HuggingFace text-to-image (Diffusers Inference Endpoint or Inference API)
+HF_TOKEN    = os.getenv("HF_TOKEN","").strip()
+HF_MODEL_ID = os.getenv("HF_MODEL_ID","").strip()  # e.g. "stabilityai/stable-diffusion-xl-base-1.0"
+
+def _write_image_bytes(img_bytes: bytes, ext: str = ".png") -> str:
+    """Save bytes to disk only if they look like a real image."""
+    if not img_bytes or len(img_bytes) < 2048:
+        raise RuntimeError("image bytes too small/empty")
+    fn = f"out_{int(time.time())}{ext}"
+    with open(fn, "wb") as f:
+        f.write(img_bytes)
+    return fn
+
+def _download_image_checked(url: str) -> str:
+    """Download an image URL and verify it’s really an image."""
+    r = requests.get(url, timeout=60)
+    ct = (r.headers.get("Content-Type") or "").lower()
+    if "image/" not in ct:
+        # Not an image – surface the real error
+        txt = r.text[:200]
+        raise RuntimeError(f"download not image (ct={ct}): {txt}")
+    ext = ".jpg" if "jpeg" in ct else ".png"
+    return _write_image_bytes(r.content, ext)
+
 def gen_fal(prompt, w=640, h=896, seed=None):
     if not FAL_KEY:
-        raise RuntimeError("FAL: missing FAL_KEY")
-    headers = {"Authorization": f"Key {FAL_KEY}", "Content-Type": "application/json"}
-    FAL_ENDPOINT = os.getenv("FAL_ENDPOINT", "https://fal.run/fal-ai/flux-lora").strip()
-    body = {
-        "prompt": prompt,
-        "image_size": f"{w}x{h}",
-        "num_inference_steps": 22,
-        "seed": int(seed if seed is not None else random.randint(1, 2**31 - 1)),
+        raise RuntimeError("FAL missing")
+    headers={"Authorization":f"Key {FAL_KEY}","Content-Type":"application/json"}
+    endpoint = os.getenv("FAL_ENDPOINT","https://fal.run/fal-ai/flux-lora").strip()
+    body={
+        "prompt":prompt,
+        "image_size":f"{int(w)}x{int(h)}",
+        "num_inference_steps":22,
+        "seed": int(seed) if seed is not None else random.randint(1,2**31-1)
     }
-    r = requests.post(FAL_ENDPOINT, headers=headers, json=body, timeout=60)
+    r = requests.post(endpoint, headers=headers, json=body, timeout=60)
+    if r.status_code != 200:
+        raise RuntimeError(f"FAL HTTP {r.status_code}: {r.text[:200]}")
     j = r.json()
-    if r.status_code != 200 or "images" not in j or not j["images"]:
-        raise RuntimeError(f"FAL error: {r.text[:200]}")
-    b64 = j["images"][0].get("content", "")
-    fn = f"out_{int(time.time())}.png"
-    open(fn, "wb").write(base64.b64decode(b64.split(",")[-1]))
-    return fn
+    imgs = (j or {}).get("images") or []
+    if not imgs:
+        raise RuntimeError(f"FAL: empty images ({str(j)[:120]})")
+    b64 = imgs[0].get("content","")
+    try:
+        raw = base64.b64decode(b64.split(",")[-1])
+    except Exception:
+        raise RuntimeError("FAL: invalid base64")
+    return _write_image_bytes(raw, ".png")
 
 def gen_replicate(prompt, w=640, h=896, seed=None):
     if not REPLICATE:
-        raise RuntimeError("Replicate: missing REPLICATE_API_TOKEN")
-    version = os.getenv("REPLICATE_VERSION", "").strip()
+        raise RuntimeError("Replicate missing")
+    version = os.getenv("REPLICATE_VERSION","").strip()
     if not version:
-        raise RuntimeError("Replicate: missing REPLICATE_VERSION env var")
-    headers = {"Authorization": f"Token {REPLICATE}", "Content-Type": "application/json"}
-    payload = {
-        "version": version,
-        "input": {
-            "prompt": prompt,
-            "width": int(w),
-            "height": int(h),
+        # Keep friendly error, many folks forget this
+        raise RuntimeError("Replicate: set REPLICATE_VERSION env var (the model version ID)")
+    headers={"Authorization":f"Token {REPLICATE}","Content-Type":"application/json"}
+    payload={
+        "version":version,
+        "input":{
+            "prompt":prompt,
+            "width":int(w),
+            "height":int(h),
             **({"seed": int(seed)} if seed is not None else {}),
-        },
+        }
     }
     r = requests.post("https://api.replicate.com/v1/predictions", headers=headers, json=payload, timeout=60)
-    if r.status_code not in (200, 201):
+    if r.status_code not in (200,201):
         raise RuntimeError(f"Replicate create failed {r.status_code}: {r.text[:200]}")
-    job = r.json()
-    get_url = job.get("urls", {}).get("get")
+    get_url = (r.json().get("urls") or {}).get("get")
     if not get_url:
-        raise RuntimeError(f"Replicate: missing get URL")
+        raise RuntimeError("Replicate: missing get URL")
+    # poll
     for _ in range(90):
         s = requests.get(get_url, headers=headers, timeout=20).json()
         st = s.get("status")
-        if st in ("succeeded", "failed", "canceled"):
+        if st in ("succeeded","failed","canceled"):
             if st != "succeeded":
                 raise RuntimeError(f"Replicate: {st}")
             out = s.get("output")
             if not out:
                 raise RuntimeError("Replicate: empty output")
-            img_url = out[0] if isinstance(out, list) else out
-            img_b = requests.get(img_url, timeout=60).content
-            fn = f"out_{int(time.time())}.png"
-            open(fn, "wb").write(img_b)
-            return fn
+            # output is usually list of URLs
+            first = out[0] if isinstance(out, list) else out
+            return _download_image_checked(first)
         time.sleep(2)
     raise RuntimeError("Replicate: timeout")
 
-    # Ensure seed is a string if provided
-    if seed is None:
-        seed = str(random.randint(1, 2**31 - 1))
-    else:
-        try:
-            seed = str(int(seed) & 0xFFFFFFFF)  # Clamp to safe positive int
-        except (ValueError, TypeError):
-            seed = str(random.randint(1, 2**31 - 1))
-
-    params = {
-        "steps": 22,
-        "width": int(w),
-        "height": int(h),
-        "n": 1,
-        "nsfw": bool(nsfw),
-        "sampler_name": "k_euler",
-        "cfg_scale": 6.5,
-        "seed": seed,
-        "prompt": prompt,
+def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
+    headers={"apikey":HORDE,"Client-Agent":"flirtpixel/3.2"}
+    # Respect anon limits (<=576x576) elsewhere; Horde still OK to receive bigger if you have kudos
+    params={
+        "steps":22,
+        "width":int(w),
+        "height":int(h),
+        "n":1,
+        "nsfw":bool(nsfw),
+        "sampler_name":"k_euler",
+        "cfg_scale":6.5
     }
-def gen_huggingface(prompt, w=512, h=512, seed=None, nsfw=True):
-    """
-    Simple text->image via Hugging Face Inference API.
-    Not all community models honor seed; we keep it in the prompt for any that do.
-    Image bytes -> file on disk -> return filepath.
-    """
-    if not HUGGINGFACE_TOKEN:
-        raise RuntimeError("HF: missing HUGGINGFACE_TOKEN")
-
-    # Keep payload small; many HF models are happier <= 768.
-    w = int(min(max(w, 256), 768))
-    h = int(min(max(h, 256), 768))
-
-    # Many public pipelines ignore seed; include in prompt for those that parse it.
-    full_prompt = prompt if seed is None else f"{prompt} [seed:{int(seed)}]"
-
-    headers = {
-        "Authorization": f"Bearer {HUGGINGFACE_TOKEN}",
-        "Accept": "image/png",
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "inputs": full_prompt,
-        "options": {
-            "wait_for_model": True,   # spin up the space if it’s cold
-            "use_cache": True
-        },
-        # Some endpoints accept parameters here; we keep width/height in top-level too:
-        "parameters": {
-            "width": w,
-            "height": h,
-            # You can add negative_prompt here if you like:
-            # "negative_prompt": "nsfw minors, underage, child, disfigured, extra fingers"
-        },
-    }
-    url = f"https://api-inference.huggingface.co/models/{HF_MODEL}"
-
-    r = requests.post(url, headers=headers, json=payload, timeout=120)
-    if r.status_code != 200:
-        # Return server message for easier debugging in Telegram
-        raise RuntimeError(f"HF HTTP {r.status_code}: {r.text[:200]}")
-
-    img_bytes = r.content
-    if not img_bytes or len(img_bytes) < 1000:
-        raise RuntimeError("HF: empty/too-small image")
-
-    fn = f"out_{int(time.time())}_hf.png"
-    open(fn, "wb").write(img_bytes)
-    return fn
-    url = "https://stablehorde.net/api/v2/generate/async"
-    r = requests.post(url, json=params, headers=headers, timeout=30)
-    if r.status_code != 200:
-        raise RuntimeError(f"Horde queue error: {r.status_code} {r.text}")
-
-    js = r.json()
-    job_id = js.get("id")
-    if not job_id:
-        raise RuntimeError(f"No job ID in Horde response: {js}")
-
-    # Poll until done
-    while True:
-        poll_url = f"https://stablehorde.net/api/v2/generate/status/{job_id}"
-        pr = requests.get(poll_url, headers=headers, timeout=30)
-        if pr.status_code != 200:
-            raise RuntimeError(f"Horde status error: {pr.status_code} {pr.text}")
-
-        ps = pr.json()
-        if ps.get("done"):
-            gens = ps.get("generations", [])
-            if not gens:
-                raise RuntimeError(f"Horde finished but no images: {ps}")
-            b64 = gens[0].get("img")
-            if not b64:
-                raise RuntimeError(f"No image data in Horde result: {gens[0]}")
-            return base64.b64decode(b64)
-
-        time.sleep(3)
     if seed is not None:
-        params["seed"] = int(seed)
-    job = {
-        "prompt": prompt,
-        "params": params,
-        "r2": True,
-        "censor_nsfw": False,
-        "replacement_filter": True,
-    }
-    r = requests.post("https://stablehorde.net/api/v2/generate/async", json=job, headers=headers, timeout=45)
-    if r.status_code not in (200, 202):
+        # Horde parameter schema often wants STRING seeds in JSON
+        params["seed"] = str(int(seed))
+    job={"prompt":prompt,"params":params,"r2":True,"censor_nsfw":False,"replacement_filter":True}
+    r=requests.post("https://stablehorde.net/api/v2/generate/async", json=job, headers=headers, timeout=45)
+    if r.status_code not in (200,202):
         raise RuntimeError(f"Horde queue HTTP {r.status_code}: {r.text[:200]}")
-    rid = r.json().get("id")
+    rid = (r.json() or {}).get("id")
     if not rid:
         raise RuntimeError(f"Horde queue error: {r.text[:200]}")
-    waited = 0
-    max_wait = int(os.getenv("HORDE_MAX_WAIT", "360"))
+    waited=0
+    max_wait=int(os.getenv("HORDE_MAX_WAIT","360"))
     while True:
         s = requests.get(f"https://stablehorde.net/api/v2/generate/check/{rid}", timeout=30).json()
         if s.get("faulted"):
             raise RuntimeError("Horde: job faulted")
         if s.get("done"):
             break
-        time.sleep(2)
-        waited += 2
-        if waited > max_wait:
+        time.sleep(2); waited+=2
+        if waited>max_wait:
             raise RuntimeError("Horde: queue timeout")
     st = requests.get(f"https://stablehorde.net/api/v2/generate/status/{rid}", timeout=45).json()
-    gens = st.get("generations", [])
+    gens = st.get("generations",[])
     if not gens:
-        raise RuntimeError(f"Horde empty result: {str(st)[:200]}")
-    fn = f"out_{int(time.time())}.png"
-    open(fn, "wb").write(base64.b64decode(gens[0]["img"]))
-    return fn
+        raise RuntimeError(f"Horde empty: {str(st)[:200]}")
+    # base64 PNG
+    try:
+        raw = base64.b64decode(gens[0]["img"])
+    except Exception:
+        raise RuntimeError("Horde: invalid base64 image")
+    return _write_image_bytes(raw, ".png")
 
-# ===== IMAGING: robust Horde + smart failover =====
-def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
-    """
-    Stable Horde generation with:
-      - auto downscale to meet anon/low-kudos limits (<=576 on longest side)
-      - proper string seed
-      - clear errors
-    """
-    if not HORDE:
-        raise RuntimeError("Horde: missing HORDE_API_KEY")
-
-    headers = {
-        "apikey": HORDE,
-        "Client-Agent": "flirtpixel/3.3"
+def gen_hf(prompt, w=640, h=640, seed=None, nsfw=True):
+    """Optional Hugging Face Inference API for text-to-image.
+       Set HF_TOKEN and HF_MODEL_ID to enable. If not set, raise."""
+    if not HF_TOKEN or not HF_MODEL_ID:
+        raise RuntimeError("HF disabled (set HF_TOKEN & HF_MODEL_ID)")
+    url = f"https://api-inference.huggingface.co/models/{HF_MODEL_ID}"
+    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+    payload = {
+        "inputs": prompt,
+        "options": {"use_cache": True, "wait_for_model": True}
     }
-import threading
-
-# ---- keep Horde requests within anonymous limits + clearer errors ----
-def _safe_dims(w, h):
-    # Horde anonymous requires both sides <= 576
-    w = int(w)
-    h = int(h)
-    if w > 576: w = 576
-    if h > 576: h = 576
-    return w, h
-
-def gen_horde(prompt, w=640, h=896, seed=None, nsfw=True):
-    if not HORDE:
-        raise RuntimeError("Horde: missing HORDE_API_KEY")
-
-    w, h = _safe_dims(w, h)
-
-    headers = {"apikey": HORDE, "Client-Agent": "flirtpixel/3.2"}
-    params = {
-        "steps": 28,                 # keep under 50 for anon usage
-        "width": w,
-        "height": h,
-        "n": 1,
-        "nsfw": bool(nsfw),
-        "sampler_name": "k_euler",   # safe/default sampler
-        "cfg_scale": 6.5,
-    }
-    if seed is not None:
-        params["seed"] = str(int(seed))  # Horde expects a string
-
-    job = {
-        "prompt": prompt,
-        "params": params,
-        # keep things broad so any worker can pick it up:
-        # (you can add "models": ["stable_diffusion"] later if you wish)
-        "r2": True,
-        "censor_nsfw": False,
-        "replacement_filter": True,
-    }
-
-    r = requests.post("https://stablehorde.net/api/v2/generate/async",
-                      json=job, headers=headers, timeout=45)
-    if r.status_code not in (200, 202):
-        raise RuntimeError(f"Horde HTTP {r.status_code}: {r.text[:200]}")
-    data = r.json()
-    rid = data.get("id")
-    if not rid:
-        raise RuntimeError(f"Horde queue error: {r.text[:200]}")
-
-    # poll
-    waited = 0
-    max_wait = int(os.getenv("HORDE_MAX_WAIT", "180"))  # 3 min
-    while True:
-        chk = requests.get(
-            f"https://stablehorde.net/api/v2/generate/check/{rid}", timeout=30
-        )
-        if chk.status_code != 200:
-            raise RuntimeError(f"Horde check HTTP {chk.status_code}: {chk.text[:160]}")
-        s = chk.json()
-        if s.get("faulted"):
-            raise RuntimeError("Horde: job faulted")
-        if s.get("done"):
-            break
-        time.sleep(2)
-        waited += 2
-        if waited > max_wait:
-            raise RuntimeError("Horde: queue timeout (try smaller dims/steps)")
-
-    st = requests.get(
-        f"https://stablehorde.net/api/v2/generate/status/{rid}", timeout=45
-    )
-    if st.status_code != 200:
-        raise RuntimeError(f"Horde status HTTP {st.status_code}: {st.text[:160]}")
-    js = st.json()
-    gens = js.get("generations", [])
-    if not gens:
-        raise RuntimeError(f"Horde empty result: {str(js)[:200]}")
-
-    fn = f"out_{int(time.time())}.png"
-    open(fn, "wb").write(base64.b64decode(gens[0]["img"]))
-    return fn
-    # --- Respect Horde free/low-kudos size limits (longest side <= 576 by default) ---
-    max_side = int(os.getenv("HORDE_MAX_SIDE", "576"))
-    W, H = int(w), int(h)
-    if max(W, H) > max_side:
-        scale = max_side / float(max(W, H))
-        W = int(round(W * scale))
-        H = int(round(H * scale))
-        # Round to multiples of 64 (commonly required by backends)
-        def _round64(n): return max(64, int(round(n / 64.0) * 64))
-        W, H = _round64(W), _round64(H)
-
-    # Horde wants seed as a *string*
-    seed_str = str(int(seed)) if seed is not None else None
-
-    params = {
-        "steps": 22,                # keep well under step limits
-        "width": W,
-        "height": H,
-        "n": 1,
-        "nsfw": bool(nsfw),
-        "sampler_name": "k_euler",
-        "cfg_scale": 6.5,
-    }
-    if seed_str is not None:
-        params["seed"] = seed_str
-
-    job = {
-        "prompt": prompt,
-        "params": params,
-        "r2": True,
-        "censor_nsfw": False,
-        "replacement_filter": True,
-    }
-
-    r = requests.post(
-        "https://stablehorde.net/api/v2/generate/async",
-        json=job, headers=headers, timeout=45
-    )
-
-    if r.status_code == 401:
-        raise RuntimeError("Horde auth failed (401): invalid API key?")
-    if r.status_code == 403:
-        # Likely size/steps/kudos restriction
-        raise RuntimeError(f"Horde 403 (limits): {r.text[:200]}")
-    if r.status_code == 429:
-        raise RuntimeError("Horde rate limited (429): try again soon")
-    if r.status_code not in (200, 202):
-        raise RuntimeError(f"Horde queue HTTP {r.status_code}: {r.text[:200]}")
-
-    rid = (r.json() or {}).get("id")
-    if not rid:
-        raise RuntimeError(f"Horde queue error: {r.text[:200]}")
-
-    waited = 0
-    max_wait = int(os.getenv("HORDE_MAX_WAIT", "360"))
-    while True:
-        s = requests.get(
-            f"https://stablehorde.net/api/v2/generate/check/{rid}",
-            timeout=30
-        ).json()
-        if s.get("faulted"):
-            raise RuntimeError("Horde: job faulted")
-        if s.get("done"):
-            break
-        time.sleep(2)
-        waited += 2
-        if waited > max_wait:
-            raise RuntimeError("Horde: queue timeout")
-
-    st = requests.get(
-        f"https://stablehorde.net/api/v2/generate/status/{rid}",
-        timeout=45
-    ).json()
-    gens = st.get("generations", [])
-    if not gens:
-        raise RuntimeError(f"Horde empty result: {str(st)[:200]}")
-
-    fn = f"out_{int(time.time())}.png"
-    open(fn, "wb").write(base64.b64decode(gens[0]["img"]))
-    return fn
-
+    # Some models accept width/height via parameters; Inference API standard payload doesn’t.
+    r = requests.post(url, headers=headers, json=payload, timeout=120)
+    ct = (r.headers.get("Content-Type") or "").lower()
+    if "image/" in ct:
+        ext = ".jpg" if "jpeg" in ct else ".png"
+        return _write_image_bytes(r.content, ext)
+    # Not an image -> show error
+    raise RuntimeError(f"HF: {ct} {r.text[:200]}")
 
 def generate_image(prompt, w=640, h=896, seed=None, nsfw=True):
-    """
-    Try backends in order:
-      1) FAL (if configured)
-      2) Replicate (if configured)
-      3) Hugging Face Inference API (if HUGGINGFACE_TOKEN set)
-      4) Stable Horde (always last; good for consistent seeds, but queues happen)
-    """
+    """Try providers in order; only save when bytes are real images."""
     errors = []
     tried = []
 
@@ -1499,37 +1281,32 @@ def generate_image(prompt, w=640, h=896, seed=None, nsfw=True):
         try:
             return fn()
         except Exception as e:
-            errors.append(f"{label}: {str(e)[:200]}")
+            errors.append(f"{label}: {e}")
             return None
 
-    # Keep dimensions sensible per backend (HF <= ~768 is safer; Horde anon <= 576)
-    w_int, h_int = int(w), int(h)
+    # 1) Optional HuggingFace first if configured
+    if HF_TOKEN and HF_MODEL_ID:
+        out = _try("HF", lambda: gen_hf(prompt, w=w, h=h, seed=seed, nsfw=nsfw))
+        if out: return out
 
-    # 1) FAL
+    # 2) FAL
     if FAL_KEY:
-        out = _try("FAL", lambda: gen_fal(prompt, w_int, h_int, seed))
-        if out:
-            return out
+        out = _try("FAL", lambda: gen_fal(prompt, w, h, seed))
+        if out: return out
 
-    # 2) Replicate
-    if REPLICATE and os.getenv("REPLICATE_VERSION", "").strip():
-        out = _try("Replicate", lambda: gen_replicate(prompt, w_int, h_int, seed))
-        if out:
-            return out
+    # 3) Replicate
+    if REPLICATE and os.getenv("REPLICATE_VERSION","").strip():
+        out = _try("Replicate", lambda: gen_replicate(prompt, w, h, seed))
+        if out: return out
 
-    # 3) Hugging Face
-    if HUGGINGFACE_TOKEN:
-        # keep <= 768 to avoid 413/oom on some hosted models
-        out = _try("HuggingFace", lambda: gen_huggingface(prompt, min(w_int, 768), min(h_int, 768), seed, nsfw))
-        if out:
-            return out
-
-    # 4) Horde (anon limits: ~576x576; our _spawn_image_job already clamps)
-    out = _try("Horde", lambda: gen_horde(prompt, w_int, h_int, seed, nsfw))
-    if out:
-        return out
+    # 4) Horde (usually reliable fallback)
+    if HORDE:
+        out = _try("Horde", lambda: gen_horde(prompt, w, h, seed, nsfw))
+        if out: return out
 
     raise RuntimeError(f"All backends failed ({', '.join(tried)}): " + " | ".join(errors[:3]))
+
+
 
 # ===== BOOK HELPERS =====
 def book_snack(p):
