@@ -29,7 +29,7 @@ except Exception as e:
     def pick_girl(arg: str, user_id: str) -> str:
         return "(picker unavailable)"
 
-# --- tiny healthcheck server (keeps Railway alive) ---
+# ---tiny healthcheck server (keeps Railway alive) ---
 app = Flask(__name__)
 
 @app.get("/")
