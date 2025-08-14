@@ -1642,9 +1642,18 @@ def persona_reply(p, s, user_text:str) -> str:
             "tell me something oddly specific about you.",
             "what do you want to feel more of this week?"
         ])
-        return f"{_pick(openers)} {('also: ' + quirk) if quirk else ''} {feels}. {ask}"
-HELP = ("Commands:\n"
-# ===== NSFW TEASES FOR NON-OWNER =====
+                return f"{_pick(openers)} {('also: ' + quirk) if quirk else ''} {feels}. {ask}"
+
+# ===== COMMAND HELP TEXT =====
+HELP = (
+    "Commands:\n"
+    "/start - Begin chatting with the bot\n"
+    "/selfie [vibe] - Generate a selfie with optional vibe\n"
+    "/nsfw_on - Enable NSFW mode (owner only)\n"
+    "/nsfw_off - Disable NSFW mode\n"
+    "/help - Show this help message\n"
+)
+    # ===== NSFW TEASES FOR NON-OWNER =====
 TEASE_LINES = [
     "mm, not yet… tease me back first. What’s the last song that gave you goosebumps?",
     "you’ve got me warm, but you have to earn the next step 😇 tell me a very specific thing you notice about mouths.",
