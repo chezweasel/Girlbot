@@ -1770,7 +1770,7 @@ HELP = (
 )
     
 
-    # ===== NSFW TEASES FOR NON-OWNER =====
+# ===== NSFW TEASES FOR NON-OWNER =====
 TEASE_LINES = [
     "mm, not yet… tease me back first. What’s the last song that gave you goosebumps?",
     "you’ve got me warm, but you have to earn the next step 😇 tell me a very specific thing you notice about mouths.",
@@ -1792,6 +1792,7 @@ def send_tease_or_allow_nsfw(p, s, uid, chat) -> bool:
     save_state()
     send_message(chat, f"{p.get('name', 'Girl')}: {TEASE_LINES[i]}")
     return False
+
 
 # ===== /gen COMMAND HANDLER =====
 if low.startswith("/gen"):
@@ -1834,9 +1835,6 @@ if low.startswith("/gen"):
 
     return "OK", 200
 # ===== END /gen =====
-# ===== END /gen =====
-
-# ===== HELP TEXT =====
 HELP = (
     "Commands:\n"
     "hi — menu\n"
