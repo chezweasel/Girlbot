@@ -85,15 +85,33 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "Commands:\n"
-        "/girls — list personas\n"
-        "/pick <#|name> — switch persona\n"
-        "/ping — health check\n\n"
-        "Spicy (suggestive) chat:\n"
-        "/spicy_on, /spicy_off, /spicy_status, /spicy_set <name>, /spicy <message>\n"
-        "(Spicy stays playful/implied; not explicit.)"
+    msg = (
+        "Commands you can use:\n"
+        "• /start – Say hi\n"
+        "• /ping – Check the bot\n"
+        "• /girls – List the girls\n"
+        "• /pick <#|name> – Switch to a girl (examples: /pick 2, /pick Zoey)\n"
+        "\n"
+        "NSFW / Spicy access (ages 18+ only):\n"
+        "• /spicy_on – Request access to explicit chat (DMs only)\n"
+        "• /spicy_off – Turn it off\n"
+        "• /spicy_status – See if spicy mode is on for you\n"
+        "• /spicy – Quick toggle (on/off)\n"
+        "• /spicy_set on|off – Force a setting (admin/dev usage)\n"
+        "\n"
+        "Image generation:\n"
+        "• /gen <prompt> – Make an image (SFW by default)\n"
+        "   Example: /gen cozy portrait in soft window light, 35mm look\n"
+        "• /gen_sfw <prompt> – Force safe image generation\n"
+        "• /gen_nsfw <prompt> – Request adult image generation (18+ only; if enabled)\n"
+        "   Example: /gen_nsfw lingerie photo, moody studio lighting\n"
+        "\n"
+        "Tips:\n"
+        "• Talk in normal sentences—I'll stay in character for the picked girl.\n"
+        "• If a command says it’s unavailable, make sure you’re in a private DM (not a group) and you’ve turned on spicy mode where required.\n"
+        "• If you changed hosting variables, restart the app to apply them.\n"
     )
+    await update.message.reply_text(msg)
 
 async def cmd_ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("pong ✅")
