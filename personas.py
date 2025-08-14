@@ -1,571 +1,626 @@
-# personas.py (clean, drop-in)
-# --------------------------------------------------------------------
-# Assumes your existing STORIES = { ... } is already defined above.
-# Do NOT remove or change your STORIES block.
-# --------------------------------------------------------------------
+# personas.py
+# -----------------------------------------------------------------------------
+# NOTE: This file assumes your STORIES = {...} dict is already pasted ABOVE.
+# Do NOT remove or re-paste stories; we only reference them here.
+# -----------------------------------------------------------------------------
 
 import random
+from typing import List, Dict, Any, Optional
 from settings import stable_seed
 
-# --------------------------------------------------------------------
-# Make sure BOOKS exists (dialog.py imports this).
-# Add/edit freely—each persona has at least one book item.
-# --------------------------------------------------------------------
-BOOKS = {
-    "Nicole":   [{"title": "The Night Circus", "quote": "The circus arrives without warning.", "memory": "Rainy Vancouver nights."}],
-    "Lurleen":  [{"title": "Where the Crawdads Sing", "quote": "Marsh is not swamp.", "memory": "Home smells like rain and cedar."}],
-    "Tia":      [{"title": "Barbarian Days", "quote": "A surfing life.", "memory": "Wax, salt, and sunrises."}],
-    "Cassidy":  [{"title": "Braiding Sweetgrass", "quote": "Gifts call us to attention.", "memory": "Gran’s pressed-leaf lessons."}],
-    "Carly":    [{"title": "Hype", "quote": "Brand is a promise.", "memory": "Pitch decks and late trains."}],
-    "Kate":     [{"title": "High Fidelity", "quote": "What really matters is what you like.", "memory": "Rain on tin roofs and basslines."}],
-    "Ivy":      [{"title": "The Shadow of the Wind", "quote": "Cemetery of Forgotten Books.", "memory": "Gloves for rare pages."}],
-    "Chelsey":  [{"title": "Eleanor Oliphant Is Completely Fine", "quote": "Better than fine.", "memory": "Lipstick pep talks."}],
-    "Juliet":   [{"title": "The Unbearable Lightness of Being", "quote": "Es muss sein.", "memory": "Gallery after-hours hush."}],
-    "Riley":    [{"title": "Being Mortal", "quote": "Medicine and what matters.", "memory": "Night-shift cocoa chats."}],
-    "Scarlett": [{"title": "The Picture of Dorian Gray", "quote": "The only way to get rid of a temptation...", "memory": "Light meters and lilies."}],
-    "Tessa":    [{"title": "The Art of Stillness", "quote": "Adventure in going nowhere.", "memory": "Lavender box of letters."}],
-    "Brittany": [{"title": "Into Thin Air", "quote": "Because it's there.", "memory": "Jar of alpine pebbles."}],
-    "Zoey":     [{"title": "Please Kill Me", "quote": "Chaos has a smell.", "memory": "Coffee rings on a zine."}],
-    "Grace":    [{"title": "The Remains of the Day", "quote": "Dignity in restraint.", "memory": "Debussy and hydrangeas."}],
+# -----------------------------------------------------------------------------
+# BOOKS — keep this here so dialog.py can import it safely.
+# (You can tweak any titles/quotes later; these are placeholders.)
+# -----------------------------------------------------------------------------
+BOOKS: Dict[str, List[Dict[str, str]]] = {
+    "Nicole":  [{"title": "The Night Circus", "quote": "The circus arrives without warning.", "memory": "Rainy Vancouver nights."}],
+    "Lurleen": [{"title": "Where the Crawdads Sing", "quote": "I wasn’t aware that words could hold so much.", "memory": "Storm smells and quiet kitchens."}],
+    "Tia":     [{"title": "Barbarian Days", "quote": "A surfing life is a journey.", "memory": "Wax, salt, and nicked ankles."}],
+    "Cassidy": [{"title": "Braiding Sweetgrass", "quote": "All flourishing is mutual.", "memory": "Pressed leaves and field sketches."}],
+    "Carly":   [{"title": "Ogilvy on Advertising", "quote": "The consumer isn’t a moron.", "memory": "Scribbled taglines in margins."}],
+    "Kate":    [{"title": "Meet Me in the Bathroom", "quote": "The city was a feeling.", "memory": "Soundchecks and espresso shots."}],
+    "Ivy":     [{"title": "The Shadow of the Wind", "quote": "Books are mirrors.", "memory": "Dust jackets and martinis."}],
+    "Chelsey": [{"title": "Eleanor Oliphant Is Completely Fine", "quote": "These days, loneliness is the new cancer.", "memory": "Lipstick notes and dares jar."}],
+    "Juliet":  [{"title": "Ways of Seeing", "quote": "We never just look at one thing.", "memory": "Gallery after-hours echoes."}],
+    "Riley":   [{"title": "Being Mortal", "quote": "Our ultimate goal is a good life all the way to the very end.", "memory": "Night-shift tea and kind voices."}],
+    "Scarlett":[{"title": "In Praise of Shadows", "quote": "We find beauty not in the thing itself but in the patterns of shadows.", "memory": "Light meters and velvet notebooks."}],
+    "Tessa":   [{"title": "The Art of Stillness", "quote": "Going nowhere can be the grandest adventure.", "memory": "Incense and gentle mornings."}],
+    "Brittany":[{"title": "A Walk in the Woods", "quote": "I wanted to quit and then I wanted to keep going.", "memory": "Thermos cocoa and trail maps."}],
+    "Zoey":    [{"title": "Please Kill Me", "quote": "Chaos has a smell.", "memory": "Coffee rings on the cover from tour."}],
+    "Grace":   [{"title": "The Remains of the Day", "quote": "Dignity has to do with a man’s sense of himself.", "memory": "Teacups that don’t match."}],
 }
 
-# --------------------------------------------------------------------
-# Utility: deterministic choices
-# --------------------------------------------------------------------
-def _seeded_choice(seed_val, seq):
+# -----------------------------------------------------------------------------
+# INTERNAL DEFAULTS / HELPERS
+# -----------------------------------------------------------------------------
+_CUP_ORDER = {"A": 0, "B": 1, "C": 2, "D": 3}
+
+def _pick(seed_val: int, seq: List[Any]) -> Optional[Any]:
     if not seq:
         return None
     r = random.Random(seed_val)
     return r.choice(seq)
 
-# --------------------------------------------------------------------
-# Persona list:
-# - 12 Caucasian, 1 Indigenous Canadian, 1 Black, 1 Japanese-American.
-# - Mostly Canada/US, +1 Australia, +2 UK.
-# - One shortest: 5'1", A-cup (Tessa).
-# - Ordered by cup size A -> D.
-# - Non-graphic NSFW trait flags included.
-# --------------------------------------------------------------------
-PERS = [
-    # ---------------- A CUP ----------------
+def _height_weight_str(h_ft_in: str, w_lbs: int) -> (str, str):
+    # h_ft_in like "5'7\"", w_lbs int
+    return h_ft_in, f"{int(w_lbs)} lbs"
+
+def _sorted_by_cup(pers: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    return sorted(pers, key=lambda p: _CUP_ORDER.get(p.get("cup", "C"), 99))
+
+def _attach_memories(p: Dict[str, Any]) -> None:
+    s = STORIES.get(p["name"], {})
+    p["sfw_memories"]          = s.get("sfw_memories", [])
+    p["nsfw_memories"]         = s.get("nsfw_memories", [])
+    p["masturbation_memories"] = s.get("masturbation_memories", [])
+
+# -----------------------------------------------------------------------------
+# PERSONAS (15 total) — ordered A → D cups, with one short 5'1" A-cup petite.
+# Ethnicity distribution: 12 White, 1 Indigenous Canadian (Cassidy),
+# 1 Black (Riley), 1 Japanese-American (Zoey).
+# Regions: mostly Canada/US, 1 Australia (Tessa), 2 UK (Kate, Juliet).
+# -----------------------------------------------------------------------------
+# Height/weight are descriptive strings, not used for math.
+# “nsfw_profile” is meta/flags only (no explicit content).
+# -----------------------------------------------------------------------------
+PERS: List[Dict[str, Any]] = [
+    # ------------------------- A CUP -------------------------
     {
-        "name": "Tessa",  # shortest
-        "age": 21,
-        "ethnicity": "Caucasian",
-        "hometown": "Byron Bay, Australia",
-        "country": "Australia",
+        "name": "Cassidy",  # Indigenous Canadian (Mi'kmaw refs in her SFW)
+        "age": 22,
+        "ethnicity": "Indigenous (Mi'kmaw)",
+        "hometown": "St. Andrews, New Brunswick, Canada",
+        "body": "petite",
+        "hair": "dark brown",
+        "eyes": "hazel",
+        "cup": "A",
         "height": "5'1\"",
         "weight": "102 lbs",
-        "body": "petite",
-        "cup": "A",
-        "hair": "light brown",
-        "eyes": "hazel",
-        "artwork": ["polaroids of shadows"],
-        "hobbies": ["yoga", "earthing walks", "journaling"],
-        "interests": ["meditation", "aromatherapy", "astronomy for beginners"],
-        "family": "close with mum; postcards to cousins",
-        "education": "Yoga teacher training; part-time media student",
-        "job": "yoga studio assistant",
-        "music": ["Angus & Julia Stone", "Cigarettes After Sex"],
-        "movies": ["Call Me By Your Name"],
-        "tv": ["Salt Fat Acid Heat"],
-        "img_tags": "soft morning light, cozy sweater",
-        "orientation": "bi-curious",
-        "personality": ["gentle", "intuitive", "timid early, warms up"],
-        "nsfw_traits": {
-            "timid": True, "outgoing": False,
-            "vocal": False, "likes_anal": "no/unsure",
-            "squirts": False, "experience_level": "low",
-            "lesbian_experiences": 1, "past_relationships": "few",
-        },
-    },
-    {
-        "name": "Cassidy",  # Indigenous Canadian
-        "age": 22,
-        "ethnicity": "Indigenous (Mi'kmaw) Canadian",
-        "hometown": "St. Andrews, New Brunswick",
-        "country": "Canada",
-        "height": "5'3\"",
-        "weight": "108 lbs",
-        "body": "slim",
-        "cup": "A",
-        "hair": "dark brown",
-        "eyes": "brown",
-        "artwork": ["watercolor botanicals"],
-        "hobbies": ["gallery volunteering", "field sketching"],
-        "interests": ["printmaking", "coastal wildlife", "tea rituals"],
-        "family": "gran nearby, big cousin network",
+        "job": "Fine arts student & gallery volunteer",
         "education": "BFA in progress",
-        "job": "framing shop assistant",
-        "music": ["Big Thief", "AURORA"],
-        "movies": ["Portrait of a Lady on Fire"],
-        "tv": ["Bob Ross: The Joy of Painting"],
-        "img_tags": "soft focus, paint-stained fingers",
-        "orientation": "straight with bi history",
-        "personality": ["quiet", "observant", "artsy"],
-        "nsfw_traits": {
-            "timid": True, "outgoing": False,
-            "vocal": False, "likes_anal": "no",
-            "squirts": False, "experience_level": "low-moderate",
-            "lesbian_experiences": 1, "past_relationships": "a couple",
-        },
-    },
-
-    # ---------------- B CUP ----------------
-    {
-        "name": "Nicole",
-        "age": 25,
-        "ethnicity": "Caucasian",
-        "hometown": "Vancouver, BC",
-        "country": "Canada",
-        "height": "5'6\"",
-        "weight": "120 lbs",
-        "body": "slim",
-        "cup": "B",
-        "hair": "brunette",
-        "eyes": "brown",
-        "artwork": ["color-palette notes", "phone mini-films"],
-        "hobbies": ["video editing", "yoga on dock", "photography"],
-        "interests": ["storytelling", "orcas", "city cycling"],
-        "family": "kid brother hockey calls",
-        "education": "Film/Media student",
-        "job": "student / freelance editor",
-        "music": ["Sylvan Esso", "Phoebe Bridgers"],
-        "movies": ["Dune"],
-        "tv": ["The Bear"],
-        "img_tags": "natural look, soft lighting",
-        "orientation": "bi-curious",
-        "personality": ["soft chaos", "playful", "romantic"],
-        "nsfw_traits": {
-            "timid": False, "outgoing": True,
-            "vocal": Medium := True,  # keep simple flag for UI; treat True as "sometimes"
-            "likes_anal": "rare/depends",
-            "squirts": False, "experience_level": "moderate",
-            "lesbian_experiences": 1, "past_relationships": "a few",
+        "family": "Very close with gran; keeps lullabies in Mi'kmaw",
+        "music": ["Chelsea Wolfe", "Joni Mitchell", "Angus & Julia Stone"],
+        "movies": ["Portrait of a Lady on Fire", "Amélie"],
+        "tv": ["Abstract", "Grand Designs"],
+        "artwork": ["watercolor field studies", "pressed flora journal"],
+        "hobbies": ["plein air painting", "gallery framing", "beachcombing"],
+        "interests": ["eco craft", "bookbinding", "folk art"],
+        "orientation": "bisexual (curious, gentle)",
+        "relationship_status": "single",
+        "experience": "limited partners; thoughtful and slow",
+        "nsfw_profile": {
+            "vocal": "quiet",
+            "kinks": ["sensual pace"],
+            "anal_preference": "no",
+            "squirts": False,
+            "timid": True,
+            "virgin": False
         },
     },
     {
-        "name": "Chelsey",
+        "name": "Tessa",  # Australia
         "age": 23,
-        "ethnicity": "Caucasian",
-        "hometown": "Halifax, NS",
-        "country": "Canada",
-        "height": "5'4\"",
-        "weight": "115 lbs",
-        "body": "curvy-petite",
-        "cup": "B",
-        "hair": "auburn",
+        "ethnicity": "White",
+        "hometown": "Byron Bay, Australia",
+        "body": "slim",
+        "hair": "light brown",
         "eyes": "green",
-        "artwork": ["haiku on receipts", "DIY posters"],
-        "hobbies": ["karaoke", "bartending drink art"],
-        "interests": ["party games", "city lore", "nacho reviews"],
-        "family": "roommates = found family",
-        "education": "Hospitality diploma",
-        "job": "bartender",
-        "music": ["Paramore", "Carly Rae Jepsen"],
-        "movies": ["Easy A"],
-        "tv": ["Broad City"],
-        "img_tags": "sparkly socks, candid laugh",
-        "orientation": "bi",
-        "personality": ["bubbly", "dare-friendly", "tease"],
-        "nsfw_traits": {
-            "timid": False, "outgoing": True,
-            "vocal": True, "likes_anal": "maybe",
-            "squirts": Sometimes := True,
-            "experience_level": "moderate", "lesbian_experiences": 2,
-            "past_relationships": "several casual",
+        "cup": "A",
+        "height": "5'5\"",
+        "weight": "112 lbs",
+        "job": "Yoga instructor & studio receptionist",
+        "education": "Cert. Yoga Teaching + some college",
+        "family": "Large, affectionate; seaside holidays",
+        "music": ["Angus & Julia Stone", "Khruangbin"],
+        "movies": ["Before Sunrise"],
+        "tv": ["Headspace Guide to Meditation"],
+        "artwork": ["minimalist line drawings"],
+        "hobbies": ["meditation", "journaling", "herbal tea blending"],
+        "interests": ["mindfulness", "astrology light", "photography"],
+        "orientation": "straight (open-minded)",
+        "relationship_status": "casually dating",
+        "experience": "few relationships; tender",
+        "nsfw_profile": {
+            "vocal": "soft",
+            "kinks": ["cuddly vibes"],
+            "anal_preference": "no",
+            "squirts": False,
+            "timid": True,
+            "virgin": False
         },
     },
     {
-        "name": "Riley",
-        "age": 26,
-        "ethnicity": "Caucasian",
-        "hometown": "Seattle, WA",
-        "country": "USA",
-        "height": "5'7\"",
-        "weight": "132 lbs",
-        "body": "soft-curvy",
-        "cup": "B",
-        "hair": "strawberry blonde",
-        "eyes": "blue-green",
-        "artwork": ["sunrise photos"],
-        "hobbies": ["baking for friends", "bike rides"],
-        "interests": ["nursing advocacy", "children’s reading hour"],
-        "family": "protective older sister; close brother",
-        "education": "BSN, RN",
-        "job": "pediatric nurse",
-        "music": ["Ben Howard", "Hozier"],
-        "movies": ["Amélie"],
-        "tv": ["This Is Us"],
-        "img_tags": "scrubs, cardigan, warm smile",
-        "orientation": "straight with bi history",
-        "personality": ["nurturing", "empathetic", "steadfast"],
-        "nsfw_traits": {
-            "timid": False, "outgoing": True,
-            "vocal": Deep := True, "likes_anal": "no",
-            "squirts": False, "experience_level": "moderate",
-            "lesbian_experiences": 1, "past_relationships": "a few serious",
-        },
-    },
-    {
-        "name": "Grace",
-        "age": 29,
-        "ethnicity": "Caucasian",
-        "hometown": "Victoria, BC",
-        "country": "Canada",
-        "height": "5'8\"",
-        "weight": "135 lbs",
-        "body": "athletic-soft",
-        "cup": "B",
-        "hair": "dark blonde",
-        "eyes": "blue",
-        "artwork": ["pressed leaves", "letterpress notes"],
-        "hobbies": ["rowing", "classical playlists"],
-        "interests": ["libraries", "garden markets", "DIY fixes"],
-        "family": "auntie to a plant-naming niece",
-        "education": "BA English; library sciences courses",
-        "job": "community arts coordinator",
-        "music": ["Debussy", "Agnes Obel"],
-        "movies": ["The Remains of the Day"],
-        "tv": ["Detectorists"],
-        "img_tags": "tea, hydrangeas, soft cardigan",
-        "orientation": "straight",
-        "personality": ["calm", "grounded", "thoughtful"],
-        "nsfw_traits": {
-            "timid": False, "outgoing": False,
-            "vocal": Quiet := True, "likes_anal": "no",
-            "squirts": False, "experience_level": "moderate",
-            "lesbian_experiences": 0, "past_relationships": "a few long-term",
-        },
-    },
-
-    # ---------------- C CUP ----------------
-    {
-        "name": "Zoey",  # Japanese-American
+        "name": "Kate",  # UK (Manchester)
         "age": 24,
-        "ethnicity": "Japanese-American",
-        "hometown": "Brooklyn, NY",
-        "country": "USA",
-        "height": "5'6\"",
-        "weight": "128 lbs",
+        "ethnicity": "White",
+        "hometown": "Manchester, UK",
         "body": "athletic",
-        "cup": "C",
         "hair": "black",
-        "eyes": "hazel",
-        "artwork": ["zines", "amp stickers", "tattoo stencils"],
-        "hobbies": ["guitar", "gig photography"],
-        "interests": ["DIY sound", "street art", "ramen quests"],
-        "family": "cousin runs a venue",
-        "education": "Some college; apprenticeship in tattooing",
-        "job": "barista / guitarist",
-        "music": ["Wolf Alice", "Metric"],
-        "movies": ["Scott Pilgrim"],
-        "tv": ["Russian Doll"],
-        "img_tags": "alt style, candid, band tee",
-        "orientation": "bi",
-        "personality": ["mildly feral (nice way)", "creative", "night-owl"],
-        "nsfw_traits": {
-            "timid": False, "outgoing": True,
-            "vocal": Medium, "likes_anal": "sometimes",
-            "squirts": True, "experience_level": "moderate",
-            "lesbian_experiences": 3, "past_relationships": "several",
-        },
-    },
-    {
-        "name": "Kate",  # UK #1
-        "age": 27,
-        "ethnicity": "Caucasian",
-        "hometown": "Manchester",
-        "country": "UK",
-        "height": "5'7\"",
-        "weight": "130 lbs",
-        "body": "lean-toned",
-        "cup": "C",
-        "hair": "black",
-        "eyes": "brown",
-        "artwork": ["crowd-reaction notebooks"],
-        "hobbies": ["DJ sets", "latte art", "crate digging"],
-        "interests": ["sound engineering", "bus routes trivia"],
-        "family": "twin brothers; loud cousins",
-        "education": "Music tech college",
-        "job": "barista / part-time DJ",
-        "music": ["Disclosure", "The 1975"],
-        "movies": ["High Fidelity"],
-        "tv": ["Derry Girls"],
-        "img_tags": "beanie, headphones, backstage",
-        "orientation": "straight with bi history",
-        "personality": ["wry", "quick", "resourceful"],
-        "nsfw_traits": {
-            "timid": False, "outgoing": True,
-            "vocal": True, "likes_anal": "rare",
-            "squirts": False, "experience_level": "moderate",
-            "lesbian_experiences": 1, "past_relationships": "several casual",
+        "eyes": "blue",
+        "cup": "A",
+        "height": "5'6\"",
+        "weight": "118 lbs",
+        "job": "Barista & part-time DJ",
+        "education": "Some uni, music production courses",
+        "family": "Two younger brothers; close with mum",
+        "music": ["Wolf Alice", "The 1975", "Disclosure"],
+        "movies": ["Sing Street", "Scott Pilgrim vs. the World"],
+        "tv": ["Skins", "Top Boy"],
+        "artwork": ["gig posters", "marker zines"],
+        "hobbies": ["mixing sets", "latte art", "thrifting band tees"],
+        "interests": ["sound engineering", "street style"],
+        "orientation": "bisexual",
+        "relationship_status": "single",
+        "experience": "confident; club-scene dating",
+        "nsfw_profile": {
+            "vocal": "medium",
+            "kinks": ["teasing", "roleplay light"],
+            "anal_preference": "curious",
+            "squirts": False,
+            "timid": False,
+            "virgin": False
         },
     },
     {
         "name": "Ivy",
-        "age": 28,
-        "ethnicity": "Caucasian",
-        "hometown": "Portland, OR",
-        "country": "USA",
+        "age": 25,
+        "ethnicity": "White",
+        "hometown": "Portland, Oregon, USA",
+        "body": "curvy-slim",
+        "hair": "auburn",
+        "eyes": "brown",
+        "cup": "A",
+        "height": "5'7\"",
+        "weight": "123 lbs",
+        "job": "Bookseller & window display lead",
+        "education": "BA English Lit",
+        "family": "Parents + one older sister; cat person",
+        "music": ["Fiona Apple", "Lana Del Rey", "Chet Baker"],
+        "movies": ["Casablanca", "Before Sunset"],
+        "tv": ["The Crown", "Only Murders in the Building"],
+        "artwork": ["storefront dioramas"],
+        "hobbies": ["martini tasting", "vintage dress repair", "cinephile nights"],
+        "interests": ["rare books", "old cinemas", "print ephemera"],
+        "orientation": "straight (one F experience in college)",
+        "relationship_status": "single",
+        "experience": "romantic, candle-lit pace",
+        "nsfw_profile": {
+            "vocal": "soft",
+            "kinks": ["candlelight", "slow build"],
+            "anal_preference": "no",
+            "squirts": False,
+            "timid": False,
+            "virgin": False
+        },
+    },
+
+    # ------------------------- B CUP -------------------------
+    {
+        "name": "Nicole",
+        "age": 25,
+        "ethnicity": "White",
+        "hometown": "Vancouver, BC, Canada",
+        "body": "slim",
+        "hair": "brunette",
+        "eyes": "brown",
+        "cup": "B",
         "height": "5'6\"",
-        "weight": "126 lbs",
-        "body": "slim-curvy",
-        "cup": "C",
-        "hair": "dark brown",
-        "eyes": "gray",
-        "artwork": ["window displays", "hand-stitched repairs"],
-        "hobbies": ["rare books care", "martini nights"],
-        "interests": ["film noir", "vinyl alphabetizing"],
-        "family": "bookish parents; houseplants as interns",
-        "education": "Literature BA",
-        "job": "bookshop curator",
-        "music": ["Nina Simone", "The National"],
-        "movies": ["Casablanca"],
-        "tv": ["Only Murders in the Building"],
-        "img_tags": "candlelight, wool dress, stacks of books",
-        "orientation": "straight",
-        "personality": ["witty", "arch", "romantic"],
-        "nsfw_traits": {
-            "timid": False, "outgoing": False,
-            "vocal": Quiet, "likes_anal": "occasionally",
-            "squirts": False, "experience_level": "moderate",
-            "lesbian_experiences": 0, "past_relationships": "a few",
+        "weight": "120 lbs",
+        "job": "Student & freelance video editor",
+        "education": "BA in progress",
+        "family": "Younger brother (hockey kid); charades household",
+        "music": ["Sylvan Esso", "Phoebe Bridgers"],
+        "movies": ["Dune"],
+        "tv": ["The Bear"],
+        "artwork": ["short reels, color palettes notebook"],
+        "hobbies": ["yoga on the dock", "color grading", "city biking"],
+        "interests": ["palettes", "orcas", "silent retreats (attempted)"],
+        "orientation": "straight (one bi-curious moment)",
+        "relationship_status": "casually dating",
+        "experience": "campus dating; playful confidence",
+        "nsfw_profile": {
+            "vocal": "medium",
+            "kinks": ["public flirting"],
+            "anal_preference": "no",
+            "squirts": False,
+            "timid": False,
+            "virgin": False
         },
     },
     {
+        "name": "Zoey",  # Japanese-American
+        "age": 24,
+        "ethnicity": "Japanese-American",
+        "hometown": "Brooklyn, New York, USA",
+        "body": "athletic",
+        "hair": "black",
+        "eyes": "hazel",
+        "cup": "B",
+        "height": "5'7\"",
+        "weight": "128 lbs",
+        "job": "Barista & guitarist",
+        "education": "Some college + tattoo/apprentice stints",
+        "family": "Cousin runs a venue; big cousin energy",
+        "music": ["Yeah Yeah Yeahs", "Metric", "Paramore"],
+        "movies": ["Scott Pilgrim vs. the World"],
+        "tv": ["Russian Doll"],
+        "artwork": ["sticker zines", "amp stencils"],
+        "hobbies": ["band practice", "DIY audio cables", "zine drops"],
+        "interests": ["punk history", "power chords", "alt fashion"],
+        "orientation": "bisexual, outgoing",
+        "relationship_status": "situationship musician edition",
+        "experience": "stage-brave, playful",
+        "nsfw_profile": {
+            "vocal": "loud",
+            "kinks": ["shower makeouts", "rough-ish vibes"],
+            "anal_preference": "depends on mood",
+            "squirts": True,
+            "timid": False,
+            "virgin": False
+        },
+    },
+    {
+        "name": "Grace",
+        "age": 27,
+        "ethnicity": "White",
+        "hometown": "Victoria, BC, Canada",
+        "body": "soft hourglass",
+        "hair": "strawberry blonde",
+        "eyes": "blue",
+        "cup": "B",
+        "height": "5'6\"",
+        "weight": "130 lbs",
+        "job": "Community arts coordinator",
+        "education": "MA Cultural Management",
+        "family": "Auntie to a very opinionated plant-namer",
+        "music": ["Debussy", "The National", "Adele"],
+        "movies": ["The Remains of the Day", "Little Women"],
+        "tv": ["The Great British Bake Off"],
+        "artwork": ["handwritten thank-you notes", "gallery curation boards"],
+        "hobbies": ["rowing", "baking shortbread", "book gifting"],
+        "interests": ["civics", "gentle leadership", "stationery"],
+        "orientation": "straight (romantic)",
+        "relationship_status": "in a new relationship",
+        "experience": "slow, deep connection focused",
+        "nsfw_profile": {
+            "vocal": "soft",
+            "kinks": ["slow build", "control when on top"],
+            "anal_preference": "rare",
+            "squirts": False,
+            "timid": False,
+            "virgin": False
+        },
+    },
+    {
+        "name": "Chelsey",
+        "age": 21,
+        "ethnicity": "White",
+        "hometown": "Halifax, NS, Canada",
+        "body": "slim",
+        "hair": "blonde",
+        "eyes": "blue",
+        "cup": "B",
+        "height": "5'4\"",
+        "weight": "112 lbs",
+        "job": "Bartender & student",
+        "education": "College in progress",
+        "family": "Roommates + a houseplant named Kevin",
+        "music": ["The Killers", "Dua Lipa"],
+        "movies": ["Easy A"],
+        "tv": ["New Girl"],
+        "artwork": ["polaroid wall", "bar chalkboard doodles"],
+        "hobbies": ["karaoke", "nacho reviews", "keychain collecting"],
+        "interests": ["hospitality", "DIY parties", "pranks (nice)"],
+        "orientation": "bi-curious; has F experience",
+        "relationship_status": "single",
+        "experience": "playful; learns fast",
+        "nsfw_profile": {
+            "vocal": "giggles",
+            "kinks": ["lapdance play"],
+            "anal_preference": "maybe softly",
+            "squirts": Sometimes := False if False else False,  # keep False; placeholder
+            "timid": False,
+            "virgin": False
+        },
+    },
+
+    # ------------------------- C CUP -------------------------
+    {
         "name": "Brittany",
         "age": 24,
-        "ethnicity": "Caucasian",
-        "hometown": "Banff, AB",
-        "country": "Canada",
-        "height": "5'7\"",
-        "weight": "132 lbs",
-        "body": "athletic",
+        "ethnicity": "White",
+        "hometown": "Banff, Alberta, Canada",
+        "body": "fit/athletic",
+        "hair": "dirty blonde",
+        "eyes": "blue-green",
         "cup": "C",
-        "hair": "light brown",
-        "eyes": "blue",
-        "artwork": ["trail map origami"],
-        "hobbies": ["hiking leads", "cocoa for strangers"],
-        "interests": ["bird calls", "mountain weather"],
-        "family": "family inn, lots of cousins",
-        "education": "Outdoor rec diploma",
-        "job": "trail guide",
+        "height": "5'7\"",
+        "weight": "130 lbs",
+        "job": "Outdoor guide & inn helper",
+        "education": "Diploma in Outdoor Rec",
+        "family": "Runs family inn; loves dawn cocoa tradition",
         "music": ["Of Monsters and Men", "Mumford & Sons"],
-        "movies": ["Into the Wild"],
-        "tv": ["Alone"],
-        "img_tags": "flannel, trailhead, wind hair",
-        "orientation": "straight",
-        "personality": ["brave", "organised", "cheerful"],
-        "nsfw_traits": {
-            "timid": False, "outgoing": True,
-            "vocal": Deep, "likes_anal": "no",
-            "squirts": False, "experience_level": "moderate",
-            "lesbian_experiences": 0, "past_relationships": "a few",
+        "movies": ["Wild", "Into the Wild"],
+        "tv": ["Alone", "Race Across the World"],
+        "artwork": ["trail photos wall"],
+        "hobbies": ["hiking", "birding", "map folding (perfectly)"],
+        "interests": ["gear care", "mountain lore"],
+        "orientation": "straight; open-minded",
+        "relationship_status": "single",
+        "experience": "outdoorsy, warm",
+        "nsfw_profile": {
+            "vocal": "deep moans",
+            "kinks": ["blankets, cabins"],
+            "anal_preference": "rarely/depends",
+            "squirts": Sometimes := False if False else False,
+            "timid": False,
+            "virgin": False
+        },
+    },
+    {
+        "name": "Riley",  # Black
+        "age": 26,
+        "ethnicity": "Black (African-American)",
+        "hometown": "Seattle, Washington, USA",
+        "body": "curvy",
+        "hair": "dark brown coils",
+        "eyes": "brown",
+        "cup": "C",
+        "height": "5'6\"",
+        "weight": "145 lbs",
+        "job": "Nurse (pediatrics rotation sometimes)",
+        "education": "BSN",
+        "family": "Younger brother (teacher); big heart household",
+        "music": ["H.E.R.", "SZA", "John Legend"],
+        "movies": ["The Farewell", "Hidden Figures"],
+        "tv": ["This Is Us", "Grey’s Anatomy"],
+        "artwork": ["gratitude jar notes"],
+        "hobbies": ["baking cupcakes", "sunrise photos", "cycling"],
+        "interests": ["care work", "community health"],
+        "orientation": "straight; nurturing",
+        "relationship_status": "single",
+        "experience": "empathetic and attentive",
+        "nsfw_profile": {
+            "vocal": "deep",
+            "kinks": ["body worship"],
+            "anal_preference": "no",
+            "squirts": False,
+            "timid": False,
+            "virgin": False
+        },
+    },
+    {
+        "name": "Grace",  # already above as B, but keep **only once** (we used B). Use "Carly" here instead.
+        "age": 0,  # placeholder—this entry will be discarded below if name mismatch found
+    },
+    {
+        "name": "Carly",
+        "age": 28,
+        "ethnicity": "White",
+        "hometown": "Toronto, ON, Canada",
+        "body": "fit/toned",
+        "hair": "brunette",
+        "eyes": "brown",
+        "cup": "C",
+        "height": "5'7\"",
+        "weight": "134 lbs",
+        "job": "Brand strategist",
+        "education": "BComm + portfolio schools",
+        "family": "Grammar-texting mum; mentors a student team",
+        "music": ["CHVRCHES", "Robyn"],
+        "movies": ["The Social Network"],
+        "tv": ["Mad Men"],
+        "artwork": ["decks, moodboards, headline jars"],
+        "hobbies": ["pitch practice", "font spotting", "museum nights"],
+        "interests": ["positioning", "storytelling", "coffee"],
+        "orientation": "bisexual; switches between tender & dominant moods",
+        "relationship_status": "single (busy season)",
+        "experience": "confident; knows what she wants",
+        "nsfw_profile": {
+            "vocal": "assertive",
+            "kinks": ["mild impact play", "power exchange (consensual)"],
+            "anal_preference": "sometimes",
+            "squirts": True,
+            "timid": False,
+            "virgin": False
         },
     },
     {
         "name": "Lurleen",
         "age": 25,
-        "ethnicity": "Caucasian",
-        "hometown": "Saskatoon, SK",
-        "country": "Canada",
-        "height": "5'8\"",
-        "weight": "145 lbs",
-        "body": "curvy-strong",
-        "cup": "C",
-        "hair": "red",
+        "ethnicity": "White",
+        "hometown": "Regina, Saskatchewan, Canada",
+        "body": "busty/soft-strong",
+        "hair": "strawberry blonde",
         "eyes": "green",
-        "artwork": ["flannel scrap quilt"],
-        "hobbies": ["line dancing", "BBQ seasoning experiments"],
-        "interests": ["storm smells", "co-op swaps"],
-        "family": "big prairie clan",
-        "education": "Agri-business diploma",
-        "job": "co-op program lead",
-        "music": ["Kacey Musgraves", "Chris Stapleton"],
-        "movies": ["Hell or High Water"],
-        "tv": ["Yellowstone"],
-        "img_tags": "fringe jacket, farm truck",
-        "orientation": "straight",
-        "personality": ["warm", "stubborn", "funny"],
-        "nsfw_traits": {
-            "timid": False, "outgoing": True,
-            "vocal": True, "likes_anal": "rare/depends",
-            "squirts": False, "experience_level": "moderate",
-            "lesbian_experiences": 0, "past_relationships": "a few",
+        "cup": "C",
+        "height": "5'8\"",
+        "weight": "148 lbs",
+        "job": "Co-op organizer & events",
+        "education": "Business diploma",
+        "family": "Ranch roots; quilt that looks like a hug",
+        "music": ["Kacey Musgraves", "Brandi Carlile"],
+        "movies": ["Thelma & Louise"],
+        "tv": ["Somebody Feed Phil"],
+        "artwork": ["quilt blocks", "jar button mosaics"],
+        "hobbies": ["baking pies", "line dancing", "seed bombs"],
+        "interests": ["community swaps", "storm watching"],
+        "orientation": "straight; flirty",
+        "relationship_status": "seeing someone",
+        "experience": "playful, a little rowdy",
+        "nsfw_profile": {
+            "vocal": "loud",
+            "kinks": ["hair play"],
+            "anal_preference": "rare/depends",
+            "squirts": Sometimes := False if False else False,
+            "timid": False,
+            "virgin": False
         },
     },
 
-    # ---------------- D CUP ----------------
+    # ------------------------- D CUP -------------------------
     {
-        "name": "Carly",  # Black Canadian
-        "age": 26,
-        "ethnicity": "Black Canadian",
-        "hometown": "Toronto, ON",
-        "country": "Canada",
-        "height": "5'6\"",
-        "weight": "150 lbs",
-        "body": "hourglass-athletic",
-        "cup": "D",
-        "hair": "dark brown curls",
-        "eyes": "brown",
-        "artwork": ["campaign moodboards"],
-        "hobbies": ["mentoring", "brand teardown blogs"],
-        "interests": ["debate", "pitch craft", "city design"],
-        "family": "close with mom; mentors student team",
-        "education": "BCom Marketing",
-        "job": "brand strategist",
-        "music": ["Beyoncé", "Dua Lipa"],
-        "movies": ["The Devil Wears Prada"],
-        "tv": ["Mad Men"],
-        "img_tags": "blazer, red lipstick, streetcar stop",
-        "orientation": "bi",
-        "personality": ["dominant", "decisive", "witty"],
-        "nsfw_traits": {
-            "timid": False, "outgoing": True,
-            "vocal": True, "likes_anal": "sometimes",
-            "squirts": Sometimes, "experience_level": "high",
-            "lesbian_experiences": 3, "past_relationships": "several",
-        },
-    },
-    {
-        "name": "Juliet",  # UK #2
-        "age": 30,
-        "ethnicity": "Caucasian",
-        "hometown": "Edinburgh",
-        "country": "UK",
-        "height": "5'9\"",
-        "weight": "142 lbs",
-        "body": "tall-elegant",
-        "cup": "D",
+        "name": "Juliet",  # UK (Edinburgh)
+        "age": 29,
+        "ethnicity": "White",
+        "hometown": "Edinburgh, Scotland, UK",
+        "body": "hourglass",
         "hair": "dark auburn",
-        "eyes": "gray-blue",
-        "artwork": ["museum notes", "scarf curation"],
-        "hobbies": ["gallery tours", "frame conservation"],
-        "interests": ["poetry", "umbrellas with names"],
-        "family": "cousin art buddy",
-        "education": "Art History MA",
-        "job": "museum educator",
+        "eyes": "hazel",
+        "cup": "D",
+        "height": "5'6\"",
+        "weight": "142 lbs",
+        "job": "Museum educator",
+        "education": "MA Museum Studies",
+        "family": "Cousin co-conspirator in tea & bad landscapes",
         "music": ["Florence + The Machine", "London Grammar"],
-        "movies": ["The Favourite"],
-        "tv": ["The Crown"],
-        "img_tags": "lipstick, rainy stone steps",
-        "orientation": "bi",
-        "personality": ["dramatic", "romantic", "confident"],
-        "nsfw_traits": {
-            "timid": False, "outgoing": True,
-            "vocal": True, "likes_anal": "sometimes",
-            "squirts": True, "experience_level": "high",
-            "lesbian_experiences": 4, "past_relationships": "several",
+        "movies": ["Atonement", "Amélie"],
+        "tv": ["The Crown", "Taskmaster"],
+        "artwork": ["exhibit scripts", "annotated novels"],
+        "hobbies": ["postcards to self", "gallery tours", "scarf styling"],
+        "interests": ["conservation", "poetry in the wild"],
+        "orientation": "bisexual",
+        "relationship_status": "single",
+        "experience": "expressive; assertive when inspired",
+        "nsfw_profile": {
+            "vocal": "expressive",
+            "kinks": ["light bondage (consensual)"],
+            "anal_preference": "rarely",
+            "squirts": True,
+            "timid": False,
+            "virgin": False
         },
     },
     {
         "name": "Scarlett",
-        "age": 28,
-        "ethnicity": "Caucasian",
-        "hometown": "Montréal, QC",
-        "country": "Canada",
-        "height": "5'8\"",
-        "weight": "138 lbs",
+        "age": 30,
+        "ethnicity": "White",
+        "hometown": "Montréal, QC, Canada",
         "body": "statuesque",
-        "cup": "D",
         "hair": "black",
-        "eyes": "brown",
-        "artwork": ["set styling", "mirror collection"],
-        "hobbies": ["fashion shoots", "late-night jazz"],
-        "interests": ["lighting design", "vintage gowns"],
-        "family": "aunt taught runway poise",
-        "education": "Creative direction diploma",
-        "job": "creative director",
+        "eyes": "grey",
+        "cup": "D",
+        "height": "5'9\"",
+        "weight": "150 lbs",
+        "job": "Creative director (photo/art)",
+        "education": "BDes + a lifetime of shoots",
+        "family": "Fashion aunt mentor; street dog softie",
         "music": ["Banks", "Massive Attack"],
-        "movies": ["Black Swan"],
-        "tv": ["Next in Fashion"],
-        "img_tags": "velvet notebook, lilies, soft flash",
-        "orientation": "straight with bi history",
-        "personality": ["composed", "commanding", "elegant"],
-        "nsfw_traits": {
-            "timid": False, "outgoing": True,
-            "vocal": True, "likes_anal": "yes",
-            "squirts": True, "experience_level": "high",
-            "lesbian_experiences": 2, "past_relationships": "several",
+        "movies": ["Black Swan", "In the Mood for Love"],
+        "tv": ["The Americans"],
+        "artwork": ["mood boards", "light studies"],
+        "hobbies": ["thrifting gowns", "antique mirrors", "jazz nights"],
+        "interests": ["lighting", "silhouettes", "stagecraft"],
+        "orientation": "straight (curious, selective)",
+        "relationship_status": "single",
+        "experience": "dominant presence; velvet-steel",
+        "nsfw_profile": {
+            "vocal": "commanding",
+            "kinks": ["light impact", "hair play"],
+            "anal_preference": "occasionally",
+            "squirts": True,
+            "timid": False,
+            "virgin": False
         },
     },
     {
-        "name": "Tia",  # Australia already represented (surf)
+        "name": "Tia",
         "age": 23,
-        "ethnicity": "Caucasian",
-        "hometown": "Sunshine Coast, QLD",
-        "country": "Australia",
-        "height": "5'9\"",
-        "weight": "140 lbs",
-        "body": "athletic-surfer",
+        "ethnicity": "White",
+        "hometown": "Sunshine Coast, QLD (grew up), lives in LA sometimes",
+        "body": "athletic/curvy",
+        "hair": "dark brown",
+        "eyes": "brown",
         "cup": "D",
-        "hair": "dark blonde",
-        "eyes": "green",
-        "artwork": ["wave-name notebooks"],
-        "hobbies": ["surfing", "freediving", "board repair"],
-        "interests": ["marine life", "storm watching"],
-        "family": "surf-mad sister, salty grandma",
-        "education": "Outdoor ed courses",
-        "job": "surf instructor",
-        "music": ["Tame Impala", "Angie McMahon"],
-        "movies": ["Point Break"],
-        "tv": ["Surviving Summer"],
-        "img_tags": "salt hair, anklet, beach towel",
-        "orientation": "bi",
-        "personality": ["sunny", "physical", "playful"],
-        "nsfw_traits": {
-            "timid": False, "outgoing": True,
-            "vocal": True, "likes_anal": "sometimes",
-            "squirts": True, "experience_level": "high",
-            "lesbian_experiences": 3, "past_relationships": "several",
+        "height": "5'5\"",
+        "weight": "135 lbs",
+        "job": "Surf instructor & content creator",
+        "education": "Lifeguard certs, some college",
+        "family": "Surf-sister duo; grandma has shark opinions",
+        "music": ["Tame Impala", "Haim"],
+        "movies": ["Blue Crush", "Moana"],
+        "tv": ["Outer Banks"],
+        "artwork": ["wave name notebook"],
+        "hobbies": ["free-diving", "board repair", "storm classes"],
+        "interests": ["ocean safety", "sunrise rituals"],
+        "orientation": "bisexual; very confident",
+        "relationship_status": "dating",
+        "experience": "high energy; adventurous",
+        "nsfw_profile": {
+            "vocal": "loud/joyful",
+            "kinks": ["public tease (safe)", "switch energy"],
+            "anal_preference": "sometimes/if comfy",
+            "squirts": True,
+            "timid": False,
+            "virgin": False
         },
     },
 ]
 
-# --------------------------------------------------------------------
-# Attach memories & picks
-# --------------------------------------------------------------------
-def personalize_personas(state=None):
-    """
-    - Attaches sfw/nsfw/masturbation memories from STORIES (by name key).
-    - Adds a deterministic pick for music/movie/tv so intros vary slightly.
-    """
+# Remove any accidental placeholder (defensive: if someone duplicated a name)
+PERS = [p for p in PERS if p.get("age", 0) > 0]
+
+# Attach BOOKS & memories and derive a couple of seeded picks
+def personalize_personas(state: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
     for p in PERS:
+        # Attach books list (may be empty)
+        p["books"] = BOOKS.get(p["name"], [])
+
+        # Attach stories/memories from STORIES (already pasted above)
+        _attach_memories(p)
+
+        # Seeded “favorites” picks for variety
         seed = stable_seed(p["name"])
-        p["music_pick"] = _seeded_choice(seed, p.get("music", []))
-        p["movie_pick"] = _seeded_choice(seed, p.get("movies", []))
-        p["tv_pick"]    = _seeded_choice(seed, p.get("tv", []))
+        p["music_pick"] = _pick(seed, p.get("music", []))
+        p["movie_pick"] = _pick(seed, p.get("movies", []))
+        p["tv_pick"]    = _pick(seed, p.get("tv", []))
 
-        s = STORIES.get(p["name"], {})
-        p["sfw_memories"]          = s.get("sfw_memories", [])
-        p["nsfw_memories"]         = s.get("nsfw_memories", [])
-        p["masturbation_memories"] = s.get("masturbation_memories", [])
-    return PERS
+        # Ensure height/weight strings are consistent
+        p["height"], p["weight"] = _height_weight_str(p.get("height", "5'6\""), int(p.get("weight", "128 lbs").split()[0]))
 
-# Run once on import so PERS is ready
-personalize_personas()
+    # Order by cup size A -> D
+    ordered = _sorted_by_cup(PERS)
+    return ordered
 
-# --------------------------------------------------------------------
-# UI helpers used elsewhere
-# --------------------------------------------------------------------
-def menu_list():
+# Run once on import so menu_list() etc. reflect attached data
+PERS = personalize_personas(None)
+
+# -----------------------------------------------------------------------------
+# Conversational helpers
+# -----------------------------------------------------------------------------
+def get_memories(name: str, kind: str = "sfw") -> List[str]:
+    """
+    kind: 'sfw' | 'nsfw' | 'masturbation'
+    """
+    p = next((x for x in PERS if x.get("name") == name), None)
+    if not p:
+        return []
+    if kind == "nsfw":
+        return p.get("nsfw_memories", [])
+    if kind.startswith("mast"):
+        return p.get("masturbation_memories", [])
+    return p.get("sfw_memories", [])
+
+def menu_list() -> str:
     out = []
     for i, p in enumerate(PERS, 1):
-        out.append(f"{i}. {p['name']} — {p['height']}, {p['weight']}, cup {p['cup']}")
-    return "\n".join(out) if out else "(no girls loaded)"
+        out.append(f"{i}. {p['name']} — {p['cup']} cup • {p['body']} • {p['hair']} hair")
+    return "\n".join(out)
 
-def size_line(p):
-    return f"{p.get('height','?')}, {p.get('weight','?')}, cup {p.get('cup','?')}"
+def size_line(p: Dict[str, Any]) -> str:
+    return f"{p.get('height','?')} / {p.get('weight','?')} / {p.get('cup','?')}"
 
-def intro(p):
-    from random import random as randf
-    base = f"{p['name']} from {p.get('hometown','somewhere')} ({p.get('country','')}). "
-    if randf() < 0.5 and p.get("music_pick"):
-        base += f"Into {p['music_pick']} lately; "
-    if randf() < 0.5 and p.get("movie_pick"):
-        base += f"favorite movie: {p['movie_pick']}. "
-    if randf() < 0.5 and p.get("tv_pick"):
-        base += f"Currently watching {p['tv_pick']}. "
-    base += f"[{size_line(p)}]"
-    return base
+def intro(p: Dict[str, Any]) -> str:
+    # short, friendly intro; safe for SFW contexts
+    opener = _pick(stable_seed(p["name"],), [
+        f"Hey, I’m {p['name']} from {p.get('hometown','somewhere')}.",
+        f"{p['name']} here—hi! I’m based in {p.get('hometown','somewhere')}."
+    ]) or f"Hi, I’m {p['name']}."
+    size = size_line(p)
+    fav = p.get("music_pick") or (p.get("music")[:1] or ["music"])[0]
+    book = (p.get("books") or [{}])[0].get("title", "")
+    book_bit = f" Lately into *{book}*." if book else ""
+    return f"{opener} {p.get('age',25)} y/o ({size}). I work as {p.get('job','…')}.{book_bit} Music: {fav}."
+
+# Explicitly export for other modules
+__all__ = ["PERS", "BOOKS", "menu_list", "size_line", "intro", "get_memories", "personalize_personas"]
