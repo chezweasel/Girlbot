@@ -1642,7 +1642,7 @@ def persona_reply(p, s, user_text:str) -> str:
             "tell me something oddly specific about you.",
             "what do you want to feel more of this week?"
         ])
-                return f"{_pick(openers)} {('also: ' + quirk) if quirk else ''} {feels}. {ask}"
+        return f"{_pick(openers)} {('also: ' + quirk) if quirk else ''} {feels}. {ask}"
 
 # ===== COMMAND HELP TEXT =====
 HELP = (
