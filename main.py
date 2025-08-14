@@ -1654,7 +1654,7 @@ HELP = (
     "/help - Show this help message\n"
 )
     
-    # ===== NSFW TEASES FOR NON-OWNER =====
+
     # ===== NSFW TEASES FOR NON-OWNER =====
 TEASE_LINES = [
     "mm, not yet… tease me back first. What’s the last song that gave you goosebumps?",
@@ -1667,17 +1667,38 @@ def send_tease_or_allow_nsfw(p, s, uid, chat) -> bool:
     Returns True if NSFW is allowed (owner), False if we teased (non-owner).
     For non-owner with NSFW on, sends a rotating tease and blocks NSFW.
     """
-    # Owner = always allowed
-    if str(uid) == OWNER_ID:
+    # Always allow if it's the owner
+    if str(uid) == str(OWNER_ID):
         return True
 
-    # Non-owner asking for NSFW → tease instead
+    # Non-owner → send tease instead of NSFW
     i = s.get("tease_count", 0) % len(TEASE_LINES)
-    line = TEASE_LINES[i]
     s["tease_count"] = s.get("tease_count", 0) + 1
     save_state()
-    send_message(chat, f"{p.get('name','Girl')}: {line}")
+    send_message(chat, f"{p.get('name', 'Girl')}: {TEASE_LINES[i]}")
     return False
+
+
+# ===== /gen COMMAND HANDLER =====
+if low.startswith("/gen"):
+    vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else ""
+    if not send_tease_or_allow_nsfw(p, s, uid, chat):
+        return "OK", 200  # Block for non-owners
+
+    # Generate NSFW image for owner
+    prompt = vibe.strip() or "tasteful nude portrait"
+    seed = stable_seed(p.get("name", "Girl"))
+    send_message(chat, "🎨 One moment…")
+    try:
+        out = generate_image(prompt, w=640, h=896, seed=seed, nsfw=True)
+        send_photo(chat, out)
+        if str(uid) != str(OWNER_ID):
+            STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
+            save_state()
+    except Exception as e_img:
+        send_message(chat, f"Image queue: {e_img}")
+
+    return "OK", 200
 
 
 # ===== HELP TEXT =====
