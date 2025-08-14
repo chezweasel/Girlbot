@@ -1,125 +1,152 @@
 # dialog.py
-# Tiny, friendly wrapper around personas.py.
-# It handles commands and builds a reply using intro() + one memory line.
+from typing import Dict, Any, List, Optional
+from personas import PERS, STORIES, BOOKS, menu_list, intro, size_line
 
-import random
-from settings import stable_seed
-from personas import PERS, BOOKS, intro, menu_list, size_line
+# ---- helpers ---------------------------------------------------------------
 
-def init_state():
-    """Call this once at app start."""
-    return {
-        "current": PERS[0]["name"] if PERS else None,  # which girl is active
-        "nsfw": False,                                  # toggle for spicy memories
-    }
+def _normalize_name(name: str) -> str:
+    return (name or "").strip().lower()
 
-def find_persona(name):
-    """Find a persona by name (case-insensitive)."""
+def _find_persona(query: str):
+    """Find by number (1-based), exact name, or prefix-insensitive match."""
+    q = query.strip()
+    if not q:
+        return None
+
+    # number pick
+    if q.isdigit():
+        idx = int(q) - 1
+        if 0 <= idx < len(PERS):
+            return PERS[idx]
+
+    # name / fuzzy prefix
+    qn = _normalize_name(q)
+    # exact name match (case-insensitive)
+    for p in PERS:
+        if _normalize_name(p.get("name", "")) == qn:
+            return p
+    # startswith
+    cands = [p for p in PERS if _normalize_name(p.get("name","")).startswith(qn)]
+    if len(cands) == 1:
+        return cands[0]
+    return None
+
+def _current_persona(state: Dict[str, Any]):
+    name = state.get("current_name")
     if not name:
         return None
-    name = name.strip().lower()
     for p in PERS:
-        if p["name"].lower() == name:
+        if p.get("name") == name:
             return p
     return None
 
-def pick_memory(persona, nsfw_enabled, user_text):
+def _pick_memory(p: Dict[str, Any], nsfw: bool) -> Optional[str]:
+    """Choose an SFW or NSFW memory if available."""
+    import random
+    if nsfw:
+        pool = p.get("nsfw_memories") or []
+        if pool:
+            return random.choice(pool)
+    # fallback to sfw or life
+    pool = p.get("sfw_memories") or p.get("life_memories") or []
+    if pool:
+        return random.choice(pool)
+    return None
+
+def _books_line(p: Dict[str, Any]) -> str:
+    items = (BOOKS or {}).get(p.get("name", ""), [])
+    if not items:
+        return "(no books set)"
+    parts = []
+    for b in items[:3]:
+        t = b.get("title","?")
+        q = b.get("quote")
+        if q:
+            parts.append(f"{t} — “{q}”")
+        else:
+            parts.append(t)
+    return "; ".join(parts)
+
+def _help_text() -> str:
+    return (
+        "Commands:\n"
+        "/girls — list all girls\n"
+        "/pick <#|name> — choose who to chat with (e.g., /pick 2 or /pick Nicole)\n"
+        "/nsfw_on, /nsfw_off — toggle NSFW memory picks\n"
+        "/intro — show a short intro from current girl\n"
+        "/size — height/weight/cup line\n"
+        "/books — show book picks if present\n"
+        "/who — show who’s selected\n"
+        "/help — this help\n"
+        "Type anything else to chat and I’ll pull a memory.\n"
+    )
+
+# ---- main turn -------------------------------------------------------------
+
+def generate_chat_turn(state: Dict[str, Any], user_msg: str) -> str:
     """
-    Choose one memory line to say.
-    - If nsfw is ON, prefer nsfw_memories (fallback to sfw).
-    - If user mentions 'solo' or 'masturbat', prefer masturbation_memories.
+    state: {
+      'current_name': Optional[str],
+      'nsfw': bool
+    }
+    returns a response string
     """
-    text = (user_text or "").lower()
+    msg = (user_msg or "").strip()
 
-    # default pool is SFW
-    pool = persona.get("sfw_memories", [])[:]
+    # commands
+    if msg.lower() in ("/help", "help", "?"):
+        return _help_text()
 
-    # switch pool if user asked about solo
-    if "masturbat" in text or "solo" in text:
-        pool = persona.get("masturbation_memories", []) or pool
-    # else if nsfw toggle is on, try nsfw pool
-    elif nsfw_enabled:
-        pool = persona.get("nsfw_memories", []) or pool
+    if msg.lower() == "/girls":
+        return menu_list()
 
-    if not pool:
-        return ""  # nothing to say
-    # deterministic-ish pick so it feels consistent per name + input length
-    seed_val = stable_seed(persona["name"]) + len(text)
-    rnd = random.Random(seed_val)
-    return rnd.choice(pool)
+    if msg.lower().startswith("/pick"):
+        arg = msg[5:].strip()
+        if not arg:
+            return "Usage: /pick <#|name> (e.g., /pick 1 or /pick Zoey)"
+        p = _find_persona(arg)
+        if not p:
+            return f"Couldn’t find '{arg}'. Try /girls and pick by number or name."
+        state["current_name"] = p.get("name")
+        return f"Picked {p.get('name')}.\nSay /intro or type a message."
 
-def handle_command(state, text):
-    """
-    Handle slash commands. Returns (output_or_None, state).
-    If it's not a command, returns (None, state).
-    """
-    t = (text or "").strip()
+    if msg.lower() in ("/nsfw_on", "/nsfw off", "/nsfw_off", "/nsfw on"):
+        # normalize
+        on = msg.lower() in ("/nsfw_on", "/nsfw on")
+        state["nsfw"] = bool(on)
+        return f"NSFW is now {'ON' if state['nsfw'] else 'OFF'}."
 
-    if t.startswith("/girls"):
-        return menu_list(), state
+    if msg.lower() == "/intro":
+        p = _current_persona(state)
+        if not p:
+            return "Pick a girl first with /girls then /pick <#|name>."
+        return intro(p)
 
-    if t.startswith("/nsfw_on"):
-        state["nsfw"] = True
-        return "NSFW is ON.", state
+    if msg.lower() == "/size":
+        p = _current_persona(state)
+        if not p:
+            return "Pick a girl first with /girls then /pick <#|name>."
+        return size_line(p)
 
-    if t.startswith("/nsfw_off"):
-        state["nsfw"] = False
-        return "NSFW is OFF.", state
+    if msg.lower() == "/books":
+        p = _current_persona(state)
+        if not p:
+            return "Pick a girl first with /girls then /pick <#|name>."
+        return _books_line(p)
 
-    if t.startswith("/pick"):
-        # supports: /pick 3   or   /pick Zoey
-        parts = t.split(maxsplit=1)
-        if len(parts) == 2:
-            key = parts[1].strip()
-            chosen = None
-            if key.isdigit():
-                idx = int(key) - 1
-                if 0 <= idx < len(PERS):
-                    chosen = PERS[idx]
-            else:
-                chosen = find_persona(key)
+    if msg.lower() == "/who":
+        p = _current_persona(state)
+        if not p:
+            return "Nobody picked. Use /girls then /pick."
+        return f"Talking to {p.get('name')} (NSFW {'ON' if state.get('nsfw') else 'OFF'})."
 
-            if chosen:
-                state["current"] = chosen["name"]
-                return f"Picked {chosen['name']}. [{size_line(chosen)}]", state
-        return "Couldn’t pick—try `/pick 1` or `/pick Zoey`.", state
+    # normal chat: pull a memory and echo a simple line + memory
+    p = _current_persona(state)
+    if not p:
+        return "Pick someone first: /girls → /pick <#|name> (try /help)."
 
-    if t.startswith("/books"):
-        cur = find_persona(state.get("current")) or (PERS[0] if PERS else None)
-        if not cur:
-            return "No personas loaded.", state
-        items = BOOKS.get(cur["name"], [])
-        if not items:
-            return f"{cur['name']} has no saved books.", state
-        lines = [f"• {it.get('title','?')} — {it.get('quote','')}".rstrip(" — ")
-                 for it in items]
-        return f"{cur['name']}'s shelf:\n" + "\n".join(lines), state
-
-    if t.startswith("/help"):
-        return ("Commands: /girls, /pick #|name, /books, /nsfw_on, /nsfw_off, /help"),
-        state
-
-    # not a command
-    return None, state
-
-def generate_chat_turn(state, user_text):
-    """
-    Main entry point called by main.py.
-    Returns (assistant_text, updated_state).
-    """
-    # 1) Commands first
-    out, state = handle_command(state, user_text)
-    if out is not None:
-        return out, state
-
-    # 2) Normal conversational turn
-    cur = find_persona(state.get("current")) or (PERS[0] if PERS else None)
-    if not cur:
-        return "No personas loaded.", state
-
-    # A little intro + one memory line (pool depends on /nsfw_on & message)
-    preface = intro(cur)
-    memory_line = pick_memory(cur, state.get("nsfw", False), user_text)
-    reply = preface + ("\n\n" + memory_line if memory_line else "")
-
-    return reply, state
+    mem = _pick_memory(p, state.get("nsfw", False))
+    pre = f"{p.get('name')} says:"
+    if mem:
+        return f"{pre} {mem}"
+    return f"{pre} I’m thinking… tell me something about you?"
