@@ -4,6 +4,13 @@
 # All characters 18+. NSFW requires /nsfw_on.
 import requests
 import os
+# === HF image gen config ===
+HF_TOKEN = os.getenv("HF_TOKEN", "").strip()
+HF_MODEL_ID = os.getenv("HF_MODEL_ID", "stabilityai/stable-diffusion-xl-base-1.0").strip()
+
+# Pillow is used to normalize images for Telegram
+from PIL import Image
+import io
 
 HF_TOKEN = os.getenv("HUGGINGFACE_TOKEN", "")
 
