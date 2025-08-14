@@ -1301,7 +1301,7 @@ def send_photo(cid, path):
     try:
         safe_path = _prep_for_telegram(path)
 
-        # try as photo
+        # Try as photo
         with open(safe_path, "rb") as f:
             r = requests.post(
                 f"{API}/sendPhoto",
@@ -1314,7 +1314,7 @@ def send_photo(cid, path):
 
         print("PHOTO ERR (photo):", r.text[:200])
 
-        # fallback: document
+        # Fallback: send as document
         with open(safe_path, "rb") as f:
             r2 = requests.post(
                 f"{API}/sendDocument",
@@ -1322,17 +1322,48 @@ def send_photo(cid, path):
                 files={"document": f},
                 timeout=120
             )
-        if r2.status_code != 200:
-            print("PHOTO ERR (document):", r2.text[:200])
-            try:
-                desc = r.json().get("description", "unknown")
-            except Exception:
-                desc = "unknown"
-            send_message(cid, f"Image upload failed: {desc}")
+        if r2.status_code == 200:
+            return  # <- success on fallback
+
+        # Still failing — log & tell user
+        print("PHOTO ERR (document):", r2.text[:200])
+        try:
+            desc = r.json().get("description", "unknown")
+        except Exception:
+            desc = "unknown"
+        send_message(cid, f"Image upload failed: {desc}")
+
     except Exception as e:
         print("PHOTO SEND EXC:", e)
         send_message(cid, f"Image upload error: {e}")
 
+
+def send_audio(cid, path):
+    """Send audio; fall back to document if Telegram rejects it."""
+    try:
+        with open(path, "rb") as f:
+            r = requests.post(
+                f"{API}/sendAudio",
+                data={"chat_id": int(cid)},
+                files={"audio": f},
+                timeout=120
+            )
+        if r.status_code == 200:
+            return
+
+        # Fallback
+        with open(path, "rb") as f2:
+            r2 = requests.post(
+                f"{API}/sendDocument",
+                data={"chat_id": int(cid)},
+                files={"document": f2},
+                timeout=120
+            )
+        if r2.status_code != 200:
+            print("AUDIO ERR:", r2.text[:200])
+
+    except Exception as e:
+        print("AUDIO SEND EXC:", e)
 def gen_hf(prompt, w=512, h=512, seed=None, nsfw=False) -> str:
     """
     Generate an image via Hugging Face Inference API.
