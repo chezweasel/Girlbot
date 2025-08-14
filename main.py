@@ -83,7 +83,11 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         log.exception("generate_chat_turn error")
         reply = f"Oops, something broke: {e}"
     await update.message.reply_text(reply)
-
+application.add_handler(CommandHandler("spicy_on", cmd_spicy_on))
+application.add_handler(CommandHandler("spicy_off", cmd_spicy_off))
+application.add_handler(CommandHandler("spicy_status", cmd_spicy_status))
+application.add_handler(CommandHandler("spicy_set", cmd_spicy_set))
+application.add_handler(CommandHandler("spicy", cmd_spicy))
 def run_bot():
     app_ = Application.builder().token(BOT_TOKEN).build()
     app_.add_handler(CommandHandler("start", cmd_start))
