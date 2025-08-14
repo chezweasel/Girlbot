@@ -1607,6 +1607,29 @@ def persona_reply(p, s, user_text:str) -> str:
         ])
         return f"{_pick(openers)} {('also: ' + quirk) if quirk else ''} {feels}. {ask}"
 HELP = ("Commands:\n"
+# ===== NSFW TEASES FOR NON-OWNER =====
+TEASE_LINES = [
+    "mm, not yet… tease me back first. What’s the last song that gave you goosebumps?",
+    "you’ve got me warm, but you have to earn the next step 😇 tell me a very specific thing you notice about mouths.",
+    "close… say one thing you’d whisper in my ear, then maybe I’ll behave badly."
+]
+
+def send_tease_or_allow_nsfw(p, s, uid, chat) -> bool:
+    """
+    Returns True if NSFW is allowed (owner), False if we teased (non-owner).
+    For non-owner with NSFW on, sends a rotating tease and blocks NSFW.
+    """
+    # Owner = always allowed
+    if str(uid) == OWNER_ID:
+        return True
+
+    # Non-owner asking for NSFW → tease instead
+    i = s.get("tease_count", 0) % len(TEASE_LINES)
+    line = TEASE_LINES[i]
+    s["tease_count"] = s.get("tease_count", 0) + 1
+    save_state()
+    send_message(chat, f"{p.get('name','Girl')}: {line}")
+    return False
         "hi — menu\n/girls — list\n/pick # or name — choose\n/who — current\n/bio — backstory\n/style — tastes & quirks\n/books — favorites\n"
         "/likes coffee, films — steer convo\n/selfie [vibe] — consistent portrait\n/old18 — SFW throwback at 18 (adult)\n/poster <movie>\n/draw <subject>\n"
         "/spice — tasteful 18+ profile (after /nsfw_on)\n/nsfw_on · /nsfw_off\n/gen <prompt> — custom NSFW image\n/status — free left\n/switch — random girl\n/reset")
