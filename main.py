@@ -4,6 +4,9 @@
 # All characters 18+. NSFW requires /nsfw_on.
 import requests
 import os
+
+from media_commands import handle_media_commands
+
 # === HF image gen config ===
 # === HF image gen config ===
 HF_TOKEN = (os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN") or "").strip()
