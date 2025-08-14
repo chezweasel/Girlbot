@@ -1,6 +1,15 @@
 from typing import Dict, Any, List
 import random
+import io
+import re
+from typing import Optional, Tuple
 
+from telegram import Update
+from telegram.constants import ChatAction
+from telegram.ext import ContextTypes, CommandHandler, MessageHandler, filters
+
+# uses your existing backend
+from image_backends import generate_image  # must return bytes or a PIL Image
 # Personas layer (parameters + helpers)
 try:
     from personas import PERS, intro, menu_list, size_line, get_persona_by_name_or_index
