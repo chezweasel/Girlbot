@@ -1951,37 +1951,75 @@ def hook():
             
             send_message(chat, "\n".join(lines))
             return "OK", 200
+            
         # === IMAGE COMMANDS (Hugging Face) ===
         if low.startswith("/selfie"):
             vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "teasing, SFW"
-
-            # rate-limit check
-            if (str(uid) != OWNER_ID) and not allowed(uid):
-                send_message(chat, "Free image limit hit.")
+            if str(uid) != OWNER_ID:
+                teasing_msgs = [
+                    "Zoey: I’m warming up... be sweet with me. Tell me a sound you secretly love.",
+                    "Zoey: Not yet... make me want to 😉",
+                    "Zoey: Patience... I’m just getting in the mood."
+                ]
+                send_message(chat, random.choice(teasing_msgs))
                 return "OK", 200
-
-            # Is NSFW currently toggled on?
-            nsfw_requested = bool(s.get("nsfw", False))
-
-            # If NSFW was requested and user is not owner, tease and downgrade to SFW
-            if nsfw_requested and not send_tease_or_allow_nsfw(p, s, uid, chat):
-                nsfw_requested = False  # force SFW image for non-owner
-
-            prompt = selfie_prompt(p, vibe, nsfw=nsfw_requested)
+            prompt = selfie_prompt(p, vibe, nsfw=s.get("nsfw", False))
             seed = stable_seed(p.get("name", "Girl"))
             send_message(chat, "📸 One moment…")
-
             try:
-                out = generate_image(prompt, w=576, h=704, seed=seed, nsfw=nsfw_requested)
+                out = generate_image(prompt, w=576, h=704, seed=seed, nsfw=s.get("nsfw", False))
                 send_photo(chat, out)
-                if str(uid) != OWNER_ID:
-                    STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
-                    save_state()
+                STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
+                save_state()
             except Exception as e_img:
                 send_message(chat, f"Image queue: {e_img}")
+            return "OK", 200
 
+        if low.startswith("/old18"):
+            vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "nostalgic"
+            if str(uid) != OWNER_ID:
+                teasing_msgs = [
+                    "Zoey: I’ll show you later... maybe.",
+                    "Zoey: Not yet... but keep talking to me.",
+                    "Zoey: Hmm... you’re not quite there yet."
+                ]
+                send_message(chat, random.choice(teasing_msgs))
+                return "OK", 200
+            prompt = selfie_prompt(p, vibe, nsfw=True)
+            seed = stable_seed(p.get("name", "Girl"))
+            send_message(chat, "📸 One moment…")
+            try:
+                out = generate_image(prompt, w=576, h=704, seed=seed, nsfw=True)
+                send_photo(chat, out)
+                STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
+                save_state()
+            except Exception as e_img:
+                send_message(chat, f"Image queue: {e_img}")
+            return "OK", 200
+
+        if low.startswith("/nude18"):
+            vibe = text.split(maxsplit=1)[1] if len(text.split()) > 1 else "posing nude"
+            if str(uid) != OWNER_ID:
+                teasing_msgs = [
+                    "Zoey: You wish... 😉",
+                    "Zoey: Maybe later... when I’m feeling it.",
+                    "Zoey: You’re gonna have to earn that one."
+                ]
+                send_message(chat, random.choice(teasing_msgs))
+                return "OK", 200
+            prompt = selfie_prompt(p, vibe, nsfw=True)
+            seed = stable_seed(p.get("name", "Girl"))
+            send_message(chat, "📸 One moment…")
+            try:
+                out = generate_image(prompt, w=576, h=704, seed=seed, nsfw=True)
+                send_photo(chat, out)
+                STATE[str(uid)]["used"] = STATE[str(uid)].get("used", 0) + 1
+                save_state()
+            except Exception as e_img:
+                send_message(chat, f"Image queue: {e_img}")
             return "OK", 200
         # === END IMAGE COMMANDS BLOCK ===
+
         # === END IMAGE COMMANDS BLOCK ===
             
         if text and not text.startswith("/"):
