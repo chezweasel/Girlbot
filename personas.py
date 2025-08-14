@@ -823,6 +823,11 @@ def personalize_personas(state):
         p["music_pick"] = _seeded_choice(seed, p.get("music", []))
         p["movie_pick"] = _seeded_choice(seed, p.get("movies", []))
         p["tv_pick"] = _seeded_choice(seed, p.get("tv", []))
+        s = STORIES.get(p["name"], {})
+        p["sfw_memories"]           = s.get("sfw_memories", [])
+        p["nsfw_memories"]          = s.get("nsfw_memories", [])
+        p["masturbation_memories"]  = s.get("masturbation_memories", [])
+    
     return PERS
 
 # ===== MENU =====
