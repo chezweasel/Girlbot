@@ -1582,11 +1582,17 @@ def _spawn_image_job(chat, prompt, w, h, seed, nsfw):
     Thread(target=job).start()
 
 # ===== background image job helper =====
-def _spawn_image_job(chat, prompt, w, h, seed, nsfw):
-    def job():
-        try:
-            send_message(chat, "🎨 Generating your image...")
-            out = generate_image(prompt, w, h, seed, nsfw)
+# Helper: safe image spawn with defaults that match Horde anon limits
+def _spawn_image_job(chat, prompt, w=512, h=512, seed=None, nsfw=False):
+    # Clamp to Horde's anonymous limits (max 576 x 576)
+    w = min(int(w), 576)
+    h = min(int(h), 576)
+    try:
+        fn = generate_image(prompt, w=w, h=h, seed=seed, nsfw=nsfw)
+        send_photo(chat, fn)
+    except Exception as e_img:
+        # Surface the real reason back to Telegram for easy debugging
+        send_message(chat, f"Image queue: {e_img}")
             if out:
                 send_photo(chat, out)
             else:
