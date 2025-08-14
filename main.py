@@ -1914,7 +1914,36 @@ def hook():
 
         p = PERS[s["g"] % len(PERS)]
 
+        # Centralized media commands block (selfie + gen)
+        result = handle_media_commands(
+            low, text, p, s, uid, chat,
+            send_message=send_message,
+            save_state=save_state,
+            stable_seed=stable_seed,
+            _spawn_image_job=_spawn_image_job,
+            OWNER_ID=OWNER_ID,
+            STATE=STATE,
+        )
+        if result:
+            return result  # ("OK", 200)
+
         # Continue with other command handlers...
+        #         p = PERS[s["g"] % len(PERS)]
+
+        # Centralized media commands block (selfie + gen)
+        result = handle_media_commands(
+            low, text, p, s, uid, chat,
+            send_message=send_message,
+            save_state=save_state,
+            stable_seed=stable_seed,
+            _spawn_image_job=_spawn_image_job,
+            OWNER_ID=OWNER_ID,
+            STATE=STATE,
+        )
+        if result:
+            return result  # ("OK", 200)
+
+        # Continue with other command handlers...Continue with other command handlers...
         # --- GREETINGS ---
         if low in {"hi","hello","hey","/start"}:
             send_message(chat, intro(p))
