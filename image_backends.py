@@ -1,51 +1,31 @@
 # image_backends.py
-import os, io, requests
-from PIL import Image
-from settings import HF_TOKEN, HF_MODEL
-from telegram_io import API
+import os
+import requests
 
-def _prep_for_telegram(path: str) -> str:
-    try:
-        im = Image.open(path)
-        im.load()
-        if im.mode != "RGB":
-            im = im.convert("RGB")
-        out = os.path.splitext(path)[0] + "_tg.jpg"
-        im.save(out, "JPEG", quality=92, optimize=True)
-        return out if os.path.exists(out) and os.path.getsize(out)>0 else path
-    except Exception:
-        return path
+HF_MODEL = os.getenv("HF_MODEL", "SG161222/Realistic_Vision_V6.0_B1_noVAE")
+HF_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 
-def send_photo(cid, path, caption=None):
-    try:
-        safe = _prep_for_telegram(path)
-        with Image.open(safe) as im:
-            buf = io.BytesIO()
-            im.convert("RGB").save(buf, "JPEG", quality=95)
-            buf.seek(0)
-        files = {"photo": ("image.jpg", buf, "image/jpeg")}
-        data = {"chat_id": int(cid)}
-        if caption: data["caption"] = caption
-        r = requests.post(f"{API}/sendPhoto", data=data, files=files, timeout=60)
-        if r.status_code != 200:
-            print("sendPhoto ERR:", r.text[:200])
-    except Exception as e:
-        print("send_photo EXC:", e)
+FORBIDDEN_TERMS = ["minor", "child", "infant", "beast", "animal", "underage"]
 
-def generate_image(prompt, w=576, h=704, seed=None, nsfw=False):
-    """Simple HF text-to-image. Returns file path."""
-    if not HF_TOKEN:
-        raise RuntimeError("HF_TOKEN missing (set HF_TOKEN or HUGGINGFACE_TOKEN env)")
+def hf_txt2img(prompt, width=512, height=512):
+    # Filter prompt for forbidden terms
+    low_prompt = prompt.lower()
+    if any(term in low_prompt for term in FORBIDDEN_TERMS):
+        return None, "❌ Forbidden term detected. Try something else."
+
     api_url = f"https://api-inference.huggingface.co/models/{HF_MODEL}"
-    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+    headers = {"Authorization": f"Bearer {HF_API_KEY}"}
     payload = {
         "inputs": prompt,
-        "parameters": {"width": int(w), "height": int(h)}
+        "parameters": {"width": width, "height": height}
     }
-    r = requests.post(api_url, headers=headers, json=payload, timeout=120)
-    if r.status_code != 200:
-        raise RuntimeError(f"HF error: {r.status_code} {r.text[:200]}")
-    out = f"out_{abs(hash(prompt))%10_000_000}.png"
-    with open(out, "wb") as f:
-        f.write(r.content)
-    return out
+    response = requests.post(api_url, headers=headers, json=payload, timeout=300)
+
+    if response.status_code != 200:
+        return None, f"HF API error {response.status_code}: {response.text[:200]}"
+
+    try:
+        image_bytes = response.content
+        return image_bytes, None
+    except Exception as e:
+        return None, f"Processing error: {str(e)}"
