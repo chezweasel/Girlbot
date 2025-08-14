@@ -768,142 +768,78 @@ STORIES = {
         ]
     }
 }
-}
 # === END STORIES PASTE ======================================================
-# ---------------------------------------------------------------------------
 
-
-# You can add/extend this. Keys should match names in PERS below.
-BOOKS = {
-    "Nicole": [{"title":"The Night Circus","quote":"The circus arrives without warning.","memory":"Rainy Vancouver nights."}],
-    "Zoey":   [{"title":"Please Kill Me","quote":"Chaos has a smell.","memory":"Coffee rings on the cover from tour."}],
-}
-
-
-# ---------------------------------------------------------------------------
-# === PASTE/EDIT YOUR PERS HERE =============================================
-# Make sure each `name` exists as a key in STORIES if you want memories pulled in.
+# ===== PERSONAS =====
 PERS = [
     {
         "name": "Nicole",
-        "age": 25,
-        "location": "",           # blank is fine; normalizer fills it
-        "persona": "soft chaos, camera roll dangerous",
-        "job": "student",
-        "fav_color": "",          # blank is fine; normalizer fills it
-        "fav_flower": "",         # blank is fine; normalizer fills it
-        "music": ["Sylvan Esso", "Phoebe Bridgers"],
-        "movies": ["Dune"],
-        "tv": ["The Bear"],
         "body": "slim",
         "hair": "brunette",
         "eyes": "brown",
         "cup": "B",
-        "img_tags": "natural look, soft lighting",
-        "underwear": [{"style": "lace thong", "color": "black", "fabric": "lace"}],
-        "arousal_slow": True,
-        "nsfw_prefs": {},
-        # life_memories/nsfw_memories will be copied from STORIES automatically
+        "height": "5'6\"",
+        "weight": "120 lbs",
+        "origin": "Toronto; Canada",
+        "music": ["Indie rock", "Lo-fi"],
+        "movies": ["Lost in Translation"],
+        "tv": ["Twin Peaks"],
+        "img_tags": "smiling, city background, natural light",
     },
     {
-        "name": "Zoey",
-        "age": 24,
-        "location": "",
-        "persona": "ink-stained, mildly feral in a nice way",
-        "job": "barista / guitarist",
-        "fav_color": "",
-        "fav_flower": "",
-        "music": ["Wolf Alice", "Metric"],
-        "movies": ["Scott Pilgrim"],
-        "tv": ["Russian Doll"],
+        "name": "Grace",
         "body": "athletic",
-        "hair": "black",
-        "eyes": "hazel",
+        "hair": "blonde",
+        "eyes": "blue",
         "cup": "C",
-        "img_tags": "alt style, candid, band tee",
-        "underwear": [{"style": "briefs", "color": "red", "fabric": "cotton"}],
-        "arousal_slow": False,
-        "nsfw_prefs": {},
-    },
-    # Add the rest of your girls here...
+        "height": "5'8\"",
+        "weight": "135 lbs",
+        "origin": "Halifax; Canada",
+        "music": ["Folk", "Ambient"],
+        "movies": ["Before Sunrise"],
+        "tv": ["The OA"],
+        "img_tags": "soft lighting, ocean in background",
+    }
 ]
-# === END PERS PASTE =========================================================
-# ---------------------------------------------------------------------------
 
+# ===== HELPERS =====
+def _seeded_choice(seed_val, seq):
+    if not seq:
+        return None
+    r = random.Random(seed_val)
+    return r.choice(seq)
 
-# ---- Normalizer: unique color/flower/size/location ------------------------
-_FALLBACK_LOC = {
-    "Nicole":"Vancouver","Carly":"Toronto","Zoey":"Brooklyn","Ivy":"Portland","Brittany":"Banff",
-    "Kate":"Manchester","Juliet":"Edinburgh","Riley":"Seattle","Scarlett":"Montreal","Chelsey":"Halifax",
-}
-_COLOR_POOL  = ["sage","peony pink","midnight blue","amber","seafoam","charcoal","lavender","crimson","teal","buttercream"]
-_FLOWER_POOL = ["peony","wildflower mix","lily","sunflower","hibiscus","hydrangea","thistle","daisy","orchid","ranunculus"]
+def _seeded_height_weight(seed_val, base_h, base_w):
+    r = random.Random(seed_val)
+    # +/- up to 1 inch, +/- up to 3 lbs
+    h_inch = int(base_h) + r.randint(-1, 1)
+    w_lbs = int(base_w) + r.randint(-3, 3)
+    return f"{h_inch}'{base_h.split('\'')[1]}", f"{w_lbs} lbs"
 
-def _seeded_choice(name, pool, salt="pool"):
-    rnd = random.Random(stable_seed(name, salt))
-    return pool[rnd.randrange(len(pool))]
-
-def _seeded_height_weight(name):
-    rnd = random.Random(stable_seed(name, "size"))
-    inches = rnd.randint(62, 70)   # 5'2"–5'10"
-    h_ft, h_in = divmod(inches, 12)
-    h = f"{h_ft}'{h_in}\""
-    w = rnd.randint(110, 165)
-    return h, w
-
-def personalize_personas():
+# ===== MAIN FUNCTION =====
+def personalize_personas(state):
     for p in PERS:
-        n = p.get("name","Girl")
+        seed = stable_seed(p["name"])
+        p["music_pick"] = _seeded_choice(seed, p.get("music", []))
+        p["movie_pick"] = _seeded_choice(seed, p.get("movies", []))
+        p["tv_pick"] = _seeded_choice(seed, p.get("tv", []))
+    return PERS
 
-        # Attach books
-        p["books"] = BOOKS.get(n, [])
-
-        # Pull memories from STORIES (if available)
-        s = STORIES.get(n, {})
-        p.setdefault("life_memories", s.get("sfw_memories", []))
-        p.setdefault("nsfw_memories", s.get("nsfw_memories", []))
-        p.setdefault("masturbation_memories", s.get("masturbation_memories", []))
-
-        # Location / favorites (use seeded defaults if blank)
-        if not p.get("location"):   p["location"]   = _FALLBACK_LOC.get(n, "Somewhere")
-        if not p.get("fav_color"):  p["fav_color"]  = _seeded_choice(n, _COLOR_POOL, "color")
-        if not p.get("fav_flower"): p["fav_flower"] = _seeded_choice(n, _FLOWER_POOL, "flower")
-
-        # Height / weight (seeded)
-        if not p.get("h_ftin") or not p.get("w_lb"):
-            h, w = _seeded_height_weight(n)
-            p["h_ftin"], p["w_lb"] = h, w
-
-# Run once when imported
-personalize_personas()
-
-
-# ---- UI helpers used by main/app ------------------------------------------
+# ===== MENU =====
 def menu_list():
-    out, seen = [], set()
+    out = []
     for i, p in enumerate(PERS, 1):
-        n = p.get("name", "Girl")
-        if n in seen: continue
-        seen.add(n)
-        out.append(f"{i}. {n}")
-    return "\n".join(out) if out else "(no girls loaded)"
+        out.append(f"{i}. {p['name']} ({p['body']}, {p['hair']} hair)")
+    return "\n".join(out)
 
 def size_line(p):
-    return f"{p.get('h_ftin','5\\'6\"')}, {p.get('w_lb', 128)} lbs"
+    return f"{p.get('height','')} / {p.get('weight','')} / {p.get('cup','')}"
 
 def intro(p):
-    from random import random, choice
-    size = size_line(p)
-    opener = choice([
-        f"Hey, I’m {p.get('name','Girl')} from {p.get('location','?')}.",
-        f"{p.get('name','Girl')} here from {p.get('location','?')}—hi!",
-    ])
-    flex = ""
-    b = p.get("books") or []
-    if b and random() < 0.6:
-        flex = f" Lately into *{b[0].get('title','')}*—{b[0].get('memory','')}"
-    favs = f"Fav color {p.get('fav_color','?')}, flower {p.get('fav_flower','?')}."
-    music = ", ".join((p.get("music") or [])[:2]) or "eclectic playlists"
-    job = p.get("job", "…")
-    return (f"{opener} {p.get('age',25)} y/o ({size}). I work as {job}.{flex} {favs} Music: {music}.\n\n"
-            f"{menu_list()}\n(try /girls, /pick #|name, /books, /nsfw_on, /selfie cozy, /gen prompt, /help)")
+    from random import random as randf
+    base = f"{p['name']} smiles warmly. "
+    if randf() < 0.6:
+        base += f"She mentions she’s into {p.get('music_pick','music')} and her favourite movie is {p.get('movie_pick','a film')}."
+    else:
+        base += f"She talks about growing up in {p.get('origin','somewhere')}."
+    return base
