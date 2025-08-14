@@ -2067,10 +2067,6 @@ def hook():
             
             send_message(chat, "\n".join(lines))
             return "OK", 200
-        
-        # === IMAGE COMMANDS (styles + tease gate; paste after /diag return) ===
-
-      
 
             # parse user args into style flags (safe, rejects minors)
             arg = text.split(maxsplit=1)[1] if len(text.split()) > 1 else ""
@@ -2102,12 +2098,6 @@ def hook():
             seed = stable_seed(p.get("name","Girl"))
             send_message(chat, "🖼️ Generating…")
             try:
-               
-        # === END IMAGE COMMANDS ===============================================
-
-
-
-        # === END IMAGE COMMANDS BLOCK ===
             
         if text and not text.startswith("/"):
             t = text.strip()
