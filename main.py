@@ -1706,37 +1706,7 @@ HELP = (
     "/help - Show this help message\n"
 )
     
-
-# ===== NSFW TEASES FOR NON-OWNER =====
-TEASE_LINES = [
-    "mm, not yet… tease me back first. What’s the last song that gave you goosebumps?",
-    "you’ve got me warm, but you have to earn the next step 😇 tell me a very specific thing you notice about mouths.",
-    "close… say one thing you’d whisper in my ear, then maybe I’ll behave badly."
-]
-
-def send_tease_or_allow_nsfw(p, s, uid, chat) -> bool:
-    """
-    Returns True if NSFW is allowed (owner), False if we teased (non-owner).
-    For non-owner with NSFW on, sends a rotating tease and blocks NSFW.
-    """
-    # Always allow if it's the owner
-    if str(uid) == str(OWNER_ID):
-        return True
-
-    # Non-owner → send tease instead of NSFW
-    i = s.get("tease_count", 0) % len(TEASE_LINES)
-    s["tease_count"] = s.get("tease_count", 0) + 1
-    save_state()
-    send_message(chat, f"{p.get('name', 'Girl')}: {TEASE_LINES[i]}")
-    return False
-
-
 # ===== /gen COMMAND HANDLER =====
-
-
-    # Non-owners get a rotating tease instead of NSFW generation
-    if not send_tease_or_allow_nsfw(p, s, uid, chat):
-        return "OK", 200  # Block for non-owners (we already teased)
 
     # Build a consistent-look hint for the persona
     hint = (
@@ -2108,15 +2078,6 @@ def hook():
                 send_message(chat, err)
                 return "OK", 200
 
-            # NSFW only if user toggled /nsfw_on AND not blocked by tease gate
-            nsfw_req = bool(s.get("nsfw", False)) or bool(flags.get("nsfw", False))
-            nsfw = False
-            if nsfw_req:
-                # Tease-gate for non-owners
-                if not send_tease_or_allow_nsfw(p, s, uid, chat):
-                    return "OK", 200
-                nsfw = True
-
             # build prompt with styles on top of the consistent selfie prompt
             vibe = flags.get("vibe") or ("teasing" if not nsfw else "lingerie editorial")
             prompt = build_selfie_prompt_with_style(p, vibe, flags, nsfw)
@@ -2126,13 +2087,6 @@ def hook():
 
             user_prompt = parts[1].strip()
 
-
-
-            # must be NSFW toggled + tease allowed for non-owner if the content is spicy
-            spicy = bool(s.get("nsfw", False))
-            if spicy and (str(uid) != OWNER_ID):
-                if not send_tease_or_allow_nsfw(p, s, uid, chat):
-                    return "OK", 200  # teased instead of generating
 
             # Add consistent-look hint
             hint = (
