@@ -1560,6 +1560,33 @@ def send_message(cid, text):
     r = requests.post(f"{API}/sendMessage", json={"chat_id": int(cid), "text": text}, timeout=20)
     if r.status_code != 200:
         print("SEND ERR:", r.text[:200])
+# Make images Telegram-friendly (strip alpha, re-encode as JPEG)
+def _prep_for_telegram(path: str) -> str:
+    try:
+        from PIL import Image
+        import os
+
+        im = Image.open(path)
+        im.load()  # fully read to catch corrupt files
+
+        # Telegram is happiest with JPEG without alpha
+        if im.mode in ("RGBA", "LA", "P"):
+            im = im.convert("RGB")
+        else:
+            # even if it's already RGB, re-save to normalize
+            if im.mode != "RGB":
+                im = im.convert("RGB")
+
+        base, _ = os.path.splitext(path)
+        out = f"{base}_tg.jpg"
+        im.save(out, "JPEG", quality=92, optimize=True)
+        # Only switch if the output actually exists and isn’t empty
+        if os.path.exists(out) and os.path.getsize(out) > 0:
+            return out
+        return path
+    except Exception as e:
+        print("PREP ERR:", e)
+        return path
 
 def send_photo(cid, path):
     with open(path, "rb") as f:
