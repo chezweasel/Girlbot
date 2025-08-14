@@ -4,7 +4,7 @@
 # All characters 18+. NSFW requires /nsfw_on.
 import requests
 import os
-
+from chat_ai import ai_complete_text, handle_telegram_voice_message, ENABLE_AI_CHAT
 from media_commands import handle_media_commands
 
 # === HF image gen config ===
