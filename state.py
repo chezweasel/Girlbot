@@ -42,6 +42,9 @@ def get_user(uid):
         STATE[u]["t"] = now()
         STATE[u]["used"] = 0
         save_state()
+    # Owner unlimited access - replace with your Telegram user ID
+    if u == "your_telegram_user_id_here":
+        STATE[u]["paid_until"] = now() + 31536000  # 1 year
     return STATE[u]
 
 def allowed(uid):
