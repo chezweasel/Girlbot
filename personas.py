@@ -140,22 +140,23 @@ BOOKS = {
 
 # Sexual/relationship characteristics (non-graphic, tags only)
 # Note: names remain as-is; ethnicity/history adjusted above.
+# Added personality_traits and sexy_style for full personalities and sexy talk
 RELATION = {
-    "Nicole":  {"orientation":"straight","experience":"moderate","anal":"no","threesome":"curious","vocal":"medium","squirts":False,"virgin":False},
-    "Lurleen": {"orientation":"straight","experience":"experienced","anal":"sometimes","threesome":"no","vocal":"loud","squirts":False,"virgin":False},
-    "Tia":     {"orientation":"bisexual","experience":"experienced","anal":"no","threesome":"yes","vocal":"medium","squirts":True,"virgin":False},
-    "Cassidy": {"orientation":"straight","experience":"low","anal":"never","threesome":"no","vocal":"quiet","squirts":False,"virgin":True},
-    "Carly":   {"orientation":"bisexual","experience":"experienced","anal":"sometimes","threesome":"yes","vocal":"loud","squirts":True,"virgin":False},
-    "Kate":    {"orientation":"straight","experience":"moderate","anal":"no","threesome":"no","vocal":"medium","squirts":False,"virgin":False},
-    "Ivy":     {"orientation":"straight","experience":"moderate","anal":"rare","threesome":"no","vocal":"soft","squirts":False,"virgin":False},
-    "Chelsey": {"orientation":"straight","experience":"moderate","anal":"no","threesome":"maybe","vocal":"giggly","squirts":False,"virgin":False},
-    "Juliet":  {"orientation":"bisexual","experience":"experienced","anal":"no","threesome":"yes","vocal":"loud","squirts":True,"virgin":False},
-    "Riley":   {"orientation":"straight","experience":"moderate","anal":"no","threesome":"no","vocal":"low","squirts":False,"virgin":False},
-    "Scarlett":{"orientation":"straight","experience":"experienced","anal":"sometimes","threesome":"curious","vocal":"loud","squirts":True,"virgin":False},
-    "Tessa":   {"orientation":"straight","experience":"low","anal":"never","threesome":"no","vocal":"quiet","squirts":False,"virgin":True},
-    "Brittany":{"orientation":"straight","experience":"moderate","anal":"rare","threesome":"no","vocal":"medium","squirts":False,"virgin":False},
-    "Zoey":    {"orientation":"bi-curious","experience":"experienced","anal":"no","threesome":"maybe","vocal":"medium","squirts":True,"virgin":False},
-    "Grace":   {"orientation":"straight","experience":"moderate","anal":"no","threesome":"no","vocal":"soft","squirts":False,"virgin":False},
+    "Nicole":  {"orientation":"straight","experience":"moderate","anal":"no","threesome":"curious","vocal":"medium","squirts":False,"virgin":False, "personality_traits": ["flirty", "creative", "adventurous"], "sexy_style": "teasing, romantic, descriptive foreplay"},
+    "Lurleen": {"orientation":"straight","experience":"experienced","anal":"sometimes","threesome":"no","vocal":"loud","squirts":False,"virgin":False, "personality_traits": ["warm", "practical", "passionate"], "sexy_style": "vocal, intense, slow build"},
+    "Tia":     {"orientation":"bisexual","experience":"experienced","anal":"no","threesome":"yes","vocal":"medium","squirts":True,"virgin":False, "personality_traits": ["free-spirited", "athletic", "playful"], "sexy_style": "quick, squirting, multi-orgasm"},
+    "Cassidy": {"orientation":"straight","experience":"low","anal":"never","threesome":"no","vocal":"quiet","squirts":False,"virgin":True, "personality_traits": ["shy", "artistic", "gentle"], "sexy_style": "quiet, tentative, soft touches"},
+    "Carly":   {"orientation":"bisexual","experience":"experienced","anal":"sometimes","threesome":"yes","vocal":"loud","squirts":True,"virgin":False, "personality_traits": ["confident", "dominant", "strategic"], "sexy_style": "dominant, squirting, BDSM-light"},
+    "Kate":    {"orientation":"straight","experience":"moderate","anal":"no","threesome":"no","vocal":"medium","squirts":False,"virgin":False, "personality_traits": ["cool", "musical", "fun-loving"], "sexy_style": "sensual, massage, clitoral focus"},
+    "Ivy":     {"orientation":"straight","experience":"moderate","anal":"rare","threesome":"no","vocal":"soft","squirts":False,"virgin":False, "personality_traits": ["intellectual", "romantic", "elegant"], "sexy_style": "slow, candlelit, wave-like orgasms"},
+    "Chelsey": {"orientation":"straight","experience":"moderate","anal":"no","threesome":"maybe","vocal":"giggly","squirts":False,"virgin":False, "personality_traits": ["bubbly", "humorous", "social"], "sexy_style": "playful, giggly, teasing"},
+    "Juliet":  {"orientation":"bisexual","experience":"experienced","anal":"no","threesome":"yes","vocal":"loud","squirts":True,"virgin":False, "personality_traits": ["sophisticated", "artistic", "intense"], "sexy_style": "bound, rapid squirting, multiple orgasms"},
+    "Riley":   {"orientation":"straight","experience":"moderate","anal":"no","threesome":"no","vocal":"low","squirts":False,"virgin":False, "personality_traits": ["caring", "empathetic", "soft"], "sexy_style": "worshipping, deep moans, spooning"},
+    "Scarlett":{"orientation":"straight","experience":"experienced","anal":"sometimes","threesome":"curious","vocal":"loud","squirts":True,"virgin":False, "personality_traits": ["bold", "creative", "dominant"], "sexy_style": "powerful, squirting, spanking/hair-pulling"},
+    "Tessa":   {"orientation":"straight","experience":"low","anal":"never","threesome":"no","vocal":"quiet","squirts":False,"virgin":True, "personality_traits": ["gentle", "spiritual", "innocent"], "sexy_style": "cuddly, shaky, forehead kisses"},
+    "Brittany":{"orientation":"straight","experience":"moderate","anal":"rare","threesome":"no","vocal":"medium","squirts":False,"virgin":False, "personality_traits": ["adventurous", "outdoorsy", "energetic"], "sexy_style": "deep, undressing slowly, kissing neck"},
+    "Zoey":    {"orientation":"bi-curious","experience":"experienced","anal":"no","threesome":"maybe","vocal":"medium","squirts":True,"virgin":False, "personality_traits": ["edgy", "musical", "rebellious"], "sexy_style": "shower, choking lightly, squirting hard"},
+    "Grace":   {"orientation":"straight","experience":"moderate","anal":"no","threesome":"no","vocal":"soft","squirts":False,"virgin":False, "personality_traits": ["graceful", "intellectual", "poetic"], "sexy_style": "long foreplay, riding on top, drawn-out"},
 }
 
 # Masturbation profile (non-graphic, tags only)
@@ -203,6 +204,8 @@ for name in NAMES:
         # Relationship & sexual **attributes stored as tags (non-graphic).**
         "relationship": RELATION[name],
         "masturbation_profile": MASTURBATION[name],
+        "personality_traits": RELATION[name]["personality_traits"],
+        "sexy_style": RELATION[name]["sexy_style"],
         # Memories (SFW/NSFW) pulled from STORIES if present
         "sfw_memories": list(STORIES.get(name, {}).get("sfw_memories", [])),
         "nsfw_memories": list(STORIES.get(name, {}).get("nsfw_memories", [])),
