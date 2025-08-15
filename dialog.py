@@ -75,7 +75,7 @@ def pick_girl(arg: str, user_id: str) -> str:
     name = PERS[idx].get("name", "Girl")
     return f"✓ Switched to {name}. Say hi!"
 
-# --- main chat turn use by main.py ---
+# --- main chat turn used by main.py ---
 def generate_chat_turn(text: str, user_id: str = "unknown") -> str:
     st = _user_state(user_id)
 
