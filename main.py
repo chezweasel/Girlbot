@@ -4,8 +4,8 @@ import threading
 from typing import Final
 from flask import Flask
 
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram import Update, LabeledPrice
+from telegram.ext import Application, CommandHandler, MessageHandler, PreCheckoutQueryHandler, ContextTypes, filters
 
 # Import ONLY the functions that exist in nsfw_chat.py
 try:
@@ -37,6 +37,12 @@ except Exception as e:
         return "(no personas loaded)"
     def pick_girl(arg: str, user_id: str) -> str:
         return "(picker unavailable)"
+
+# Import media_commands for /gen
+from media_commands import cmd_gen
+
+# Import state for paywall
+from state import get_user, save_state, now
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
@@ -83,6 +89,8 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/spicy_off - disable NSFW mode\n"
         "/spicy_status - check NSFW mode status\n"
         "/spicy_set <level> - set NSFW level (1-3)\n"
+        "/gen <prompt> - generate image\n"
+        "/subscribe - get premium for unlimited"
     )
 
 async def cmd_ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -117,11 +125,47 @@ async def spicy_status_all(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await cmd_spicy_status(update, context)
     await update.message.reply_text(f"(local) NSFW mode is currently: {status}")
 
+# Paywall commands
+async def subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = str(update.effective_user.id)
+    user = get_user(user_id)
+    if user["paid_until"] > now():
+        await update.message.reply_text("You're subscribed!")
+        return
+    await context.bot.send_invoice(
+        chat_id=update.effective_chat.id,
+        title="Premium Access",
+        description="Unlimited NSFW chats/images for 30 days",
+        payload=f"sub-{user_id}",
+        provider_token=os.getenv("PROVIDER_TOKEN"),
+        currency="USD",
+        prices=[LabeledPrice("Subscription", 500)]  # $5
+    )
+
+async def pre_checkout(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.pre_checkout_query
+    if query.invoice_payload.startswith("sub-"):
+        await query.answer(ok=True)
+    else:
+        await query.answer(ok=False, error_message="Invalid")
+
+async def successful_payment(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    payload = update.message.successful_payment.invoice_payload
+    user_id = payload.split("-")[1]
+    user = get_user(user_id)
+    user["paid_until"] = now() + 2592000  # 30 days
+    save_state()
+    await update.message.reply_text("Subscribed! Enjoy unlimited sexy chats/images.")
+
 # --- Main text handler ---
 async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not update.message:
         return
     user_id = str(update.message.from_user.id) if update.message.from_user else "unknown"
+    user = get_user(user_id)
+    if user["used"] >= 5 and now() > user["paid_until"]:  # FREE_PER_DAY = 5
+        await update.message.reply_text("Free limit reached. /subscribe for unlimited!")
+        return
     text = update.message.text or ""
     try:
         if user_nsfw_mode.get(user_id):
@@ -132,6 +176,8 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         log.exception("chat_turn error")
         reply = f"Oops, something broke: {e}"
     await update.message.reply_text(reply)
+    user["used"] += 1
+    save_state()
 
 def run_bot():
     app_ = Application.builder().token(BOT_TOKEN).build()
@@ -142,12 +188,18 @@ def run_bot():
     app_.add_handler(CommandHandler("ping", cmd_ping))
     app_.add_handler(CommandHandler("girls", cmd_girls))
     app_.add_handler(CommandHandler("pick", cmd_pick))
+    app_.add_handler(CommandHandler("gen", cmd_gen))
 
     # NSFW / Spicy commands (global toggle)
     app_.add_handler(CommandHandler("spicy_on", spicy_on_all))
     app_.add_handler(CommandHandler("spicy_off", spicy_off_all))
     app_.add_handler(CommandHandler("spicy_status", spicy_status_all))
     app_.add_handler(CommandHandler("spicy_set", cmd_spicy_set))
+
+    # Paywall
+    app_.add_handler(CommandHandler("subscribe", subscribe))
+    app_.add_handler(PreCheckoutQueryHandler(pre_checkout))
+    app_.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, successful_payment))
 
     # Catch-all text handler
     app_.add_handler(MessageHandler(filters.ChatType.PRIVATE & filters.TEXT & ~filters.COMMAND, on_text))
