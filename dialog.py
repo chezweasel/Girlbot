@@ -45,10 +45,6 @@ def list_girls() -> str:
     return "\n".join(lines)
 
 def _resolve_persona(arg: str) -> int:
-    """
-    Returns persona index by number or name (case-insensitive, partial match ok).
-    Raises ValueError if not found.
-    """
     arg = (arg or "").strip().lower()
     if not arg:
         raise ValueError("empty argument")
@@ -81,12 +77,6 @@ def pick_girl(arg: str, user_id: str) -> str:
 
 # --- main chat turn used by main.py ---
 def generate_chat_turn(text: str, user_id: str = "unknown") -> str:
-    """
-    1) Gets the user's selected persona
-    2) Maintains a tiny chat history
-    3) Calls HuggingFace via chat_ai.ai_complete_text
-    4) Returns the model's reply
-    """
     st = _user_state(user_id)
 
     # Allow natural language switching without slash commands:
