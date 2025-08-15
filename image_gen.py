@@ -1,85 +1,41 @@
-# Ultra-realistic image generation via Hugging Face Inference API
-# Now with: Persona integration, consistent seeds, NSFW allowance in spicy mode, enhanced prompts.
-
 import os
-import io
-import time
 import requests
-from PIL import Image
-from settings import stable_seed  # For deterministic seeds
+import time
 
-HF_TOKEN = (os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN") or "").strip()
-HF_MODEL_ID = os.getenv("HF_MODEL_ID", "CompVis/stable-diffusion-v1-4").strip()  # Hosted model, supports NSFW
-HF_API_URL = f"https://api-inference.huggingface.co/models/{HF_MODEL_ID}"
+# API key from Railway variables
+MODELSLAB_KEY = os.getenv("MODELSLAB_KEY", "").strip()
+if not MODELSLAB_KEY:
+    raise RuntimeError("MODELSLAB_KEY missing in Railway variables.")
 
-# Strict blocks (always, regardless of mode)
-_MINOR_WORDS = {"minor", "underage", "child", "kid", "shota", "school boy", "school girl", "infant", "toddler", "beast", "animal"}
-def contains_minor_terms(s: str) -> bool:
-    s = (s or "").lower()
-    return any(w in s for w in _MINOR_WORDS)
+# ModelsLab NSFW photoreal model
+MODEL_ID = "newrealityxl-global-nsfw"
 
-def _ensure_rgb_jpeg(bytes_or_path: str | bytes) -> str:
-    if isinstance(bytes_or_path, bytes):
-        data = bytes_or_path
-    else:
-        with open(bytes_or_path, "rb") as f:
-            data = f.read()
-    im = Image.open(io.BytesIO(data))
-    if im.mode in ("RGBA", "P", "LA"):
-        im = im.convert("RGB")
-    elif im.mode != "RGB":
-        im = im.convert("RGB")
-    out = f"out_{int(time.time())}.jpg"
-    im.save(out, "JPEG", quality=90, optimize=True)
-    return out
+def generate_image(prompt, negative_prompt=None, width=512, height=512):
+    url = "https://stablediffusionapi.com/api/v4/dreambooth"
 
-def gen_hf_image(prompt: str, w: int = 512, h: int = 768, seed: int | None = None, nsfw: bool = False) -> str:
-    if not HF_TOKEN:
-        raise RuntimeError("HF_TOKEN missing.")
-    if not HF_MODEL_ID:
-        raise RuntimeError("HF_MODEL_ID missing.")
-
-    # Enhance for realism/consistency
-    enhanced_prompt = f"hyper-realistic, detailed, high resolution, {prompt}"
-    if nsfw:
-        enhanced_prompt += ", NSFW, explicit, uncensored"
-    negative = "blurry, low quality, deformed"
-
-    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
     payload = {
-        "inputs": enhanced_prompt,
-        "parameters": {
-            "negative_prompt": negative,
-            "width": int(w),
-            "height": int(h),
-            "num_inference_steps": 30,
-            "guidance_scale": 7.5,
-            "seed": seed
-        }
+        "key": MODELSLAB_KEY,
+        "model_id": MODEL_ID,
+        "prompt": prompt,
+        "negative_prompt": negative_prompt or "",
+        "width": width,
+        "height": height,
+        "samples": 1,
+        "num_inference_steps": 25,
+        "safety_checker": "no",  # allow NSFW
+        "enhance_prompt": "yes",
+        "guidance_scale": 7.5
     }
 
-    r = requests.post(HF_API_URL, headers=headers, json=payload, timeout=120)
+    r = requests.post(url, json=payload)
     if r.status_code != 200:
-        raise RuntimeError(f"HF API {r.status_code}: {r.text[:300]}")
+        raise RuntimeError(f"ModelsLab API error {r.status_code}: {r.text}")
 
-    img_bytes = r.content
-    if not img_bytes or len(img_bytes) < 1000:
-        raise RuntimeError("HF returned empty or tiny image.")
-    return _ensure_rgb_jpeg(img_bytes)
+    data = r.json()
+    if not data.get("status") == "success":
+        raise RuntimeError(f"Generation failed: {data}")
 
-def generate_image(prompt: str, persona: dict, user_id: str = "unknown", w: int = 512, h: int = 768, nsfw: bool = False) -> str:
-    if contains_minor_terms(prompt):
-        raise RuntimeError("Blocked: under-18 / young-looking content not allowed.")
-    
-    # Clamp size for API/speed
-    w = max(256, min(int(w), 768))
-    h = max(256, min(int(h), 1024))
-    
-    # Deterministic seed for consistency
-    seed = stable_seed(user_id, persona.get("name", "default"), prompt)
-    
-    # Enhance prompt with persona for realism
-    body_desc = f"{persona.get('ethnicity', 'Caucasian')} woman, {persona.get('age', 25)} years old, {persona.get('body', 'slim')} build, {persona.get('height', '5\'6\"')}, {persona.get('weight', '120 lbs')}, cup {persona.get('cup', 'B')}, detailed face, natural expression"
-    full_prompt = f"{body_desc}, {prompt}"
-    
-    return gen_hf_image(full_prompt, w=w, h=h, seed=seed, nsfw=nsfw)
+    # The API sometimes needs a short wait before image is ready
+    time.sleep(2)
+    image_url = data["output"][0]
+    return image_url
