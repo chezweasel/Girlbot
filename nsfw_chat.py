@@ -1,6 +1,7 @@
 import logging
-from dialog import _user_state, PERS
-from chat_ai import ai_complete_text  # Assume this is your HF text gen module; implement if missing
+from dialog import _user_state
+from personas import PERS
+from chat_ai import ai_complete_text  # Assume this handles HF text gen
 
 log = logging.getLogger("nsfw_chat")
 
