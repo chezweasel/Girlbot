@@ -2,7 +2,8 @@ import re
 from typing import Optional
 from telegram import Update
 from telegram.ext import ContextTypes
-from dialog import _user_state, PERS  # To get current persona
+from dialog import _user_state
+from personas import PERS  # Changed to import PERS from personas
 from main import user_nsfw_mode  # Or state.py's get_user()["nsfw"]
 from image_gen import generate_image  # Updated gen fn
 from state import get_user, save_state, now
