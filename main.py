@@ -7,7 +7,7 @@ from flask import Flask
 from telegram import Update, LabeledPrice
 from telegram.ext import Application, CommandHandler, MessageHandler, PreCheckoutQueryHandler, ContextTypes, filters
 
-# Impor ONLY the functions that exist in nsfw_chat.py
+# Import ONLY the functions that exist in nsfw_chat.py
 try:
     from nsfw_chat import (
         cmd_spicy_on,
