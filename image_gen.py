@@ -1,4 +1,3 @@
-
 # Ultra-realistic image generation via Hugging Face Inference API
 # Now with: Persona integration, consistent seeds, NSFW allowance in spicy mode, enhanced prompts.
 
@@ -10,7 +9,7 @@ from PIL import Image
 from settings import stable_seed  # For deterministic seeds
 
 HF_TOKEN = (os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN") or "").strip()
-HF_MODEL_ID = os.getenv("HF_MODEL_ID", "CompVis/stable-diffusion-v1-4").strip()  # Hosted, supports NSFW prompts
+HF_MODEL_ID = os.getenv("HF_MODEL_ID", "CompVis/stable-diffusion-v1-4").strip()  # Hosted model, supports NSFW
 HF_API_URL = f"https://api-inference.huggingface.co/models/{HF_MODEL_ID}"
 
 # Strict blocks (always, regardless of mode)
@@ -34,7 +33,7 @@ def _ensure_rgb_jpeg(bytes_or_path: str | bytes) -> str:
     im.save(out, "JPEG", quality=90, optimize=True)
     return out
 
-def gen_hf_image(prompt: str, w: int = 512, h: int = 512, seed: int | None = None, nsfw: bool = False) -> str:
+def gen_hf_image(prompt: str, w: int = 512, h: int = 768, seed: int | None = None, nsfw: bool = False) -> str:
     if not HF_TOKEN:
         raise RuntimeError("HF_TOKEN missing.")
     if not HF_MODEL_ID:
@@ -68,19 +67,19 @@ def gen_hf_image(prompt: str, w: int = 512, h: int = 512, seed: int | None = Non
         raise RuntimeError("HF returned empty or tiny image.")
     return _ensure_rgb_jpeg(img_bytes)
 
-def generate_image(prompt: str, user_id: str, persona: dict, w: int = 512, h: int = 512, nsfw: bool = False) -> str:
+def generate_image(prompt: str, user_id: str = "unknown", persona: dict, w: int = 512, h: int = 768, nsfw: bool = False) -> str:
     if contains_minor_terms(prompt):
         raise RuntimeError("Blocked: under-18 / young-looking content not allowed.")
     
-    # Clamp size
-    w = max(256, min(int(w), 512))
-    h = max(256, min(int(h), 512))
-
-    # Deterministic seed
+    # Clamp size for API/speed
+    w = max(256, min(int(w), 768))
+    h = max(256, min(int(h), 1024))
+    
+    # Deterministic seed for consistency
     seed = stable_seed(user_id, persona.get("name", "default"), prompt)
-
-    # Enhance prompt with persona
+    
+    # Enhance prompt with persona for realism
     body_desc = f"{persona.get('ethnicity', 'Caucasian')} woman, {persona.get('age', 25)} years old, {persona.get('body', 'slim')} build, {persona.get('height', '5\'6\"')}, {persona.get('weight', '120 lbs')}, cup {persona.get('cup', 'B')}, detailed face, natural expression"
     full_prompt = f"{body_desc}, {prompt}"
-
+    
     return gen_hf_image(full_prompt, w=w, h=h, seed=seed, nsfw=nsfw)
