@@ -67,7 +67,7 @@ def gen_hf_image(prompt: str, w: int = 512, h: int = 768, seed: int | None = Non
         raise RuntimeError("HF returned empty or tiny image.")
     return _ensure_rgb_jpeg(img_bytes)
 
-def generate_image(prompt: str, user_id: str = "unknown", persona: dict, w: int = 512, h: int = 768, nsfw: bool = False) -> str:
+def generate_image(prompt: str, persona: dict, user_id: str = "unknown", w: int = 512, h: int = 768, nsfw: bool = False) -> str:
     if contains_minor_terms(prompt):
         raise RuntimeError("Blocked: under-18 / young-looking content not allowed.")
     
