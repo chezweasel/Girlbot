@@ -1,4 +1,3 @@
-# state.py
 import json, os, time
 from settings import STATE_FILE, FREE_PER_DAY
 
@@ -35,7 +34,7 @@ def get_user(uid):
         STATE[u] = {
             "g": 0, "t": now(), "used": 0, "nsfw": False, "likes": [],
             "last_msg_id": None, "u_msg": 0, "teased": False, "arousal": 0.0,
-            "tease_count": 0
+            "tease_count": 0, "paid_until": 0
         }
         save_state()
     # daily reset
