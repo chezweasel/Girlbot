@@ -44,6 +44,12 @@ from media_commands import cmd_gen
 # Import state for paywall and NSFW state
 from state import get_user, save_state, now
 
+# Import for selfie
+from dialog import _user_state
+from personas import PERS
+from image_gen import generate_image
+import random  # For varying prompts
+
 logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     level=logging.INFO,
@@ -87,7 +93,6 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "/spicy_status - check NSFW mode status\n"
         "/spicy_set <level> - set NSFW level (1-3)\n"
         "/gen <prompt> - generate image\n"
-        "/selfie - generate sexy selfie of current girl\n"
         "/subscribe - get premium for unlimited"
     )
 
@@ -128,11 +133,6 @@ async def spicy_status_all(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await cmd_spicy_status(update, context)
     await update.message.reply_text(f"(local) NSFW mode is currently: {status}")
 
-# /selfie command
-async def cmd_selfie(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    context.args = ["sexy selfie of me"]  # Auto-prompt
-    await cmd_gen(update, context)
-
 # Paywall commands
 async def subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
@@ -171,19 +171,56 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     user_id = str(update.message.from_user.id) if update.message.from_user else "unknown"
     user = get_user(user_id)
-    if user["used"] >= 5 and now() > user["paid_until"]:  # FREE_PER_DAY = 5
+    if user["used"] >= 5 and now() > user["paid_until"]:
         await update.message.reply_text("Free limit reached. /subscribe for unlimited!")
         return
     text = update.message.text or ""
-    try:
+    reply = ""
+    selfie_requested = "selfie" in text.lower()
+    if selfie_requested:
+        # Get current persona
+        st = _user_state(user_id)
+        persona = PERS[st["persona_idx"]]
+        nsfw = user["nsfw"]
+        experience = persona["relationship"]["experience"]
+        # Vary prompt by experience
+        if nsfw:
+            if experience == "low":
+                prompts = [
+                    "hyper realistic selfie, timid girl in bra and panties, shy upskirt tease, blushing, detailed skin, innocent pose",
+                    "hyper realistic selfie, shy girl lifting skirt, panties visible, timid expression, soft lighting, teasing glance"
+                ]
+            elif experience == "moderate":
+                prompts = [
+                    "hyper realistic selfie, playful girl in lingerie, partial nude, flirtatious pose, detailed body, sexy smile",
+                    "hyper realistic selfie, teasing girl showing cleavage, lingerie unbuttoned, seductive eyes, warm lighting"
+                ]
+            else:  # experienced
+                prompts = [
+                    "hyper realistic selfie, bold girl full nude, spread pussy, confident gaze, detailed anatomy, erotic pose",
+                    "hyper realistic selfie, experienced girl legs spread, pussy exposed, dominant expression, high detail, provocative angle"
+                ]
+        else:
+            prompts = [
+                "hyper realistic selfie, cute clothed girl, smiling face, natural pose, detailed features",
+                "hyper realistic selfie, friendly girl in casual clothes, happy expression, soft lighting, close-up"
+            ]
+        # Generate 2 images with varied prompts
+        path1 = generate_image(prompts[0], user_id, persona, nsfw=nsfw)
+        path2 = generate_image(prompts[1], user_id, persona, nsfw=nsfw)
+        # Send images
+        with open(path1, "rb") as f1:
+            await update.message.reply_photo(f1, caption="Selfie 1 😘")
+        with open(path2, "rb") as f2:
+            await update.message.reply_photo(f2, caption="Selfie 2 😘")
+        reply = "I didn't know which one you'd like better, so I took two! What do you think? 💕"
+    else:
         if user["nsfw"]:
             reply = generate_nsfw_turn(text, user_id=user_id) or "(empty NSFW reply)"
         else:
             reply = generate_chat_turn(text, user_id=user_id) or "(empty reply)"
-    except Exception as e:
-        log.exception("chat_turn error")
-        reply = f"Oops, something broke: {e}"
-    await update.message.reply_text(reply)
+    if reply:
+        await update.message.reply_text(reply)
     user["used"] += 1
     save_state()
 
@@ -197,7 +234,6 @@ def run_bot():
     app_.add_handler(CommandHandler("girls", cmd_girls))
     app_.add_handler(CommandHandler("pick", cmd_pick))
     app_.add_handler(CommandHandler("gen", cmd_gen))
-    app_.add_handler(CommandHandler("selfie", cmd_selfie))
 
     # NSFW / Spicy commands (global toggle)
     app_.add_handler(CommandHandler("spicy_on", spicy_on_all))
