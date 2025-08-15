@@ -35,7 +35,7 @@ async def cmd_gen(update: Update, context: ContextTypes.DEFAULT_TYPE):
     persona = PERS[st["persona_idx"]]
 
     try:
-        path = generate_image(prompt, user_id, persona, nsfw=spicy_on)
+        path = generate_image(prompt, persona, user_id, nsfw=spicy_on)
         if not path:
             await update.message.reply_text("Couldn’t generate image.")
             return
