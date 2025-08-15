@@ -48,7 +48,6 @@ from state import get_user, save_state, now
 from dialog import _user_state
 from personas import PERS
 from image_gen import generate_image
-import random  # For varying prompts
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
@@ -206,8 +205,8 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "hyper realistic selfie, friendly girl in casual clothes, happy expression, soft lighting, close-up"
             ]
         # Generate 2 images with varied prompts
-        path1 = generate_image(prompts[0], user_id, persona, nsfw=nsfw)
-        path2 = generate_image(prompts[1], user_id, persona, nsfw=nsfw)
+        path1 = generate_image(prompts[0], persona, user_id, nsfw=nsfw)
+        path2 = generate_image(prompts[1], persona, user_id, nsfw=nsfw)
         # Send images
         with open(path1, "rb") as f1:
             await update.message.reply_photo(f1, caption="Selfie 1 😘")
