@@ -1,4 +1,3 @@
-# dialog.py
 # Glue between Telegram handlers and the AI + personas
 
 import re
@@ -111,7 +110,7 @@ def generate_chat_turn(text: str, user_id: str = "unknown") -> str:
     likes = []
     likes.extend(persona.get("music", [])[:2])
     likes.extend(persona.get("hobbies", [])[:2])
-    state_for_ai = {"likes": likes}
+    state_for_ai = {"likes": likes, "traits": persona.get("personality_traits", []), "background": f"From {persona['hometown']}, {persona['job']}, {persona['age']} y/o {persona['ethnicity']} woman with {persona['body']} build."}
 
     # Trim history so payload stays small
     hist: List[dict] = st["history"][-8:] if st["history"] else []
