@@ -1,4 +1,3 @@
-# tts_stt.py
 # Voice features: Text-to-Speech (TTS) for replies.
 # Uses ElevenLabs by default (great voices). Optionally OpenAI TTS if you set OPENAI_API_KEY + model.
 # If no keys present, returns None (voice disabled).
@@ -15,10 +14,6 @@ OPENAI_KEY = os.getenv("OPENAI_API_KEY", "").strip()
 OPENAI_TTS_MODEL = os.getenv("OPENAI_TTS_MODEL", "gpt-4o-mini-tts").strip()  # if you want OpenAI TTS
 
 def tts_say(text: str) -> str | None:
-    """
-    Generate a short audio clip (mp3) from text and return local file path.
-    Priority: ElevenLabs -> OpenAI -> None
-    """
     t = (text or "").strip()
     if not t:
         return None
