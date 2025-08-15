@@ -46,10 +46,10 @@ def list_girls() -> str:
 
 def _resolve_persona(arg: str) -> int:
     """
-    Returns persona index by number or name (case-insensitive).
+    Returns persona index by number or name (case-insensitive, partial match ok).
     Raises ValueError if not found.
     """
-    arg = (arg or "").strip()
+    arg = (arg or "").strip().lower()
     if not arg:
         raise ValueError("empty argument")
 
@@ -60,18 +60,13 @@ def _resolve_persona(arg: str) -> int:
             return idx
         raise ValueError("number out of range")
 
-    # name?
-    lower = arg.lower()
+    # name or partial name?
     for i, p in enumerate(PERS):
-        if p.get("name", "").lower() == lower:
+        name_lower = p.get("name", "").lower()
+        if name_lower == arg or name_lower.startswith(arg):
             return i
 
-    # prefix match as a convenience
-    for i, p in enumerate(PERS):
-        if p.get("name", "").lower().startswith(lower):
-            return i
-
-    raise ValueError(f"persona '{arg}' not found")
+    raise ValueError(f"persona '{arg}' not found - try exact name or number")
 
 def pick_girl(arg: str, user_id: str) -> str:
     try:
