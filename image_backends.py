@@ -1,4 +1,3 @@
-# image_backends.py
 import os
 import requests
 
