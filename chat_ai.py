@@ -25,61 +25,68 @@ def _trim(s: str, n: int = 4000) -> str:
 # ---------- TEXT GEN (chat) ----------
 def ai_complete_text(persona: dict, state: dict, user_text: str, history=None, max_new=180) -> str:
     """
-    Calls a chat-capable HF model through the Inference API.
-    history: optional list[{"role":"user"/"assistant","content": "..."}]
+    Calls a text-generation model via the HF Inference API using a plain prompt,
+    which works across most public models (no special chat schema required).
     """
     _need_token()
-    url = f"https://api-inference.huggingface.co/models/{HF_TEXT_MODEL_ID}"
+    model_id = HF_TEXT_MODEL_ID
+    url = f"https://api-inference.huggingface.co/models/{model_id}"
     hdrs = {"Authorization": f"Bearer {HF_TOKEN}"}
 
     name = persona.get("name", "Girl")
     loc  = persona.get("location", "")
     style = persona.get("persona", "")
-    likes = ", ".join(state.get("likes", [])[:4])
+    likes = ", ".join(state.get("likes", [])[:4]) or "varied"
 
-    system = (
-        f"You are {name}, an adult character. Speak naturally, briefly, and do not repeat the user's exact words. "
-        f"Location: {loc}. Style/personality: {style}. If you don't know, be playful (never say 'I don't know'). "
-        f"Use 1-3 sentences, ask a small follow-up occasionally. Likes: {likes or 'varied'}."
+    # Build a simple prompt from history
+    sys = (
+        f"You are {name}, an adult character. Speak naturally, briefly (1–3 sentences). "
+        f"Location: {loc}. Style/personality: {style}. If unsure, be playful. "
+        f"Do not repeat the user's exact words. Likes: {likes}."
     )
 
-    msgs = [{"role": "system", "content": system}]
+    convo_lines = [f"[SYSTEM] {sys}"]
     if history:
-        msgs.extend(history[-8:])
-    msgs.append({"role": "user", "content": user_text})
+        for m in history[-8:]:
+            role = m.get("role","user").upper()
+            content = str(m.get("content","")).strip()
+            if content:
+                convo_lines.append(f"[{role}] {content}")
+    convo_lines.append(f"[USER] {user_text}\n[ASSISTANT]")
+
+    prompt = "\n".join(convo_lines)
 
     payload = {
-        "inputs": msgs,
+        "inputs": prompt,
         "parameters": {
             "max_new_tokens": int(max_new),
             "temperature": 0.85,
             "top_p": 0.95,
             "repetition_penalty": 1.1,
-            "truncate": 3500
+            "truncate": 3500,
+            "return_full_text": False
         },
         "options": {"wait_for_model": True}
     }
 
     r = requests.post(url, headers=hdrs, json=payload, timeout=120)
     if r.status_code != 200:
-        raise RuntimeError(f"HF text error {r.status_code}: {_trim(r.text,300)}")
+        raise RuntimeError(f"HF text error {r.status_code}: { _trim(r.text,300) }")
 
-    # Responses vary by model—try common shapes
     try:
         j = r.json()
     except Exception:
         return _trim(r.text, 400)
 
-    if isinstance(j, dict) and "generated_text" in j:
-        return _trim(j["generated_text"], 800)
-
+    # Common Inference API shapes
     if isinstance(j, list) and j and isinstance(j[0], dict):
-        if "generated_text" in j[0]:
-            return _trim(j[0]["generated_text"], 800)
-        # Some chat models return a conversation object—fallback to str
-        return _trim(json.dumps(j), 800)
+        out = j[0].get("generated_text") or j[0].get("summary_text") or ""
+        return _trim(out, 800)
+    if isinstance(j, dict):
+        out = j.get("generated_text") or j.get("text") or ""
+        return _trim(out, 800)
 
-    return _trim(j, 800)
+    return _trim(str(j), 800)
 
 # ---------- ASR (voice in) ----------
 def transcribe_audio_bytes(audio_bytes: bytes, model_id: str = None, timeout=180) -> str:
