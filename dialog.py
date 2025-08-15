@@ -3,7 +3,6 @@
 import re
 import logging
 from typing import Dict, List
-from nsfw_chat import mark_persona_picked
 
 try:
     from personas import PERS  # your girls live here
