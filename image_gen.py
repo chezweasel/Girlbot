@@ -9,11 +9,11 @@ from PIL import Image
 from settings import stable_seed  # For deterministic seeds
 
 HF_TOKEN = (os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN") or "").strip()
-HF_MODEL_ID = os.getenv("HF_MODEL_ID", "SG161222/RealVisXL_V5.0").strip()
+HF_MODEL_ID = os.getenv("HF_MODEL_ID", "stablediffusionapi/newrealityxl-global-nsfw").strip()  # Working NSFW model
 HF_API_URL = f"https://api-inference.huggingface.co/models/{HF_MODEL_ID}"
 
 # Strict blocks (always, regardless of mode)
-_MINOR_WORDS = {"minor", "underage", "child", "kid", "shota", "school boy", "infant", "toddler", "beast", "animal"}
+_MINOR_WORDS = {"minor", "underage", "child", "kid", "shota", "school boy", "school girl", "infant", "toddler", "beast", "animal"}
 def contains_minor_terms(s: str) -> bool:
     s = (s or "").lower()
     return any(w in s for w in _MINOR_WORDS)
@@ -52,7 +52,7 @@ def gen_hf_image(prompt: str, w: int = 512, h: int = 768, seed: int | None = Non
             "negative_prompt": negative,
             "width": int(w),
             "height": int(h),
-            "num_inference_steps": 50,  # Fixed for quality
+            "num_inference_steps": 30,  # Lower for speed
             "guidance_scale": 7.5,
             "seed": seed  # Pass if provided
         }
