@@ -1,4 +1,4 @@
-import json, os, time
+oimport json, os, time
 from settings import STATE_FILE, FREE_PER_DAY
 
 def now(): return time.time()
@@ -43,7 +43,7 @@ def get_user(uid):
         STATE[u]["used"] = 0
         save_state()
     # Owner unlimited access - replace with your Telegram user ID
-    if u == "your_telegram_user_id_here":
+    if u == "7414541468":
         STATE[u]["paid_until"] = now() + 31536000  # 1 year
     return STATE[u]
 
