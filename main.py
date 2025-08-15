@@ -41,7 +41,7 @@ except Exception as e:
 # Import media_commands for /gen
 from media_commands import cmd_gen
 
-# Import state for paywall
+# Import state for paywall and NSFW state
 from state import get_user, save_state, now
 
 logging.basicConfig(
@@ -53,9 +53,6 @@ log = logging.getLogger("bot")
 BOT_TOKEN: Final[str] = os.environ.get("BOT_TOKEN", "").strip()
 if not BOT_TOKEN:
     raise RuntimeError("BOT_TOKEN env var missing (Railway → Variables).")
-
-# --- Per-user NSFW toggle state ---
-user_nsfw_mode = {}  # { user_id: True/False }
 
 # --- tiny healthcheck server (keeps Railway alive) ---
 app = Flask(__name__)
@@ -109,19 +106,24 @@ async def cmd_pick(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def spicy_on_all(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
-    user_nsfw_mode[user_id] = True
+    user = get_user(user_id)
+    user["nsfw"] = True
+    save_state()
     await cmd_spicy_on(update, context)
     await update.message.reply_text("✅ NSFW mode is now ON for all your messages.")
 
 async def spicy_off_all(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
-    user_nsfw_mode[user_id] = False
+    user = get_user(user_id)
+    user["nsfw"] = False
+    save_state()
     await cmd_spicy_off(update, context)
     await update.message.reply_text("🚫 NSFW mode is now OFF.")
 
 async def spicy_status_all(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = str(update.effective_user.id)
-    status = "ON" if user_nsfw_mode.get(user_id) else "OFF"
+    user = get_user(user_id)
+    status = "ON" if user["nsfw"] else "OFF"
     await cmd_spicy_status(update, context)
     await update.message.reply_text(f"(local) NSFW mode is currently: {status}")
 
@@ -168,7 +170,7 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     text = update.message.text or ""
     try:
-        if user_nsfw_mode.get(user_id):
+        if user["nsfw"]:
             reply = generate_nsfw_turn(text, user_id=user_id) or "(empty NSFW reply)"
         else:
             reply = generate_chat_turn(text, user_id=user_id) or "(empty reply)"
