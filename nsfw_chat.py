@@ -1,50 +1,43 @@
-# nsfw_chat.py
 import logging
-from typing import Dict
-log = logging.getLogger("nsfw")
+from dialog import _user_state, PERS
+from chat_ai import ai_complete_text  # Assume this is your HF text gen module; implement if missing
 
-# in-memory per-user settings
-_NSFW: Dict[str, bool] = {}     # user_id -> True/False
-_PERSONA_PICKED: Dict[str, bool] = {}  # user_id -> has picked a persona at least once
+log = logging.getLogger("nsfw_chat")
 
-def mark_persona_picked(user_id: str):
-    _PERSONA_PICKED[user_id] = True
+_USER_NSFW_LEVEL = {}  # user_id -> level (1-3)
 
-def is_spicy(user_id: str) -> bool:
-    return _NSFW.get(user_id, False)
-
-# ---- Telegram command handlers (async) ----
 async def cmd_spicy_on(update, context):
-    uid = str(update.effective_user.id)
-    if not _PERSONA_PICKED.get(uid):
-        await update.message.reply_text("Pick a girl first: /girls then /pick 1 (or name).")
-        return
-    _NSFW[uid] = True
-    await update.message.reply_text("🔓 Spicy mode ON for this chat. I’ll allow flirty/18+ text (still within platform rules).")
+    # Placeholder; expand as needed
+    pass
 
 async def cmd_spicy_off(update, context):
-    uid = str(update.effective_user.id)
-    _NSFW[uid] = False
-    await update.message.reply_text("🔒 Spicy mode OFF. We’ll keep it SFW.")
+    pass
 
 async def cmd_spicy_status(update, context):
-    uid = str(update.effective_user.id)
-    on = is_spicy(uid)
-    await update.message.reply_text(f"Spicy mode is {'ON' if on else 'OFF'}.")
+    pass
 
-# Convenience: toggle by value like /spicy_set on|off
 async def cmd_spicy_set(update, context):
-    uid = str(update.effective_user.id)
-    arg = (context.args[0].lower() if context.args else "")
-    if arg in ("on","true","1","yes"):
-        _NSFW[uid] = True
-        await update.message.reply_text("🔓 Spicy mode ON.")
-    elif arg in ("off","false","0","no"):
-        _NSFW[uid] = False
-        await update.message.reply_text("🔒 Spicy mode OFF.")
-    else:
-        await update.message.reply_text("Use /spicy_set on  or  /spicy_set off")
+    pass
 
-# A simple helper your dialog layer can use to hint what’s allowed
-def safety_hint(user_id: str) -> str:
-    return "spicy" if is_spicy(user_id) else "sfw"
+def mark_persona_picked():
+    # Placeholder if needed
+    pass
+
+def generate_nsfw_turn(text: str, user_id: str = "unknown") -> str:
+    st = _user_state(user_id)
+    persona = PERS[st["persona_idx"]]
+    level = _USER_NSFW_LEVEL.get(user_id, 2)  # Default medium
+    # Sexy prompt: Use memories, style
+    sexy_prompt = f"You are {persona['name']}, a {persona['sexy_style']} lover. Respond erotically, descriptively, using NSFW memories like {persona['nsfw_memories'][0] if persona['nsfw_memories'] else ''}. Level {level}/3 intensity. Be vocal: {persona['relationship']['vocal']}. Build tension, tease."
+    state_for_ai = {"likes": [], "traits": persona["personality_traits"], "sexy": True}
+    hist = st["history"][-6:]  # Shorter for focus
+    hist.append({"role": "system", "content": sexy_prompt})
+    hist.append({"role": "user", "content": text})
+    try:
+        reply = ai_complete_text(persona, state_for_ai, text, history=hist, max_new=250)  # Longer for sexy detail
+    except Exception as e:
+        log.exception("nsfw turn failed")
+        return f"(error) {e}"
+    st["history"].append({"role": "assistant", "content": reply})
+    st["history"] = st["history"][-10:]
+    return reply
