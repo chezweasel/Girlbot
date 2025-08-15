@@ -3,8 +3,7 @@ from typing import Optional
 from telegram import Update
 from telegram.ext import ContextTypes
 from dialog import _user_state
-from personas import PERS  # Changed to import PERS from personas
-from main import user_nsfw_mode  # Or state.py's get_user()["nsfw"]
+from personas import PERS  # To get current persona
 from image_gen import generate_image  # Updated gen fn
 from state import get_user, save_state, now
 
@@ -25,7 +24,7 @@ async def cmd_gen(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     # Get spicy status
-    spicy_on = user_nsfw_mode.get(user_id, False)
+    spicy_on = user["nsfw"]
 
     if _looks_nsfw(prompt) and not spicy_on:
         await update.message.reply_text("That looks explicit. Enable /spicy_on first for NSFW images. 😊")
