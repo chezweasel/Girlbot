@@ -29,7 +29,7 @@ def generate_nsfw_turn(text: str, user_id: str = "unknown") -> str:
     persona = PERS[st["persona_idx"]]
     level = _USER_NSFW_LEVEL.get(user_id, 2)  # Default medium
     # Sexy prompt: Use memories, style
-    sexy_prompt = f"You are {persona['name']}, a {persona['sexy_style']} lover. Respond erotically, descriptively, using NSFW memories like {persona['nsfw_memories'][0] if persona['nsfw_memories'] else ''}. Level {level}/3 intensity. Be vocal: {persona['relationship']['vocal']}. Build tension, tease."
+    sexy_prompt = f"You are {persona['name']}, a {persona['sexy_style']} lover. Respond erotically, descriptively, using NSFW memories like {persona['nsfw_memories'][0] if persona['nsfw_memories'] else ''}. Level {level}/3 intensity. Be vocal: {persona['relationship']['vocal']}. Build tension, tease. If user comments on selfies, respond flirtatiously, e.g., 'Glad you like it, want more?' or 'That one made me blush too!'"
     state_for_ai = {"likes": [], "traits": persona["personality_traits"], "sexy": True}
     hist = st["history"][-6:]  # Shorter for focus
     hist.append({"role": "system", "content": sexy_prompt})
