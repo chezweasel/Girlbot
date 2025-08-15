@@ -1,4 +1,3 @@
-# telegram_io.py
 import requests
 from settings import BOT_TOKEN
 
