@@ -9,7 +9,7 @@ from PIL import Image
 from settings import stable_seed  # For deterministic seeds
 
 HF_TOKEN = (os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN") or "").strip()
-HF_MODEL_ID = os.getenv("HF_MODEL_ID", "stablediffusionapi/newrealityxl-global-nsfw").strip()
+HF_MODEL_ID = os.getenv("HF_MODEL_ID", "CompVis/stable-diffusion-v1-4").strip()  # Hosted, supports NSFW prompts
 HF_API_URL = f"https://api-inference.huggingface.co/models/{HF_MODEL_ID}"
 
 # Strict blocks (always, regardless of mode)
@@ -33,17 +33,17 @@ def _ensure_rgb_jpeg(bytes_or_path: str | bytes) -> str:
     im.save(out, "JPEG", quality=90, optimize=True)
     return out
 
-def gen_hf_image(prompt: str, w: int = 512, h: int = 768, seed: int | None = None, nsfw: bool = False) -> str:
+def gen_hf_image(prompt: str, w: int = 512, h: int = 512, seed: int | None = None, nsfw: bool = False) -> str:
     if not HF_TOKEN:
         raise RuntimeError("HF_TOKEN missing.")
     if not HF_MODEL_ID:
         raise RuntimeError("HF_MODEL_ID missing.")
 
     # Enhance for realism/consistency
-    enhanced_prompt = f"hyper-realistic photo, detailed face, natural lighting, {prompt}"
+    enhanced_prompt = f"hyper-realistic, detailed, high resolution, {prompt}"
     if nsfw:
-        enhanced_prompt += ", explicit NSFW, uncensored, sexy pose"
-    negative = "blurry, lowres, deformed, ugly, cartoon, anime, 3d, watermark, text, artifacts, extra limbs"
+        enhanced_prompt += ", NSFW, explicit, uncensored"
+    negative = "blurry, low quality, deformed"
 
     headers = {"Authorization": f"Bearer {HF_TOKEN}"}
     payload = {
@@ -52,9 +52,9 @@ def gen_hf_image(prompt: str, w: int = 512, h: int = 768, seed: int | None = Non
             "negative_prompt": negative,
             "width": int(w),
             "height": int(h),
-            "num_inference_steps": 30,  # Lower for speed
+            "num_inference_steps": 30,
             "guidance_scale": 7.5,
-            "seed": seed  # Pass if provided
+            "seed": seed
         }
     }
 
@@ -64,22 +64,22 @@ def gen_hf_image(prompt: str, w: int = 512, h: int = 768, seed: int | None = Non
 
     img_bytes = r.content
     if not img_bytes or len(img_bytes) < 1000:
-        raise RuntimeError("HF returned empty image.")
+        raise RuntimeError("HF returned empty or tiny image.")
     return _ensure_rgb_jpeg(img_bytes)
 
-def generate_image(prompt: str, user_id: str, persona: dict, w: int = 512, h: int = 768, nsfw: bool = False) -> str:
+def generate_image(prompt: str, user_id: str, persona: dict, w: int = 512, h: int = 512, nsfw: bool = False) -> str:
     if contains_minor_terms(prompt):
         raise RuntimeError("Blocked: under-18 / young-looking content not allowed.")
     
-    # Clamp size for API/speed
-    w = max(256, min(int(w), 768))
-    h = max(256, min(int(h), 1024))
-    
-    # Deterministic seed for consistency
+    # Clamp size
+    w = max(256, min(int(w), 512))
+    h = max(256, min(int(h), 512))
+
+    # Deterministic seed
     seed = stable_seed(user_id, persona.get("name", "default"), prompt)
-    
-    # Enhance prompt with persona for realism
+
+    # Enhance prompt with persona
     body_desc = f"{persona.get('ethnicity', 'Caucasian')} woman, {persona.get('age', 25)} years old, {persona.get('body', 'slim')} build, {persona.get('height', '5\'6\"')}, {persona.get('weight', '120 lbs')}, cup {persona.get('cup', 'B')}, detailed face, natural expression"
     full_prompt = f"{body_desc}, {prompt}"
-    
+
     return gen_hf_image(full_prompt, w=w, h=h, seed=seed, nsfw=nsfw)
