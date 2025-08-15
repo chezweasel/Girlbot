@@ -1,6 +1,6 @@
 import logging
 from dialog import _user_state
-from personas import PERS
+from personas import PERS  # Changed to import from personas
 from chat_ai import ai_complete_text  # Assume this handles HF text gen
 
 log = logging.getLogger("nsfw_chat")
